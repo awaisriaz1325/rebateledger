@@ -1,0 +1,56 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+infra/terraform.tfvars
+infra/**/*.tfvars
+!infra/**/*.tfvars.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.egg-info/
+dist/
+build/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.pnpm-store/
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+*.tsbuildinfo
+next-env.d.ts
+
+# Local data
+var/
+storage/
+*.log
+
+# Build pack archive and stray local files
+rebateledger-claude-code-pack.zip
+app.py
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
