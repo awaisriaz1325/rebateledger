@@ -1,0 +1,51 @@
+# Column mapping and explicit formats for the sample ERP exports.
+# Dates are never guessed: date_format is required for every file.
+tolerance: {abs: "1.00", pct: "0.005"}
+purchases:
+  encoding: utf-8-sig
+  delimiter: ","
+  date_format: MM/DD/YYYY
+  decimal_separator: "."
+  thousands_separator: ","
+  negative_style: minus
+  columns:
+    supplier_code: Vendor No
+    invoice_number: Invoice No
+    line_number: Line
+    sku: Item No
+    quantity: Qty
+    unit_price: Unit Cost
+    amount: Ext Cost
+    invoice_date: Invoice Date
+    ship_date: Ship Date
+    branch: Branch
+    category: Product Class
+  flags:
+    special_pricing: SPA
+credits:
+  date_format: MM/DD/YYYY
+  negative_style: parentheses
+  credit_sign: positive
+  columns:
+    supplier_code: Vendor
+    credit_reference: Credit Memo
+    credit_date: Memo Date
+    amount: Amount
+    agreement_reference: Program
+    period_label: Period
+baselines:
+  date_format: YYYY-MM-DD
+  columns:
+    agreement_reference: Program
+    period_start: From
+    period_end: To
+    value: Baseline Spend
+allocations:
+  date_format: YYYY-MM-DD
+  columns:
+    credit_reference: Credit Memo
+    supplier_code: Vendor
+    agreement_reference: Program
+    period_start: From
+    period_end: To
+    amount: Amount

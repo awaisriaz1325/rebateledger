@@ -1,0 +1,35 @@
+# HAND CALCULATION — tiered_incremental per unit, measure = quantity
+#   Bands: [0,1000) $0.50/unit, [1000,∞) $0.75/unit. Q = M = 900 + 600 = 1,500
+#   band 1: 0.50 × 1,000 = 500.00 ; band 2: 0.75 × 500 = 375.00 ; E = 875.00
+name: tiered_incremental per unit
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - id: A1
+    supplier: S1
+    versions:
+      - measure: quantity
+        components:
+          - id: inc
+            type: tiered_incremental
+            tiers: [{threshold: "0", amount_per_unit: "0.50"}, {threshold: "1000", amount_per_unit: "0.75"}]
+purchases:
+  - {id: L1, supplier: S1, qty: "900", amount: "9000.00", invoice_date: 2026-01-20}
+  - {id: L2, supplier: S1, qty: "600", amount: "6000.00", invoice_date: 2026-02-20}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "875.00", statuses: [OK],
+     M: "1500", tier_reached: 2}

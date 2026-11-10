@@ -1,0 +1,31 @@
+# HAND CALCULATION — per_unit $1.25 per eligible net unit, measure = quantity
+#   Q = 100 + 40.5 + (-10) = 130.5
+#   E = 1.25 × 130.5 = 163.125 → half_up → 163.13
+name: per_unit basic
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - id: A1
+    supplier: S1
+    versions: [{measure: quantity, components: [{id: units, type: per_unit, amount_per_unit: "1.25"}]}]
+purchases:
+  - {id: L1, supplier: S1, qty: "100", amount: "5000.00", invoice_date: 2026-01-05}
+  - {id: L2, supplier: S1, qty: "40.5", amount: "2025.00", invoice_date: 2026-02-05}
+  - {id: L3, supplier: S1, qty: "-10", amount: "-500.00", invoice_date: 2026-03-05}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "163.13", unrounded: "163.125",
+     statuses: [OK], Q: "130.5", M: "130.5"}

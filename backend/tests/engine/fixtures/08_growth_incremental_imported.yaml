@@ -1,0 +1,37 @@
+# HAND CALCULATION — growth_incremental, imported baseline, rate 5%
+#   A1: B = 200,000 ; M = 260,000 → 0.05 × max(0, 260,000 − 200,000) = 0.05 × 60,000 = 3,000.00
+#   A2: B = 300,000 ; M = 260,000 → 0.05 × max(0, −40,000) = 0 → NOT_EARNED
+name: growth_incremental with imported baseline
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - id: A1
+    supplier: S1
+    versions: &v
+      - components: [{id: g, type: growth_incremental, rate: "0.05", baseline_source: imported}]
+  - id: A2
+    supplier: S2
+    versions: *v
+baselines:
+  - {agreement: A1, start: 2026-01-01, end: 2026-03-31, value: "200000"}
+  - {agreement: A2, start: 2026-01-01, end: 2026-03-31, value: "300000"}
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "260000.00", invoice_date: 2026-01-20}
+  - {id: L2, supplier: S2, qty: "1", amount: "260000.00", invoice_date: 2026-01-20}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "3000.00", statuses: [OK]}
+  - {agreement: A2, period: 2026-01-01..2026-03-31, expected: "0.00", statuses: [NOT_EARNED]}

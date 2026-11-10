@@ -1,0 +1,28 @@
+# HAND CALCULATION — SPEC §9 case 11: 1% × 20,000 = 200.00 < minimum 250 → 0.00, BELOW_MINIMUM
+#   A2: 1% × 30,000 = 300.00 ≥ 250 → 300.00 (minimum not triggered)
+name: result below minimum payout
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: &v [{minimum_payout: "250", components: [{id: base, type: flat_percent, rate: "0.01"}]}]}
+  - {id: A2, supplier: S2, versions: *v}
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "20000.00", invoice_date: 2026-01-10}
+  - {id: L2, supplier: S2, qty: "1", amount: "30000.00", invoice_date: 2026-01-10}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "0.00", unrounded: "0", statuses: [BELOW_MINIMUM]}
+  - {agreement: A2, period: 2026-01-01..2026-03-31, expected: "300.00", statuses: [OK]}

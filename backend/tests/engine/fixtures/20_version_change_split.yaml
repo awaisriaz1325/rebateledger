@@ -1,0 +1,33 @@
+# HAND CALCULATION — fixture 19 resolved as "split at the boundary"
+#   v1 window 2026-01-01..2026-02-15: S = 10,000 → 0.02 × 10,000 = 200.00 (PARTIAL_PERIOD)
+#   v2 window 2026-02-16..2026-03-31: S = 20,000 → 0.03 × 20,000 = 600.00 (PARTIAL_PERIOD)
+name: version change resolved by split
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+resolutions: [{agreement: A1, start: 2026-01-01, end: 2026-03-31, choice: split}]
+agreements:
+  - id: A1
+    supplier: S1
+    versions:
+      - {version_no: 1, effective_to: 2026-02-15, components: [{id: base, type: flat_percent, rate: "0.02"}]}
+      - {version_no: 2, effective_from: 2026-02-16, components: [{id: base, type: flat_percent, rate: "0.03"}]}
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "10000.00", invoice_date: 2026-01-10}
+  - {id: L2, supplier: S1, qty: "1", amount: "20000.00", invoice_date: 2026-03-10}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-02-15, expected: "200.00", statuses: [OK, PARTIAL_PERIOD]}
+  - {agreement: A1, period: 2026-02-16..2026-03-31, expected: "600.00", statuses: [OK, PARTIAL_PERIOD]}

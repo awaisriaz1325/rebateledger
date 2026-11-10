@@ -1,0 +1,35 @@
+# HAND CALCULATION — SPEC §9 case 1 (gte). Tiers: ≥100,000 → 2%; ≥250,000 → 3%
+#   M = S = 150,000 + 100,000 = 250,000.00 (exactly the tier-2 threshold)
+#   gte: 250,000 ≥ 250,000 → tier 2 reached
+#   all-units: E = 0.03 × 250,000 = 7,500.00
+name: tiered_all_units, M equals threshold, gte
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - id: A1
+    supplier: S1
+    versions:
+      - components:
+          - id: tiers
+            type: tiered_all_units
+            tiers: [{threshold: "100000", rate: "0.02"}, {threshold: "250000", rate: "0.03"}]
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "150000.00", invoice_date: 2026-01-10}
+  - {id: L2, supplier: S1, qty: "1", amount: "100000.00", invoice_date: 2026-03-10}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "7500.00", statuses: [OK],
+     M: "250000.00", tier_reached: 2}

@@ -1,0 +1,31 @@
+# HAND CALCULATION — growth_threshold: pays 1% of S if growth ≥ 10%
+#   B = 200,000 ; M = S = 220,000 ; growth = 220,000 ÷ 200,000 − 1 = 0.10
+#   gte: 0.10 ≥ 0.10 → qualifies → E = 0.01 × 220,000 = 2,200.00
+name: growth_threshold exactly met (gte)
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - id: A1
+    supplier: S1
+    versions:
+      - components: [{id: g, type: growth_threshold, rate: "0.01", growth_pct: "0.10", baseline_source: imported}]
+baselines:
+  - {agreement: A1, start: 2026-01-01, end: 2026-03-31, value: "200000"}
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "220000.00", invoice_date: 2026-03-01}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "2200.00", statuses: [OK]}

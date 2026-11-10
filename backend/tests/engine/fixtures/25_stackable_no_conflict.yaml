@@ -1,0 +1,29 @@
+# HAND CALCULATION — same lines as fixture 24, both agreements stackable → no conflict
+#   A1 2% on all: 0.02 × (1,000 + 2,000) = 60.00
+#   A2 1% on sku A: 0.01 × 1,000 = 10.00
+name: stackable agreements share lines
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: [{components: [{id: base, type: flat_percent, rate: "0.02"}]}]}
+  - {id: A2, supplier: S1, versions: [{eligibility: [{action: include, field: sku, values: [A]}], components: [{id: base, type: flat_percent, rate: "0.01"}]}]}
+purchases:
+  - {id: L1, supplier: S1, sku: A, qty: "1", amount: "1000.00", invoice_date: 2026-01-10}
+  - {id: L2, supplier: S1, sku: B, qty: "1", amount: "2000.00", invoice_date: 2026-01-10}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "60.00", statuses: [OK]}
+  - {agreement: A2, period: 2026-01-01..2026-03-31, expected: "10.00", statuses: [OK], excluded: {NOT_INCLUDED: 1}}

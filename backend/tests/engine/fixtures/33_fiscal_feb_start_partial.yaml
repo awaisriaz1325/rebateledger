@@ -1,0 +1,32 @@
+# HAND CALCULATION — fiscal year starts February → quarters Nov–Jan, Feb–Apr
+#   Agreement effective 2026-01-01; run range Jan–Mar 2026.
+#   Period Nov 2025–Jan 2026 is clipped to 2026-01-01..2026-01-31 (PARTIAL): 1,000 → 1% = 10.00
+#   Period Feb–Apr 2026 (whole period): 2,000 (Feb) + 3,000 (Apr 30) = 5,000 → 50.00
+name: fiscal February start with partial first quarter
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: [{period: {type: quarterly, fiscal_year_start_month: 2}, components: [{id: base, type: flat_percent, rate: "0.01"}]}]}
+purchases:
+  - {id: L0, supplier: S1, qty: "1", amount: "7000.00", invoice_date: 2025-12-15}
+  - {id: L1, supplier: S1, qty: "1", amount: "1000.00", invoice_date: 2026-01-31}
+  - {id: L2, supplier: S1, qty: "1", amount: "2000.00", invoice_date: 2026-02-01}
+  - {id: L3, supplier: S1, qty: "1", amount: "3000.00", invoice_date: 2026-04-30}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-01-31, expected: "10.00", statuses: [OK, PARTIAL_PERIOD]}
+  - {agreement: A1, period: 2026-02-01..2026-04-30, expected: "50.00", statuses: [OK]}

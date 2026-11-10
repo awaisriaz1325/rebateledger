@@ -1,0 +1,29 @@
+# HAND CALCULATION — SPEC §9 case 14: include category ELEC
+#   L1 ELEC 1,000 → eligible ; L2 no category → ATTRIBUTE_MISSING ; L3 PLUMB → NOT_INCLUDED
+#   E = 0.02 × 1,000 = 20.00
+name: line missing an attribute a filter depends on
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: [{eligibility: [{action: include, field: category, values: [ELEC]}], components: [{id: base, type: flat_percent, rate: "0.02"}]}]}
+purchases:
+  - {id: L1, supplier: S1, category: ELEC, qty: "1", amount: "1000.00", invoice_date: 2026-01-10}
+  - {id: L2, supplier: S1, qty: "1", amount: "500.00", invoice_date: 2026-01-10}
+  - {id: L3, supplier: S1, category: PLUMB, qty: "1", amount: "300.00", invoice_date: 2026-01-10}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "20.00", statuses: [OK], eligible: 1,
+     excluded: {ATTRIBUTE_MISSING: 1, NOT_INCLUDED: 1}}

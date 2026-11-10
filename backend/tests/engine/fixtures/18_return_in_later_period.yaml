@@ -1,0 +1,29 @@
+# HAND CALCULATION — SPEC §9 case 4: a return counts in its own basis-date period (v1)
+#   Q1: purchase 1,000 → 0.02 × 1,000 = 20.00
+#   Q2: return −400 (dated Apr 5) → 0.02 × −400 = −8 → floor → 0.00 NOT_EARNED
+name: return dated in a later period
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+range: {start: 2026-01-01, end: 2026-06-30}
+agreements:
+  - {id: A1, supplier: S1, versions: [{components: [{id: base, type: flat_percent, rate: "0.02"}]}]}
+purchases:
+  - {id: L1, supplier: S1, qty: "10", amount: "1000.00", invoice_date: 2026-01-10}
+  - {id: L2, supplier: S1, qty: "-4", amount: "-400.00", invoice_date: 2026-04-05}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "20.00", statuses: [OK]}
+  - {agreement: A1, period: 2026-04-01..2026-06-30, expected: "0.00", statuses: [NOT_EARNED]}

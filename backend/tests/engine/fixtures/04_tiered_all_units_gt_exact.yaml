@@ -1,0 +1,39 @@
+# HAND CALCULATION — SPEC §9 case 1 (gt). Same tiers as fixture 03, comparison = gt
+#   A1: M = 250,000.00. gt: 250,000 > 250,000 is false; 250,000 > 100,000 true → tier 1
+#       E = 0.02 × 250,000 = 5,000.00
+#   A2: M = 100,000.00. gt: 100,000 > 100,000 false → no tier → E = 0 → NOT_EARNED
+name: tiered_all_units, M equals threshold, gt
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - id: A1
+    supplier: S1
+    versions: &v
+      - threshold_comparison: gt
+        components:
+          - id: tiers
+            type: tiered_all_units
+            tiers: [{threshold: "100000", rate: "0.02"}, {threshold: "250000", rate: "0.03"}]
+  - id: A2
+    supplier: S2
+    versions: *v
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "250000.00", invoice_date: 2026-01-10}
+  - {id: L2, supplier: S2, qty: "1", amount: "100000.00", invoice_date: 2026-01-10}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "5000.00", statuses: [OK], tier_reached: 1}
+  - {agreement: A2, period: 2026-01-01..2026-03-31, expected: "0.00", statuses: [NOT_EARNED]}

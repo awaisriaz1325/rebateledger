@@ -1,0 +1,31 @@
+# HAND CALCULATION — SPEC §9 case 48: fiscal year starts July → Q1 = Jul–Sep, Q2 = Oct–Dec
+#   Q1 FY2027 (2026-07-01..09-30): 1,000 (Jul 1) + 2,000 (Sep 30) = 3,000 → 1% = 30.00
+#   Q2 FY2027 (2026-10-01..12-31): 4,000 (Oct 1) → 40.00 ; Jun 30 line is outside the range
+name: fiscal-aligned quarters
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+range: {start: 2026-07-01, end: 2026-12-31}
+agreements:
+  - {id: A1, supplier: S1, versions: [{period: {type: quarterly, fiscal_year_start_month: 7}, components: [{id: base, type: flat_percent, rate: "0.01"}]}]}
+purchases:
+  - {id: L0, supplier: S1, qty: "1", amount: "9999.00", invoice_date: 2026-06-30}
+  - {id: L1, supplier: S1, qty: "1", amount: "1000.00", invoice_date: 2026-07-01}
+  - {id: L2, supplier: S1, qty: "1", amount: "2000.00", invoice_date: 2026-09-30}
+  - {id: L3, supplier: S1, qty: "1", amount: "4000.00", invoice_date: 2026-10-01}
+expected:
+  - {agreement: A1, period: 2026-07-01..2026-09-30, expected: "30.00", statuses: [OK]}
+  - {agreement: A1, period: 2026-10-01..2026-12-31, expected: "40.00", statuses: [OK]}

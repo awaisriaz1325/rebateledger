@@ -1,0 +1,36 @@
+# HAND CALCULATION — components sum
+#   S = 25,000 ; Q = 500
+#   base  flat 1%            = 0.01 × 25,000 = 250.00
+#   bonus fixed $250 at ≥20k = 250.00
+#   units $0.10 per unit     = 0.10 × 500 = 50.00
+#   E = 550.00
+name: several components summed
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - id: A1
+    supplier: S1
+    versions:
+      - components:
+          - {id: base, type: flat_percent, rate: "0.01"}
+          - {id: bonus, type: fixed_bonus, amount: "250", threshold: "20000"}
+          - {id: units, type: per_unit, amount_per_unit: "0.10"}
+purchases:
+  - {id: L1, supplier: S1, qty: "500", amount: "25000.00", invoice_date: 2026-01-10}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "550.00", statuses: [OK],
+     components: {base: "250.0000", bonus: "250", units: "50.000"}}

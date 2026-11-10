@@ -1,0 +1,26 @@
+# HAND CALCULATION — SPEC §9 case 3, allow_clawback
+#   S = −500 → 0.02 × −500 = −10.00 ; allow_clawback keeps −10.00 → E = −10.00
+name: returns exceed purchases, clawback
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: [{negative_result: allow_clawback, components: [{id: base, type: flat_percent, rate: "0.02"}]}]}
+purchases:
+  - {id: L1, supplier: S1, qty: "10", amount: "1000.00", invoice_date: 2026-01-15}
+  - {id: L2, supplier: S1, qty: "-15", amount: "-1500.00", invoice_date: 2026-02-15}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "-10.00", statuses: [OK]}

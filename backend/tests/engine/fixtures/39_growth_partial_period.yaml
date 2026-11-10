@@ -1,0 +1,28 @@
+# HAND CALCULATION — growth component in a partial period (agreement starts Feb 1)
+#   The baseline covers a full quarter but the measure covers two months; comparing them
+#   is a business decision → NEEDS_REVIEW GROWTH_PARTIAL_PERIOD (+ PARTIAL_PERIOD), no amount.
+name: growth component in a partial period
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: [{effective_from: 2026-02-01, components: [{id: g, type: growth_incremental, rate: "0.05", baseline_source: imported}]}]}
+baselines:
+  - {agreement: A1, start: 2026-01-01, end: 2026-03-31, value: "1000"}
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "5000.00", invoice_date: 2026-02-10}
+expected:
+  - {agreement: A1, period: 2026-02-01..2026-03-31, expected: null, statuses: [NEEDS_REVIEW, PARTIAL_PERIOD], reasons: [GROWTH_PARTIAL_PERIOD]}

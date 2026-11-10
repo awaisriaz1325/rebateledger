@@ -1,0 +1,25 @@
+# HAND CALCULATION — SPEC §9 case 16: tiers ≥0 → 3%, ≥100,000 → 2% (rates decrease; allowed)
+#   M = 150,000 → tier 2 → all-units 0.02 × 150,000 = 3,000.00 (per definition, not "best" tier)
+name: tiers with decreasing rates
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: [{components: [{id: t, type: tiered_all_units, tiers: [{threshold: "0", rate: "0.03"}, {threshold: "100000", rate: "0.02"}]}]}]}
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "150000.00", invoice_date: 2026-01-10}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "3000.00", statuses: [OK], tier_reached: 2}

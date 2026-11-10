@@ -1,0 +1,4 @@
+# Decision for PipeWorks Q2: terms changed on May 1, so measure April under v1
+# and May–June under v2 separately.
+resolutions:
+  - {agreement: PIPE-PEX, start: 2026-04-01, end: 2026-06-30, choice: split}

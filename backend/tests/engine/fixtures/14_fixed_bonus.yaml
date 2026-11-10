@@ -1,0 +1,29 @@
+# HAND CALCULATION — fixed_bonus $500 when M ≥ 50,000
+#   A1: M = 50,000.00 ≥ 50,000 → 500.00
+#   A2: M = 49,999.99 → not met → 0.00 NOT_EARNED
+name: fixed_bonus met and not met
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: &v [{components: [{id: bonus, type: fixed_bonus, amount: "500", threshold: "50000"}]}]}
+  - {id: A2, supplier: S2, versions: *v}
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "50000.00", invoice_date: 2026-02-15}
+  - {id: L2, supplier: S2, qty: "1", amount: "49999.99", invoice_date: 2026-02-15}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "500.00", statuses: [OK]}
+  - {agreement: A2, period: 2026-01-01..2026-03-31, expected: "0.00", statuses: [NOT_EARNED]}

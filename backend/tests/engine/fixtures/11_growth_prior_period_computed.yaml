@@ -1,0 +1,42 @@
+# HAND CALCULATION — baselines computed from imported purchases
+#   A1 growth_incremental 4%, prior = same period prior year (Q1 2025), coverage from 2025-01-01
+#       B = 100,000 (L1; L2 is Apr 2025, outside Q1 2025) ; M = 130,000
+#       E = 0.04 × (130,000 − 100,000) = 1,200.00
+#   A2 growth_threshold 2% at ≥25%, prior = immediately preceding (Q4 2025), coverage 2025-10-01
+#       B = 50,000 ; M = 80,000 ; growth = 80,000/50,000 − 1 = 0.6 ≥ 0.25 → E = 0.02 × 80,000 = 1,600.00
+name: growth with prior_period_computed baselines
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+coverage: {S1: 2025-01-01, S2: 2025-10-01}
+agreements:
+  - id: A1
+    supplier: S1
+    versions:
+      - components: [{id: g, type: growth_incremental, rate: "0.04", baseline_source: prior_period_computed, prior_period_offset: same_period_prior_year}]
+  - id: A2
+    supplier: S2
+    versions:
+      - components: [{id: g, type: growth_threshold, rate: "0.02", growth_pct: "0.25", baseline_source: prior_period_computed, prior_period_offset: immediately_preceding}]
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "100000.00", invoice_date: 2025-02-01}
+  - {id: L2, supplier: S1, qty: "1", amount: "77777.00", invoice_date: 2025-04-01}
+  - {id: L3, supplier: S1, qty: "1", amount: "130000.00", invoice_date: 2026-02-01}
+  - {id: L4, supplier: S2, qty: "1", amount: "50000.00", invoice_date: 2025-11-15}
+  - {id: L5, supplier: S2, qty: "1", amount: "80000.00", invoice_date: 2026-01-15}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "1200.00", statuses: [OK]}
+  - {agreement: A2, period: 2026-01-01..2026-03-31, expected: "1600.00", statuses: [OK]}

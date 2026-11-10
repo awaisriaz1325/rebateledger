@@ -1,0 +1,38 @@
+# HAND CALCULATION — fixture 19 resolved by applying one version to the whole period
+#   A1 apply_new: v2 3% over all of Q1: 0.03 × (10,000 + 20,000) = 900.00
+#   A2 apply_old: v1 2% over all of Q1: 0.02 × 30,000 = 600.00
+name: version change resolved by apply old / apply new
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+resolutions:
+  - {agreement: A1, start: 2026-01-01, end: 2026-03-31, choice: apply_new}
+  - {agreement: A2, start: 2026-01-01, end: 2026-03-31, choice: apply_old}
+agreements:
+  - id: A1
+    supplier: S1
+    versions: &v
+      - {version_no: 1, effective_to: 2026-02-15, components: [{id: base, type: flat_percent, rate: "0.02"}]}
+      - {version_no: 2, effective_from: 2026-02-16, components: [{id: base, type: flat_percent, rate: "0.03"}]}
+  - {id: A2, supplier: S2, versions: *v}
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "10000.00", invoice_date: 2026-01-10}
+  - {id: L2, supplier: S1, qty: "1", amount: "20000.00", invoice_date: 2026-03-10}
+  - {id: L3, supplier: S2, qty: "1", amount: "10000.00", invoice_date: 2026-01-10}
+  - {id: L4, supplier: S2, qty: "1", amount: "20000.00", invoice_date: 2026-03-10}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "900.00", statuses: [OK]}
+  - {agreement: A2, period: 2026-01-01..2026-03-31, expected: "600.00", statuses: [OK]}

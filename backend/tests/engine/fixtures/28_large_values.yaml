@@ -1,0 +1,31 @@
+# HAND CALCULATION — SPEC §9 case 13: ~$2 trillion spend, 6-decimal rate, no precision loss
+#   S = 999,999,999,999.9999 × 2 = 1,999,999,999,999.9998
+#   E = 0.123457 × 1,999,999,999,999.9998
+#     = 246,914,000,000 − 0.123457 × 0.0002
+#     = 246,914,000,000 − 0.0000246914 = 246,913,999,999.9999753086
+#   round half_up 2dp → 246,914,000,000.00
+name: very large values
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: [{components: [{id: base, type: flat_percent, rate: "0.123457"}]}]}
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "999999999999.9999", invoice_date: 2026-01-10}
+  - {id: L2, supplier: S1, qty: "1", amount: "999999999999.9999", invoice_date: 2026-01-11}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "246914000000.00",
+     unrounded: "246913999999.9999753086", statuses: [OK], S: "1999999999999.9998"}

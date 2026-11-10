@@ -1,0 +1,34 @@
+# HAND CALCULATION — spend_basis decides whether returns reduce M (S stays net)
+#   Lines: 100,000 + 60,000 − 30,000 (return). Tier ≥150,000 → 2% all-units.
+#   A1 gross: M = 160,000 ≥ 150,000 → 0.02 × S(net 130,000) = 2,600.00
+#   A2 net:   M = 130,000 < 150,000 → 0.00 NOT_EARNED
+name: gross vs net spend basis
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: [{spend_basis: gross, components: [{id: t, type: tiered_all_units, tiers: [{threshold: "150000", rate: "0.02"}]}]}]}
+  - {id: A2, supplier: S2, versions: [{components: [{id: t, type: tiered_all_units, tiers: [{threshold: "150000", rate: "0.02"}]}]}]}
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "100000.00", invoice_date: 2026-01-10}
+  - {id: L2, supplier: S1, qty: "1", amount: "60000.00", invoice_date: 2026-01-10}
+  - {id: L3, supplier: S1, qty: "-1", amount: "-30000.00", invoice_date: 2026-01-10}
+  - {id: L4, supplier: S2, qty: "1", amount: "100000.00", invoice_date: 2026-01-10}
+  - {id: L5, supplier: S2, qty: "1", amount: "60000.00", invoice_date: 2026-01-10}
+  - {id: L6, supplier: S2, qty: "-1", amount: "-30000.00", invoice_date: 2026-01-10}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "2600.00", statuses: [OK], M: "160000.00", S: "130000.00"}
+  - {agreement: A2, period: 2026-01-01..2026-03-31, expected: "0.00", statuses: [NOT_EARNED], M: "130000.00"}

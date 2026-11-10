@@ -1,0 +1,28 @@
+# HAND CALCULATION — partial period WITH threshold proration
+#   Window Feb 1..Mar 31 = 28 + 31 = 59 days ; full Q1 2026 = 31 + 28 + 31 = 90 days
+#   Prorated threshold = 40,000 × 59 / 90 = 26,222.22…
+#   M = 35,000 ≥ 26,222.22 → 0.02 × 35,000 = 700.00
+name: partial period with prorated thresholds
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: [{effective_from: 2026-02-01, prorate_thresholds_on_partial_period: true, components: [{id: t, type: tiered_all_units, tiers: [{threshold: "40000", rate: "0.02"}]}]}]}
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "20000.00", invoice_date: 2026-02-10}
+  - {id: L2, supplier: S1, qty: "1", amount: "15000.00", invoice_date: 2026-03-10}
+expected:
+  - {agreement: A1, period: 2026-02-01..2026-03-31, expected: "700.00", statuses: [OK, PARTIAL_PERIOD], tier_reached: 1}

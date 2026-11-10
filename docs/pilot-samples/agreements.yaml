@@ -1,0 +1,91 @@
+# Sample agreements for the pilot CLI (fake suppliers). Format: docs/pilot-cli.md
+# Decimals are quoted on purpose: an unquoted 0.02 is a binary float and is rejected.
+agreements:
+  # Example 1 — tiered volume rebate, all-units, excluding special-pricing (SPA) lines.
+  - id: ACME-VOL
+    supplier: ACME-ELEC
+    name: ACME Electrical 2026 volume rebate
+    external_reference: ACME-VOL-2026
+    versions:
+      - version_no: 1
+        effective_from: 2026-01-01
+        effective_to: 2026-12-31
+        period: {type: quarterly, fiscal_year_start_month: 1}
+        date_basis: invoice_date
+        measure: spend
+        spend_basis: net_of_returns
+        threshold_comparison: gte
+        negative_result: floor_at_zero
+        rounding_mode: half_up
+        payment_terms_days: 45
+        stacking: exclusive
+        prorate_thresholds_on_partial_period: false
+        zero_baseline_policy: needs_review
+        eligibility:
+          - {id: no-spa, action: exclude, field: flag, flag: special_pricing}
+        components:
+          - id: volume
+            type: tiered_all_units
+            tiers:
+              - {threshold: "250000", rate: "0.02"}
+              - {threshold: "500000", rate: "0.03"}
+
+  # Example 2 — growth rebate on imported baselines plus a flat base rebate.
+  - id: COOLAIR-GROWTH
+    supplier: COOLAIR
+    name: CoolAir HVAC growth program
+    external_reference: COOLAIR-GRO-26
+    versions:
+      - version_no: 1
+        effective_from: 2026-01-01
+        effective_to: null
+        period: {type: quarterly, fiscal_year_start_month: 1}
+        date_basis: ship_date
+        measure: spend
+        spend_basis: net_of_returns
+        threshold_comparison: gte
+        negative_result: floor_at_zero
+        rounding_mode: half_up
+        payment_terms_days: 90
+        stacking: stackable
+        prorate_thresholds_on_partial_period: false
+        zero_baseline_policy: needs_review
+        cap_amount: "40000"
+        components:
+          - {id: base, type: flat_percent, rate: "0.01"}
+          - {id: growth, type: growth_incremental, rate: "0.04", baseline_source: imported}
+
+  # Example 3 — per-unit rebate on PEX pipe with a volume bonus; terms change on May 1.
+  - id: PIPE-PEX
+    supplier: PIPEWORKS
+    name: PipeWorks PEX unit rebate
+    external_reference: PW-PEX
+    versions:
+      - &pex
+        version_no: 1
+        effective_from: 2026-01-01
+        effective_to: 2026-04-30
+        period: {type: quarterly, fiscal_year_start_month: 1}
+        date_basis: invoice_date
+        measure: quantity
+        spend_basis: net_of_returns
+        threshold_comparison: gte
+        negative_result: floor_at_zero
+        rounding_mode: half_even
+        payment_terms_days: 30
+        stacking: stackable
+        prorate_thresholds_on_partial_period: true
+        zero_baseline_policy: needs_review
+        minimum_payout: "100"
+        eligibility:
+          - {id: pex-only, action: include, field: category, values: [PEX]}
+        components:
+          - {id: per-unit, type: per_unit, amount_per_unit: "0.15"}
+          - {id: bonus, type: fixed_bonus, amount: "1000", threshold: "10000"}
+      - <<: *pex
+        version_no: 2
+        effective_from: 2026-05-01
+        effective_to: null
+        components:
+          - {id: per-unit, type: per_unit, amount_per_unit: "0.18"}
+          - {id: bonus, type: fixed_bonus, amount: "1500", threshold: "10000"}

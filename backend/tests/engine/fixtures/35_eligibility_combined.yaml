@@ -1,0 +1,44 @@
+# HAND CALCULATION — include sku [A,B]; exclude flag special_pricing; min line amount 100 (absolute)
+#   L1 A  500  sp=false → eligible
+#   L2 B 1000  sp=true  → EXCLUDED_BY_RULE (exclude wins over include)
+#   L3 C  700  sp=false → NOT_INCLUDED
+#   L4 A   50  sp=false → BELOW_MIN_LINE_AMOUNT
+#   L5 A −200  sp=false → |−200| ≥ 100 → eligible (a return)
+#   L6 A  300  no flag  → ATTRIBUTE_MISSING
+#   S = 500 − 200 = 300 → 0.02 × 300 = 6.00
+name: combined include, exclude and minimum line amount rules
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - id: A1
+    supplier: S1
+    versions:
+      - eligibility:
+          - {id: r1, action: include, field: sku, values: [A, B]}
+          - {id: r2, action: exclude, field: flag, flag: special_pricing}
+          - {id: r3, action: include, field: min_line_amount, min_amount: "100"}
+        components: [{id: base, type: flat_percent, rate: "0.02"}]
+purchases:
+  - {id: L1, supplier: S1, sku: A, qty: "1", amount: "500.00", invoice_date: 2026-01-10, flags: {special_pricing: false}}
+  - {id: L2, supplier: S1, sku: B, qty: "1", amount: "1000.00", invoice_date: 2026-01-10, flags: {special_pricing: true}}
+  - {id: L3, supplier: S1, sku: C, qty: "1", amount: "700.00", invoice_date: 2026-01-10, flags: {special_pricing: false}}
+  - {id: L4, supplier: S1, sku: A, qty: "1", amount: "50.00", invoice_date: 2026-01-10, flags: {special_pricing: false}}
+  - {id: L5, supplier: S1, sku: A, qty: "-1", amount: "-200.00", invoice_date: 2026-01-10, flags: {special_pricing: false}}
+  - {id: L6, supplier: S1, sku: A, qty: "1", amount: "300.00", invoice_date: 2026-01-10}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "6.00", statuses: [OK], eligible: 2, S: "300.00",
+     excluded: {EXCLUDED_BY_RULE: 1, NOT_INCLUDED: 1, BELOW_MIN_LINE_AMOUNT: 1, ATTRIBUTE_MISSING: 1}}

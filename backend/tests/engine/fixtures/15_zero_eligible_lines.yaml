@@ -1,0 +1,26 @@
+# HAND CALCULATION — SPEC §9 case 2: no eligible lines
+#   Only line belongs to a different supplier (S9) → ignored. S = Q = M = 0
+#   E = 0.02 × 0 = 0 → 0.00, NOT_EARNED
+name: zero eligible lines
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: [{components: [{id: base, type: flat_percent, rate: "0.02"}]}]}
+purchases:
+  - {id: L1, supplier: S9, qty: "1", amount: "1000.00", invoice_date: 2026-02-15}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "0.00", statuses: [NOT_EARNED], S: "0", eligible: 0}

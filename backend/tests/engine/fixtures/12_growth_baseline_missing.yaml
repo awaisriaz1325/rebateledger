@@ -1,0 +1,36 @@
+# HAND CALCULATION — SPEC §9 case 7: missing baseline is never treated as zero
+#   A1: imported source, no baseline row for Q1 2026 → NEEDS_REVIEW BASELINE_MISSING, no amount
+#   A2: computed from Q1 2025 but purchase data only covers from 2025-06-01 → BASELINE_MISSING
+name: growth with missing baseline
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+coverage: {S2: 2025-06-01}
+agreements:
+  - id: A1
+    supplier: S1
+    versions:
+      - components: [{id: g, type: growth_incremental, rate: "0.05", baseline_source: imported}]
+  - id: A2
+    supplier: S2
+    versions:
+      - components: [{id: g, type: growth_incremental, rate: "0.05", baseline_source: prior_period_computed, prior_period_offset: same_period_prior_year}]
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "1000.00", invoice_date: 2026-01-15}
+  - {id: L2, supplier: S2, qty: "1", amount: "1000.00", invoice_date: 2026-01-15}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: null, statuses: [NEEDS_REVIEW], reasons: [BASELINE_MISSING]}
+  - {agreement: A2, period: 2026-01-01..2026-03-31, expected: null, statuses: [NEEDS_REVIEW], reasons: [BASELINE_MISSING]}

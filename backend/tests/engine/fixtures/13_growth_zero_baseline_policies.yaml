@@ -1,0 +1,42 @@
+# HAND CALCULATION — SPEC §9 case 8: B = 0 → zero_baseline_policy decides
+#   A1 needs_review       → NEEDS_REVIEW BASELINE_ZERO, no amount
+#   A2 qualifies (growth_threshold 2%): S = 50,000 → 0.02 × 50,000 = 1,000.00
+#   A3 qualifies (growth_incremental 3%): 0.03 × (50,000 − 0) = 1,500.00
+#   A4 does_not_qualify   → 0.00 NOT_EARNED
+name: zero baseline policies
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: [{components: [{id: g, type: growth_threshold, rate: "0.02", growth_pct: "0.05", baseline_source: imported}]}]}
+  - {id: A2, supplier: S2, versions: [{zero_baseline_policy: qualifies, components: [{id: g, type: growth_threshold, rate: "0.02", growth_pct: "0.05", baseline_source: imported}]}]}
+  - {id: A3, supplier: S3, versions: [{zero_baseline_policy: qualifies, components: [{id: g, type: growth_incremental, rate: "0.03", baseline_source: imported}]}]}
+  - {id: A4, supplier: S4, versions: [{zero_baseline_policy: does_not_qualify, components: [{id: g, type: growth_threshold, rate: "0.02", growth_pct: "0.05", baseline_source: imported}]}]}
+baselines:
+  - {agreement: A1, start: 2026-01-01, end: 2026-03-31, value: "0"}
+  - {agreement: A2, start: 2026-01-01, end: 2026-03-31, value: "0"}
+  - {agreement: A3, start: 2026-01-01, end: 2026-03-31, value: "0.00"}
+  - {agreement: A4, start: 2026-01-01, end: 2026-03-31, value: "0"}
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "50000.00", invoice_date: 2026-01-15}
+  - {id: L2, supplier: S2, qty: "1", amount: "50000.00", invoice_date: 2026-01-15}
+  - {id: L3, supplier: S3, qty: "1", amount: "50000.00", invoice_date: 2026-01-15}
+  - {id: L4, supplier: S4, qty: "1", amount: "50000.00", invoice_date: 2026-01-15}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: null, statuses: [NEEDS_REVIEW], reasons: [BASELINE_ZERO]}
+  - {agreement: A2, period: 2026-01-01..2026-03-31, expected: "1000.00", statuses: [OK]}
+  - {agreement: A3, period: 2026-01-01..2026-03-31, expected: "1500.00", statuses: [OK]}
+  - {agreement: A4, period: 2026-01-01..2026-03-31, expected: "0.00", statuses: [NOT_EARNED]}

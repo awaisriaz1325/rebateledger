@@ -1,0 +1,33 @@
+# HAND CALCULATION — flat_percent 2% on net eligible spend, Q1 2026
+#   S = 1000.00 + 2500.50 + (-200.25 return) = 3300.25
+#   Q = 10 + 25 + (-2) = 33
+#   E = 0.02 × 3300.25 = 66.0050  → round half_up 2dp → 66.01
+name: flat_percent basic with a return
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - id: A1
+    supplier: S1
+    versions: [{components: [{id: base, type: flat_percent, rate: "0.02"}]}]
+purchases:
+  - {id: L1, supplier: S1, qty: "10", amount: "1000.00", invoice_date: 2026-01-15}
+  - {id: L2, supplier: S1, qty: "25", amount: "2500.50", invoice_date: 2026-02-20}
+  - {id: L3, supplier: S1, qty: "-2", amount: "-200.25", invoice_date: 2026-03-31}
+  - {id: L4, supplier: S1, qty: "5", amount: "999.00", invoice_date: 2026-04-01}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "66.01", unrounded: "66.0050",
+     statuses: [OK], S: "3300.25", Q: "33", M: "3300.25", eligible: 3}

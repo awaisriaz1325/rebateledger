@@ -1,0 +1,38 @@
+# HAND CALCULATION — review cases the spec does not decide
+#   A1: allow_clawback, minimum 100. S = −1,000 → 2% = −20.00 (a clawback). Whether a minimum
+#       payout applies to a clawback is undefined → NEEDS_REVIEW CLAWBACK_WITH_MINIMUM.
+#   A2: imported baseline −5,000 (negative) → NEEDS_REVIEW BASELINE_NEGATIVE.
+#   A3: two different imported baselines for the same period → NEEDS_REVIEW BASELINE_AMBIGUOUS.
+name: clawback with minimum, negative and ambiguous baselines
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  stacking: stackable
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - {id: A1, supplier: S1, versions: [{negative_result: allow_clawback, minimum_payout: "100", components: [{id: base, type: flat_percent, rate: "0.02"}]}]}
+  - {id: A2, supplier: S2, versions: [{components: [{id: g, type: growth_incremental, rate: "0.05", baseline_source: imported}]}]}
+  - {id: A3, supplier: S3, versions: [{components: [{id: g, type: growth_incremental, rate: "0.05", baseline_source: imported}]}]}
+baselines:
+  - {agreement: A2, start: 2026-01-01, end: 2026-03-31, value: "-5000"}
+  - {agreement: A3, start: 2026-01-01, end: 2026-03-31, value: "1000"}
+  - {agreement: A3, start: 2026-01-01, end: 2026-03-31, value: "2000"}
+purchases:
+  - {id: L1, supplier: S1, qty: "-1", amount: "-1000.00", invoice_date: 2026-01-10}
+  - {id: L2, supplier: S2, qty: "1", amount: "1000.00", invoice_date: 2026-01-10}
+  - {id: L3, supplier: S3, qty: "1", amount: "1000.00", invoice_date: 2026-01-10}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: null, statuses: [NEEDS_REVIEW], reasons: [CLAWBACK_WITH_MINIMUM]}
+  - {agreement: A2, period: 2026-01-01..2026-03-31, expected: null, statuses: [NEEDS_REVIEW], reasons: [BASELINE_NEGATIVE]}
+  - {agreement: A3, period: 2026-01-01..2026-03-31, expected: null, statuses: [NEEDS_REVIEW], reasons: [BASELINE_AMBIGUOUS]}
