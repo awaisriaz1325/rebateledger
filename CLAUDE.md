@@ -109,12 +109,20 @@ trust instantly, so correctness, explainability and security outrank speed.
 
 ## 8. Commands
 
-<!-- Fill this section in Phase 0 with the real, verified commands. -->
-- Setup: _to be defined in Phase 0_
-- Run all checks (lint + types + tests): _to be defined in Phase 0_
-- Start local stack: _to be defined in Phase 0_
-- Run backend tests / frontend tests / e2e: _to be defined in Phase 0_
-- Create migration / apply migrations: _to be defined in Phase 0_
+Run from the repo root (`make help` lists everything). Local values come from
+`.env.example` / `backend/.env.example` (dummy); never put real secrets there.
+
+- Setup: `make setup` (uv sync + pnpm install; creates `.env` from the example)
+- Start local stack: `make up` (Postgres 18, Redis 8, Mailpit — waits for health) · stop: `make down`
+- Run all checks (lint + types + tests + coverage gates + OpenAPI drift): `make check`
+- Backend tests: `make test-backend` · frontend tests: `make test-frontend` · e2e: `make e2e`
+- Engine coverage gate (≥ 95% line+branch): `make coverage-engine`
+- Apply migrations: `make migrate` · create migration: `make migration name="..."`
+- Run app: `make api` (FastAPI :8000), `make worker`, `make scheduler`, `make web` (Next.js :3000)
+- Regenerate API client after backend changes: `make openapi`
+- Security: `make audit` (deps), `make sast` (bandit), `make secrets` (gitleaks)
+- Pilot CLI on sample data: `make pilot-sample` (docs: `docs/pilot-cli.md`)
+- Demo data: `make seed`; operator account: `cd backend && uv run rebateledger create-platform-admin --email … --name …`
 
 ## 9. Progress log
 
