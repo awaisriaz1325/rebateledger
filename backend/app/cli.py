@@ -15,12 +15,6 @@ from datetime import date
 from pathlib import Path
 
 Handler = Callable[[argparse.Namespace], int]
-_EXTRA: list[Callable[[argparse._SubParsersAction[argparse.ArgumentParser]], None]] = []
-
-
-def register(fn: Callable[[argparse._SubParsersAction[argparse.ArgumentParser]], None]) -> None:
-    """Later modules add subcommands without this file importing web or DB code."""
-    _EXTRA.append(fn)
 
 
 def _date(text: str) -> date:
@@ -101,9 +95,54 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--out", type=Path, required=True, help="output directory")
     p.set_defaults(handler=_pilot)
 
-    for fn in _EXTRA:
-        fn(sub)
+    a = sub.add_parser(
+        "create-platform-admin",
+        help="create an operator account (MFA set-up is forced at first sign-in)",
+    )
+    a.add_argument("--email", required=True)
+    a.add_argument("--name", required=True)
+    a.add_argument(
+        "--password-stdin",
+        action="store_true",
+        help="read the password from stdin instead of prompting",
+    )
+    a.set_defaults(handler=_create_platform_admin)
+
+    s = sub.add_parser(
+        "seed-demo", help="create the demo tenant with realistic fake data (local/staging only)"
+    )
+    s.add_argument("--purchase-lines", type=int, default=100_000)
+    s.add_argument("--owner-email", default="demo.owner@example.com")
+    s.set_defaults(handler=_seed_demo)
     return parser
+
+
+def _create_platform_admin(args: argparse.Namespace) -> int:
+    import getpass
+
+    from app.services.platform_admin import PlatformAdminError, create_platform_admin
+
+    if args.password_stdin:
+        password = sys.stdin.readline().rstrip("\n")
+    else:
+        password = getpass.getpass("Password: ")
+        if getpass.getpass("Repeat password: ") != password:
+            print("error: passwords do not match", file=sys.stderr)
+            return 2
+    try:
+        create_platform_admin(args.email, args.name, password)
+    except PlatformAdminError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print("Platform admin created. Sign in to set up two-factor authentication (required).")
+    return 0
+
+
+def _seed_demo(args: argparse.Namespace) -> int:
+    from app.services.seed import seed_demo
+
+    print(seed_demo(purchase_lines=args.purchase_lines, owner_email=args.owner_email))
+    return 0
 
 
 def main(argv: Sequence[str] | None = None) -> int:
