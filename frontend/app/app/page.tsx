@@ -53,7 +53,7 @@ function Kpis({ d }: { d: Dashboard }) {
         <Card title="Open claims by age (days)">
           <div className="h-48" aria-hidden="true">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={aging} margin={{ left: 0, right: 8, top: 8 }}>
+              <BarChart data={aging} margin={{ left: 0, right: 8, top: 8 }} accessibilityLayer={false}>
                 <CartesianGrid strokeDasharray="2 4" stroke="var(--rule)" vertical={false} />
                 <XAxis dataKey="bucket" tick={{ fill: "var(--muted)", fontSize: 12 }} axisLine={false} tickLine={false} />
                 <YAxis allowDecimals={false} tick={{ fill: "var(--muted)", fontSize: 12 }} axisLine={false} tickLine={false} width={28} />

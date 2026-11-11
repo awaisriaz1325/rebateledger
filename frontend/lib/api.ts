@@ -93,3 +93,23 @@ export function errorMessage(error: unknown): string {
 export function idempotencyKey(): string {
   return crypto.randomUUID();
 }
+
+/**
+ * Multipart upload to a same-origin API path (openapi-fetch's typing of form bodies is
+ * awkward). The response type comes from the generated schema at the call site.
+ */
+export async function uploadForm<T>(path: `/api/v1/${string}`, form: FormData, headers: Record<string, string> = {}): Promise<T> {
+  const response = await fetch(path, {
+    method: "POST",
+    body: form,
+    credentials: "same-origin",
+    headers: { ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}), ...headers },
+  });
+  let body: unknown = null;
+  try {
+    body = await response.json();
+  } catch {
+    body = null;
+  }
+  return unwrap<T>({ data: response.ok ? (body as T) : undefined, error: response.ok ? undefined : body, response });
+}

@@ -28,7 +28,7 @@ export function ExplainDrawer({ resultId, open, onOpenChange }: { resultId: stri
         {(r) => (
           <>
             <p className="mb-4 text-sm text-muted">
-              Run {r.run_number} · version {r.version_no} · <Link className="text-brand hover:underline" href={`/app/agreements/${r.agreement_id}`}>open agreement</Link>
+              Run {r.run_number} · version {r.version_no} · <Link className="text-brand underline" href={`/app/agreements/${r.agreement_id}`}>open agreement</Link>
             </p>
             {r.stale_at ? <div className="mb-4"><Notice tone="warning" title="Stale">{r.stale_reason}. Re-run to update this result.</Notice></div> : null}
             <ResolveVersionChange r={r} />

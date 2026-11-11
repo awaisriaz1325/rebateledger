@@ -136,7 +136,7 @@ export function Drawer({ open, onOpenChange, title, description, children }: { o
   );
 }
 
-export function Menu({ trigger, items, label }: { trigger: ReactNode; label: string; items: { label: string; onSelect: () => void; danger?: boolean; disabled?: boolean }[] }) {
+export function Menu({ trigger, items, label }: { trigger: ReactNode; /** Only when the trigger has no visible text of its own. */ label?: string; items: { label: string; onSelect: () => void; danger?: boolean; disabled?: boolean }[] }) {
   return (
     <M.Root>
       <M.Trigger asChild aria-label={label}>

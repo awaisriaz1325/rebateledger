@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { headers } from "next/headers";
 import { Providers } from "@/components/providers";
 import { PRODUCT_NAME, SITE_URL } from "@/lib/site";
+import "sonner/dist/styles.css"; // toast styles as a normal stylesheet (CSP blocks sonner's runtime <style> injection)
 import "./globals.css";
 
 const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-plex-sans", display: "swap" });

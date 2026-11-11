@@ -7,20 +7,8 @@ import { DataTable } from "@/components/data-table";
 import { StatusBadge } from "@/components/ui/finance";
 import { PageHeader } from "@/components/ui/core";
 import { EmptyState, QueryState } from "@/components/ui/states";
-import { api, unwrap } from "@/lib/api";
 import { can, useSession } from "@/lib/session";
-import type { Supplier } from "@/lib/types";
-
-export async function fetchAllSuppliers(): Promise<Supplier[]> {
-  const out: Supplier[] = [];
-  let cursor: string | undefined;
-  do {
-    const page = unwrap(await api.GET("/api/v1/suppliers", { params: { query: { cursor, limit: 200 } } }));
-    out.push(...page.items);
-    cursor = page.next_cursor ?? undefined;
-  } while (cursor);
-  return out;
-}
+import { fetchAllSuppliers } from "@/lib/queries";
 
 export default function SuppliersPage() {
   const session = useSession();

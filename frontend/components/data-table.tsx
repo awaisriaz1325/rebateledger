@@ -43,6 +43,7 @@ const features = tableFeatures({
 
 export interface Column<T extends RowData> {
   id: string;
+  /** Empty string marks an unsortable action column (announced as "Actions"). */
   header: string;
   /** Plain value used for sorting, filtering and CSV export. Money stays a decimal string. */
   value: (row: T) => string | number | null | undefined;
@@ -206,6 +207,14 @@ export function DataTable<T extends RowData>({
                 {group.headers.map((header) => {
                   const col = byId.get(header.column.id);
                   const sorted = header.column.getIsSorted();
+                  if (!col?.header) {
+                    // Action column (e.g. "Explain"): nothing to sort by, but headers still need a name.
+                    return (
+                      <th key={header.id} scope="col" className="border-b border-rule px-3 py-2" style={col?.width ? { width: col.width } : undefined}>
+                        <span className="sr-only">Actions</span>
+                      </th>
+                    );
+                  }
                   return (
                     <th
                       key={header.id}

@@ -1,6 +1,7 @@
 "use client";
 
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { setNonce } from "get-nonce";
 import { ThemeProvider } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -8,6 +9,8 @@ import { Toaster } from "sonner";
 import { ApiError } from "@/lib/api";
 
 export function Providers({ children, nonce }: { children: ReactNode; nonce?: string }) {
+  // Radix dialogs lock scrolling with an injected <style>; give it the per-request CSP nonce (idempotent).
+  if (nonce) setNonce(nonce);
   const router = useRouter();
   const onAuthError = (error: unknown): void => {
     if (error instanceof ApiError && error.status === 401 && typeof window !== "undefined") {

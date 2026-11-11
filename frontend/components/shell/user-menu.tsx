@@ -15,10 +15,10 @@ export function UserMenu({ session, onHelp }: { session: SessionInfo; onHelp: ()
   const initials = name.split(/[\s@.]+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");
   return (
     <Menu
-      label="Account menu"
       trigger={
         <button type="button" className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand">
-          {initials}
+          <span aria-hidden="true">{initials}</span>
+          <span className="sr-only">Account menu for {name}</span>
         </button>
       }
       items={[
