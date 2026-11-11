@@ -88,7 +88,7 @@ pilot-sample: ## Run the pilot CLI on docs/pilot-samples into var/pilot-sample
 	  --from 2026-01-01 --to 2026-06-30 --as-of 2026-09-15 --out ../var/pilot-sample
 
 audit: ## Dependency vulnerability audit (Python + JS)
-	cd backend && uv export --frozen --no-hashes --no-emit-project > ../var/requirements-audit.txt && uv run pip-audit -r ../var/requirements-audit.txt --strict
+	mkdir -p var && cd backend && uv export --frozen --no-hashes --no-emit-project > ../var/requirements-audit.txt && uv run pip-audit -r ../var/requirements-audit.txt --strict
 	cd frontend && pnpm audit --audit-level high
 
 secrets: ## Secret scan of the working tree and history (gitleaks in Docker)
