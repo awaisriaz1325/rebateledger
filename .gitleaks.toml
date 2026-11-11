@@ -1,0 +1,11 @@
+# Secret scanning config: default rules plus a narrow allowlist for files that hold
+# deliberately fake, non-production keys (examples and the test harness).
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Dummy keys in example env files and the test harness"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''^backend/tests/conftest\.py$''',
+]
