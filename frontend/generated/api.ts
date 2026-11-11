@@ -21,6 +21,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agreement-terms/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Terms
+         * @description Validate draft terms and return the plain-English summary without saving (live rule builder).
+         */
+        post: operations["check_terms_api_v1_agreement_terms_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/agreement-versions/{version_id}": {
         parameters: {
             query?: never;
@@ -1844,6 +1864,13 @@ export interface components {
             /** Timezone */
             timezone: string;
         };
+        /** AgingBucket */
+        AgingBucket: {
+            /** Amount */
+            amount: string;
+            /** Count */
+            count: number;
+        };
         /** AgreementCreateIn */
         AgreementCreateIn: {
             /** External Reference */
@@ -2172,6 +2199,25 @@ export interface components {
             file: string;
             import_type: components["schemas"]["ImportType"];
         };
+        /** ClaimAttachmentOut */
+        ClaimAttachmentOut: {
+            /** Content Type */
+            content_type: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Size Bytes */
+            size_bytes: number;
+        };
         /** ClaimDetail */
         ClaimDetail: {
             /** Allowed Transitions */
@@ -2179,7 +2225,7 @@ export interface components {
             /** Assignee Id */
             assignee_id: string | null;
             /** Attachments */
-            attachments: components["schemas"]["AttachmentOut"][];
+            attachments: components["schemas"]["ClaimAttachmentOut"][];
             /** Channel */
             channel: string;
             /**
@@ -2459,6 +2505,21 @@ export interface components {
             /** Value */
             value: string | null;
         };
+        /** ComponentValueOut */
+        ComponentValueOut: {
+            /** Baseline */
+            baseline?: string | null;
+            /** Component Id */
+            component_id: string;
+            /** Formula */
+            formula: string;
+            /** Tier Reached */
+            tier_reached: number | null;
+            /** Type */
+            type: string;
+            /** Value */
+            value: string | null;
+        };
         /** ConfigIn */
         ConfigIn: {
             /** Columns */
@@ -2643,6 +2704,21 @@ export interface components {
              */
             start: string;
         };
+        /** DashboardOut */
+        DashboardOut: {
+            /** As Of */
+            as_of: string;
+            data_freshness: components["schemas"]["Freshness"];
+            /** Has Results */
+            has_results: boolean;
+            identified_open_variance: components["schemas"]["LinkedAmount"];
+            needs_review: components["schemas"]["LinkedCount"];
+            open_claims: components["schemas"]["OpenClaims"];
+            recovered_this_year: components["schemas"]["LinkedAmount"];
+            tier_opportunities: components["schemas"]["LinkedCount"];
+            /** Top Suppliers By Open Variance */
+            top_suppliers_by_open_variance: components["schemas"]["SupplierAmount"][];
+        };
         /**
          * DateBasis
          * @enum {string}
@@ -2667,6 +2743,13 @@ export interface components {
             new_email: string;
             /** Password */
             password: string;
+        };
+        /** ErrorPageOut */
+        ErrorPageOut: {
+            /** Items */
+            items: components["schemas"]["RowIssueOut"][];
+            /** Total */
+            total: number;
         };
         /** EventOut */
         EventOut: {
@@ -2695,15 +2778,67 @@ export interface components {
             /** Type */
             type: string;
         };
+        /** FieldSpecOut */
+        FieldSpecOut: {
+            /** Kind */
+            kind: string;
+            /** Label */
+            label: string;
+            /** Name */
+            name: string;
+            /** Required */
+            required: boolean;
+        };
         /** ForgotIn */
         ForgotIn: {
             /** Email */
             email: string;
         };
+        /** Freshness */
+        Freshness: {
+            /** Link */
+            link: string;
+            /** Suppliers */
+            suppliers: components["schemas"]["FreshnessRow"][];
+            /** Threshold Days */
+            threshold_days: number;
+        };
+        /** FreshnessRow */
+        FreshnessRow: {
+            /** Days Old */
+            days_old: number | null;
+            /** Latest Purchase Date */
+            latest_purchase_date: string | null;
+            /** Stale */
+            stale: boolean;
+            /** Supplier Id */
+            supplier_id: string;
+            /** Supplier Name */
+            supplier_name: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** ImportPreviewOut */
+        ImportPreviewOut: {
+            /** Date Format Candidates */
+            date_format_candidates: {
+                [key: string]: string[];
+            };
+            /** Fields */
+            fields: components["schemas"]["FieldSpecOut"][];
+            /** Header */
+            header: string[];
+            /** Sample Rows */
+            sample_rows: string[][];
+            /** Suggested Columns */
+            suggested_columns: {
+                [key: string]: string;
+            };
+            /** Supports Flags */
+            supports_flags: boolean;
         };
         /**
          * ImportType
@@ -2794,6 +2929,20 @@ export interface components {
             total: number | null;
             /** Type */
             type: string;
+        };
+        /** LinkedAmount */
+        LinkedAmount: {
+            /** Amount */
+            amount: string;
+            /** Link */
+            link: string;
+        };
+        /** LinkedCount */
+        LinkedCount: {
+            /** Count */
+            count: number;
+            /** Link */
+            link: string;
         };
         /** LoginIn */
         LoginIn: {
@@ -2963,6 +3112,19 @@ export interface components {
             /** Dismissed */
             dismissed: boolean;
         };
+        /** OpenClaims */
+        OpenClaims: {
+            /** Aging */
+            aging: {
+                [key: string]: components["schemas"]["AgingBucket"];
+            };
+            /** Amount */
+            amount: string;
+            /** Count */
+            count: number;
+            /** Link */
+            link: string;
+        };
         /** OrgOut */
         OrgOut: {
             /**
@@ -3067,10 +3229,10 @@ export interface components {
             /** Next Cursor */
             next_cursor?: string | null;
         };
-        /** Page[ResultOut] */
-        Page_ResultOut_: {
+        /** Page[PeriodResultOut] */
+        Page_PeriodResultOut_: {
             /** Items */
-            items: components["schemas"]["app__api__routes__runs__ResultOut"][];
+            items: components["schemas"]["PeriodResultOut"][];
             /** Next Cursor */
             next_cursor?: string | null;
         };
@@ -3094,6 +3256,104 @@ export interface components {
             current_password: string;
             /** New Password */
             new_password: string;
+        };
+        /** PeriodResultOut */
+        PeriodResultOut: {
+            /**
+             * Agreement Id
+             * Format: uuid
+             */
+            agreement_id: string;
+            /**
+             * Agreement Version Id
+             * Format: uuid
+             */
+            agreement_version_id: string;
+            /** Components */
+            components: components["schemas"]["ComponentValueOut"][];
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /** Eligible Count */
+            eligible_count: number;
+            /** Engine Version */
+            engine_version: string;
+            /** Excluded Counts */
+            excluded_counts: {
+                [key: string]: unknown;
+            };
+            /** Expected */
+            expected: string | null;
+            /** Expected Unrounded */
+            expected_unrounded: string | null;
+            /**
+             * Full Period End
+             * Format: date
+             */
+            full_period_end: string;
+            /**
+             * Full Period Start
+             * Format: date
+             */
+            full_period_start: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Input Hash */
+            input_hash: string;
+            /**
+             * Measure
+             * @example 1234.50
+             */
+            measure: string;
+            /**
+             * Period End
+             * Format: date
+             */
+            period_end: string;
+            /** Period Label */
+            period_label: string;
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            /**
+             * Quantity
+             * @example 1234.50
+             */
+            quantity: string;
+            /** Reasons */
+            reasons: components["schemas"]["ReasonOut"][];
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /**
+             * Spend
+             * @example 1234.50
+             */
+            spend: string;
+            /** Stale At */
+            stale_at: string | null;
+            /** Stale Reason */
+            stale_reason: string | null;
+            /** Statuses */
+            statuses: string[];
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /** Tier Reached */
+            tier_reached: number | null;
+            /** Version No */
+            version_no: number;
         };
         /**
          * PeriodType
@@ -3145,6 +3405,79 @@ export interface components {
              */
             period_containing: string;
         };
+        /** PreviewResultOut */
+        PreviewResultOut: {
+            /** Components */
+            components: components["schemas"]["ComponentValue"][];
+            /** Eligible Count */
+            eligible_count: number;
+            /** Engine Version */
+            engine_version: string;
+            /** Excluded Counts */
+            excluded_counts: {
+                [key: string]: number;
+            };
+            /** Expected */
+            expected: string | null;
+            /** Expected Unrounded */
+            expected_unrounded: string | null;
+            /**
+             * Full Period End
+             * Format: date
+             */
+            full_period_end: string;
+            /**
+             * Full Period Start
+             * Format: date
+             */
+            full_period_start: string;
+            /** Input Hash */
+            input_hash: string;
+            /**
+             * Measure
+             * @example 1234.50
+             */
+            measure: string;
+            /**
+             * Period End
+             * Format: date
+             */
+            period_end: string;
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            /**
+             * Quantity
+             * @example 1234.50
+             */
+            quantity: string;
+            /** Reasons */
+            reasons: components["schemas"]["ReasonOut"][];
+            /**
+             * Spend
+             * @example 1234.50
+             */
+            spend: string;
+            /** Statuses */
+            statuses: string[];
+            /** Tier Reached */
+            tier_reached: number | null;
+            /** Trace */
+            trace: components["schemas"]["TraceStepOut"][];
+        };
+        /** PreviewRowOut */
+        PreviewRowOut: {
+            /** Cells */
+            cells: string[];
+            /** Issues */
+            issues: components["schemas"]["RowIssueOut"][];
+            /** Ok */
+            ok: boolean;
+            /** Row */
+            row: number;
+        };
         /**
          * PriorPeriodOffset
          * @description Which earlier period a computed baseline is measured over.
@@ -3189,6 +3522,13 @@ export interface components {
             name?: string | null;
             /** Timezone */
             timezone?: string | null;
+        };
+        /** ReasonOut */
+        ReasonOut: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
         };
         /** ReconRow */
         ReconRow: {
@@ -3371,6 +3711,29 @@ export interface components {
                 [key: string]: components["schemas"]["ResolveAction"];
             };
         };
+        /** ResultChange */
+        ResultChange: {
+            /** After */
+            after: string | null;
+            /** After Statuses */
+            after_statuses: string[];
+            /** After Version */
+            after_version: number | null;
+            /** Agreement Id */
+            agreement_id: string;
+            /** Before */
+            before: string | null;
+            /** Before Statuses */
+            before_statuses: string[];
+            /** Before Version */
+            before_version: number | null;
+            /** Inputs Changed */
+            inputs_changed: boolean;
+            /** Period End */
+            period_end: string;
+            /** Period Start */
+            period_start: string;
+        };
         /** ResultDetail */
         ResultDetail: {
             /**
@@ -3384,9 +3747,7 @@ export interface components {
              */
             agreement_version_id: string;
             /** Components */
-            components: {
-                [key: string]: unknown;
-            }[];
+            components: components["schemas"]["ComponentValueOut"][];
             /**
              * Due Date
              * Format: date
@@ -3444,9 +3805,7 @@ export interface components {
              */
             quantity: string;
             /** Reasons */
-            reasons: {
-                [key: string]: unknown;
-            }[];
+            reasons: components["schemas"]["ReasonOut"][];
             /**
              * Run Id
              * Format: uuid
@@ -3473,9 +3832,7 @@ export interface components {
             /** Tier Reached */
             tier_reached: number | null;
             /** Trace */
-            trace: {
-                [key: string]: unknown;
-            }[];
+            trace: components["schemas"]["TraceStepOut"][];
             /** Version No */
             version_no: number;
         };
@@ -3493,6 +3850,21 @@ export interface components {
          * @enum {string}
          */
         RoundingMode: "half_up" | "half_even";
+        /** RowIssueOut */
+        RowIssueOut: {
+            /** Code */
+            code: string;
+            /** Column */
+            column: string;
+            /** Message */
+            message: string;
+            /** Row */
+            row: number;
+            /** Severity */
+            severity: string;
+            /** Value */
+            value: string;
+        };
         /**
          * RuleAction
          * @enum {string}
@@ -3515,6 +3887,27 @@ export interface components {
             min_amount?: string | null;
             /** Values */
             values?: string[];
+        };
+        /** RunDiffOut */
+        RunDiffOut: {
+            /** Batches Added */
+            batches_added: string[];
+            /** Batches Removed */
+            batches_removed: string[];
+            /** Engine Version Changed */
+            engine_version_changed: boolean;
+            /** From Run */
+            from_run: number;
+            /** Results Changed */
+            results_changed: components["schemas"]["ResultChange"][];
+            /** To Run */
+            to_run: number;
+            /** Tolerance Changed */
+            tolerance_changed: boolean;
+            /** Versions Added */
+            versions_added: string[];
+            /** Versions Removed */
+            versions_removed: string[];
         };
         /** RunIn */
         RunIn: {
@@ -3687,6 +4080,13 @@ export interface components {
              * Format: date
              */
             period_start: string;
+        };
+        /** SupplierAmount */
+        SupplierAmount: {
+            /** Amount */
+            amount: string;
+            /** Supplier Name */
+            supplier_name: string;
         };
         /** SupplierDetail */
         SupplierDetail: {
@@ -3895,6 +4295,17 @@ export interface components {
             /** Name */
             name?: string | null;
         };
+        /** TermsCheckOut */
+        TermsCheckOut: {
+            /** Error */
+            error?: string | null;
+            /** Summary */
+            summary: string;
+            /** Valid */
+            valid: boolean;
+            /** Warnings */
+            warnings: string[];
+        };
         /**
          * ThresholdComparison
          * @enum {string}
@@ -4074,6 +4485,13 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** ValidatePreviewOut */
+        ValidatePreviewOut: {
+            /** Config Problems */
+            config_problems: string[];
+            /** Rows */
+            rows: components["schemas"]["PreviewRowOut"][];
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -4179,172 +4597,6 @@ export interface components {
          * @enum {string}
          */
         ZeroBaselinePolicy: "needs_review" | "qualifies" | "does_not_qualify";
-        /** ResultOut */
-        app__api__routes__agreements__ResultOut: {
-            /** Components */
-            components: components["schemas"]["ComponentValue"][];
-            /** Eligible Count */
-            eligible_count: number;
-            /** Engine Version */
-            engine_version: string;
-            /** Excluded Counts */
-            excluded_counts: {
-                [key: string]: number;
-            };
-            /** Expected */
-            expected: string | null;
-            /** Expected Unrounded */
-            expected_unrounded: string | null;
-            /**
-             * Full Period End
-             * Format: date
-             */
-            full_period_end: string;
-            /**
-             * Full Period Start
-             * Format: date
-             */
-            full_period_start: string;
-            /** Input Hash */
-            input_hash: string;
-            /**
-             * Measure
-             * @example 1234.50
-             */
-            measure: string;
-            /**
-             * Period End
-             * Format: date
-             */
-            period_end: string;
-            /**
-             * Period Start
-             * Format: date
-             */
-            period_start: string;
-            /**
-             * Quantity
-             * @example 1234.50
-             */
-            quantity: string;
-            /** Reasons */
-            reasons: {
-                [key: string]: string;
-            }[];
-            /**
-             * Spend
-             * @example 1234.50
-             */
-            spend: string;
-            /** Statuses */
-            statuses: string[];
-            /** Tier Reached */
-            tier_reached: number | null;
-            /** Trace */
-            trace: components["schemas"]["TraceStepOut"][];
-        };
-        /** ResultOut */
-        app__api__routes__runs__ResultOut: {
-            /**
-             * Agreement Id
-             * Format: uuid
-             */
-            agreement_id: string;
-            /**
-             * Agreement Version Id
-             * Format: uuid
-             */
-            agreement_version_id: string;
-            /** Components */
-            components: {
-                [key: string]: unknown;
-            }[];
-            /**
-             * Due Date
-             * Format: date
-             */
-            due_date: string;
-            /** Eligible Count */
-            eligible_count: number;
-            /** Engine Version */
-            engine_version: string;
-            /** Excluded Counts */
-            excluded_counts: {
-                [key: string]: unknown;
-            };
-            /** Expected */
-            expected: string | null;
-            /** Expected Unrounded */
-            expected_unrounded: string | null;
-            /**
-             * Full Period End
-             * Format: date
-             */
-            full_period_end: string;
-            /**
-             * Full Period Start
-             * Format: date
-             */
-            full_period_start: string;
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Input Hash */
-            input_hash: string;
-            /**
-             * Measure
-             * @example 1234.50
-             */
-            measure: string;
-            /**
-             * Period End
-             * Format: date
-             */
-            period_end: string;
-            /** Period Label */
-            period_label: string;
-            /**
-             * Period Start
-             * Format: date
-             */
-            period_start: string;
-            /**
-             * Quantity
-             * @example 1234.50
-             */
-            quantity: string;
-            /** Reasons */
-            reasons: {
-                [key: string]: unknown;
-            }[];
-            /**
-             * Run Id
-             * Format: uuid
-             */
-            run_id: string;
-            /**
-             * Spend
-             * @example 1234.50
-             */
-            spend: string;
-            /** Stale At */
-            stale_at: string | null;
-            /** Stale Reason */
-            stale_reason: string | null;
-            /** Statuses */
-            statuses: string[];
-            /**
-             * Supplier Id
-             * Format: uuid
-             */
-            supplier_id: string;
-            /** Tier Reached */
-            tier_reached: number | null;
-            /** Version No */
-            version_no: number;
-        };
     };
     responses: never;
     parameters: never;
@@ -4372,6 +4624,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_terms_api_v1_agreement_terms_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionTermsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TermsCheckOut"];
                 };
             };
             /** @description Validation Error */
@@ -4540,7 +4825,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["app__api__routes__agreements__ResultOut"];
+                    "application/json": components["schemas"]["PreviewResultOut"];
                 };
             };
             /** @description Validation Error */
@@ -5635,7 +5920,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AttachmentOut"];
+                    "application/json": components["schemas"]["ClaimAttachmentOut"];
                 };
             };
             /** @description Validation Error */
@@ -5964,9 +6249,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["DashboardOut"];
                 };
             };
         };
@@ -6299,9 +6582,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["ErrorPageOut"];
                 };
             };
             /** @description Validation Error */
@@ -6363,9 +6644,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["ImportPreviewOut"];
                 };
             };
             /** @description Validation Error */
@@ -6462,9 +6741,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["ValidatePreviewOut"];
                 };
             };
             /** @description Validation Error */
@@ -7567,7 +7844,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["app__api__routes__runs__ResultOut"][];
+                    "application/json": components["schemas"]["PeriodResultOut"][];
                 };
             };
             /** @description Validation Error */
@@ -7728,9 +8005,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["RunDiffOut"];
                 };
             };
             /** @description Validation Error */
@@ -7764,7 +8039,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Page_ResultOut_"];
+                    "application/json": components["schemas"]["Page_PeriodResultOut_"];
                 };
             };
             /** @description Validation Error */

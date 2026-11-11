@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import Field
@@ -12,6 +12,7 @@ from sqlalchemy import select
 
 from app.api.deps import DB, Ctx, Public, Requires
 from app.api.schemas.common import DecimalStr, In, Ok, Out
+from app.api.schemas.views import DashboardOut
 from app.core.errors import AppError
 from app.core.permissions import Permission
 from app.db.models.identity import Notification
@@ -21,10 +22,10 @@ router = APIRouter(prefix="/api/v1", tags=["insights"])
 View = Annotated[Ctx, Depends(Requires(Permission.VIEW_DATA))]
 
 
-@router.get("/dashboard")
-def get_dashboard(ctx: View) -> dict[str, Any]:
+@router.get("/dashboard", response_model=DashboardOut)
+def get_dashboard(ctx: View) -> DashboardOut:
     assert ctx.tenant is not None
-    return dashboard.kpis(ctx.db, ctx.tenant)
+    return DashboardOut.model_validate(dashboard.kpis(ctx.db, ctx.tenant))
 
 
 class TierOut(Out):

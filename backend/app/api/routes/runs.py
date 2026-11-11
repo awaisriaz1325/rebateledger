@@ -13,6 +13,7 @@ from sqlalchemy import select
 
 from app.api.deps import Ctx, Requires, idempotency_key
 from app.api.schemas.common import DecimalStr, In, Ok, Out, Page
+from app.api.schemas.views import ComponentValueOut, ReasonOut, RunDiffOut, TraceStepOut
 from app.core.errors import not_found
 from app.core.permissions import Permission
 from app.db.models.runs import CalculationRun, PeriodResultRow, PeriodTrace
@@ -63,7 +64,7 @@ class RunOut(Out):
     error: str
 
 
-class ResultOut(Out):
+class PeriodResultOut(Out):
     id: uuid.UUID
     run_id: uuid.UUID
     agreement_id: uuid.UUID
@@ -82,8 +83,8 @@ class ResultOut(Out):
     measure: DecimalStr
     tier_reached: int | None
     statuses: list[str]
-    reasons: list[dict[str, Any]]
-    components: list[dict[str, Any]]
+    reasons: list[ReasonOut]
+    components: list[ComponentValueOut]
     eligible_count: int
     excluded_counts: dict[str, Any]
     due_date: date
@@ -93,8 +94,8 @@ class ResultOut(Out):
     stale_reason: str | None
 
 
-class ResultDetail(ResultOut):
-    trace: list[dict[str, Any]]
+class ResultDetail(PeriodResultOut):
+    trace: list[TraceStepOut]
     run_number: int
 
 
@@ -160,13 +161,13 @@ def cancel_run(run_id: uuid.UUID, ctx: Run) -> RunOut:
     return RunOut.model_validate(svc.cancel(ctx.db, ctx, run_id))
 
 
-@router.get("/runs/{run_id}/results", response_model=Page[ResultOut])
+@router.get("/runs/{run_id}/results", response_model=Page[PeriodResultOut])
 def run_results(
     run_id: uuid.UUID,
     ctx: View,
     cursor: uuid.UUID | None = None,
     limit: Annotated[int, Query(ge=1, le=200)] = 200,
-) -> Page[ResultOut]:
+) -> Page[PeriodResultOut]:
     svc.get(ctx.db, ctx.tenant_uuid, run_id)
     q = select(PeriodResultRow).where(
         PeriodResultRow.tenant_id == ctx.tenant_uuid, PeriodResultRow.run_id == run_id
@@ -175,15 +176,15 @@ def run_results(
         q = q.where(PeriodResultRow.id > cursor)
     rows = list(ctx.db.execute(q.order_by(PeriodResultRow.id).limit(limit + 1)).scalars())
     nxt = str(rows[limit - 1].id) if len(rows) > limit else None
-    return Page[ResultOut](
-        items=[ResultOut.model_validate(r) for r in rows[:limit]], next_cursor=nxt
+    return Page[PeriodResultOut](
+        items=[PeriodResultOut.model_validate(r) for r in rows[:limit]], next_cursor=nxt
     )
 
 
-@router.get("/runs/{run_id}/diff/{other_run_id}")
-def diff_runs(run_id: uuid.UUID, other_run_id: uuid.UUID, ctx: View) -> dict[str, Any]:
+@router.get("/runs/{run_id}/diff/{other_run_id}", response_model=RunDiffOut)
+def diff_runs(run_id: uuid.UUID, other_run_id: uuid.UUID, ctx: View) -> RunDiffOut:
     a, b = svc.get(ctx.db, ctx.tenant_uuid, run_id), svc.get(ctx.db, ctx.tenant_uuid, other_run_id)
-    return svc.run_diff(ctx.db, ctx.tenant_uuid, a, b)
+    return RunDiffOut.model_validate(svc.run_diff(ctx.db, ctx.tenant_uuid, a, b))
 
 
 @router.get("/results/{result_id}", response_model=ResultDetail)
@@ -201,12 +202,12 @@ def get_result(result_id: uuid.UUID, ctx: View) -> ResultDetail:
     )
     run = svc.get(ctx.db, ctx.tenant_uuid, row.run_id)
     return ResultDetail(
-        **ResultOut.model_validate(row).model_dump(), trace=trace, run_number=run.number
+        **PeriodResultOut.model_validate(row).model_dump(), trace=trace, run_number=run.number
     )
 
 
-@router.get("/results/{result_id}/history", response_model=list[ResultOut])
-def result_history(result_id: uuid.UUID, ctx: View) -> list[ResultOut]:
+@router.get("/results/{result_id}/history", response_model=list[PeriodResultOut])
+def result_history(result_id: uuid.UUID, ctx: View) -> list[PeriodResultOut]:
     row = ctx.db.execute(
         select(PeriodResultRow).where(
             PeriodResultRow.id == result_id, PeriodResultRow.tenant_id == ctx.tenant_uuid
@@ -225,7 +226,7 @@ def result_history(result_id: uuid.UUID, ctx: View) -> list[ResultOut]:
         )
         .order_by(CalculationRun.number.desc())
     ).scalars()
-    return [ResultOut.model_validate(r) for r in rows]
+    return [PeriodResultOut.model_validate(r) for r in rows]
 
 
 @router.put("/version-resolutions", response_model=Ok)

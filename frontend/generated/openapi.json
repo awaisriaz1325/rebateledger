@@ -92,6 +92,24 @@
         "title": "ActiveOrg",
         "type": "object"
       },
+      "AgingBucket": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "amount"
+        ],
+        "title": "AgingBucket",
+        "type": "object"
+      },
       "AgreementCreateIn": {
         "additionalProperties": false,
         "properties": {
@@ -841,6 +859,41 @@
         "title": "Body_upload_import_api_v1_imports_post",
         "type": "object"
       },
+      "ClaimAttachmentOut": {
+        "properties": {
+          "content_type": {
+            "title": "Content Type",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "content_type",
+          "size_bytes",
+          "created_at"
+        ],
+        "title": "ClaimAttachmentOut",
+        "type": "object"
+      },
       "ClaimDetail": {
         "properties": {
           "allowed_transitions": {
@@ -864,7 +917,7 @@
           },
           "attachments": {
             "items": {
-              "$ref": "#/components/schemas/AttachmentOut"
+              "$ref": "#/components/schemas/ClaimAttachmentOut"
             },
             "title": "Attachments",
             "type": "array"
@@ -1763,6 +1816,64 @@
         "title": "ComponentValue",
         "type": "object"
       },
+      "ComponentValueOut": {
+        "properties": {
+          "baseline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline"
+          },
+          "component_id": {
+            "title": "Component Id",
+            "type": "string"
+          },
+          "formula": {
+            "title": "Formula",
+            "type": "string"
+          },
+          "tier_reached": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier Reached"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "component_id",
+          "type",
+          "value",
+          "formula",
+          "tier_reached"
+        ],
+        "title": "ComponentValueOut",
+        "type": "object"
+      },
       "ConfigIn": {
         "additionalProperties": false,
         "properties": {
@@ -2353,6 +2464,56 @@
         "title": "CustomPeriodIn",
         "type": "object"
       },
+      "DashboardOut": {
+        "properties": {
+          "as_of": {
+            "title": "As Of",
+            "type": "string"
+          },
+          "data_freshness": {
+            "$ref": "#/components/schemas/Freshness"
+          },
+          "has_results": {
+            "title": "Has Results",
+            "type": "boolean"
+          },
+          "identified_open_variance": {
+            "$ref": "#/components/schemas/LinkedAmount"
+          },
+          "needs_review": {
+            "$ref": "#/components/schemas/LinkedCount"
+          },
+          "open_claims": {
+            "$ref": "#/components/schemas/OpenClaims"
+          },
+          "recovered_this_year": {
+            "$ref": "#/components/schemas/LinkedAmount"
+          },
+          "tier_opportunities": {
+            "$ref": "#/components/schemas/LinkedCount"
+          },
+          "top_suppliers_by_open_variance": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierAmount"
+            },
+            "title": "Top Suppliers By Open Variance",
+            "type": "array"
+          }
+        },
+        "required": [
+          "as_of",
+          "identified_open_variance",
+          "recovered_this_year",
+          "open_claims",
+          "needs_review",
+          "top_suppliers_by_open_variance",
+          "tier_opportunities",
+          "data_freshness",
+          "has_results"
+        ],
+        "title": "DashboardOut",
+        "type": "object"
+      },
       "DateBasis": {
         "enum": [
           "invoice_date",
@@ -2408,6 +2569,27 @@
           "password"
         ],
         "title": "EmailChangeIn",
+        "type": "object"
+      },
+      "ErrorPageOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RowIssueOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ErrorPageOut",
         "type": "object"
       },
       "EventOut": {
@@ -2475,6 +2657,34 @@
         "title": "EventOut",
         "type": "object"
       },
+      "FieldSpecOut": {
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "label",
+          "required",
+          "kind"
+        ],
+        "title": "FieldSpecOut",
+        "type": "object"
+      },
       "ForgotIn": {
         "additionalProperties": false,
         "properties": {
@@ -2492,6 +2702,79 @@
         "title": "ForgotIn",
         "type": "object"
       },
+      "Freshness": {
+        "properties": {
+          "link": {
+            "title": "Link",
+            "type": "string"
+          },
+          "suppliers": {
+            "items": {
+              "$ref": "#/components/schemas/FreshnessRow"
+            },
+            "title": "Suppliers",
+            "type": "array"
+          },
+          "threshold_days": {
+            "title": "Threshold Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "threshold_days",
+          "suppliers",
+          "link"
+        ],
+        "title": "Freshness",
+        "type": "object"
+      },
+      "FreshnessRow": {
+        "properties": {
+          "days_old": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days Old"
+          },
+          "latest_purchase_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Purchase Date"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "supplier_id": {
+            "title": "Supplier Id",
+            "type": "string"
+          },
+          "supplier_name": {
+            "title": "Supplier Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "supplier_id",
+          "supplier_name",
+          "latest_purchase_date",
+          "days_old",
+          "stale"
+        ],
+        "title": "FreshnessRow",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2503,6 +2786,65 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "ImportPreviewOut": {
+        "properties": {
+          "date_format_candidates": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Date Format Candidates",
+            "type": "object"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/FieldSpecOut"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
+          "header": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Header",
+            "type": "array"
+          },
+          "sample_rows": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Sample Rows",
+            "type": "array"
+          },
+          "suggested_columns": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Suggested Columns",
+            "type": "object"
+          },
+          "supports_flags": {
+            "title": "Supports Flags",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "header",
+          "sample_rows",
+          "suggested_columns",
+          "date_format_candidates",
+          "fields",
+          "supports_flags"
+        ],
+        "title": "ImportPreviewOut",
         "type": "object"
       },
       "ImportType": {
@@ -2718,6 +3060,42 @@
           "finished_at"
         ],
         "title": "JobOut",
+        "type": "object"
+      },
+      "LinkedAmount": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "link": {
+            "title": "Link",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "link"
+        ],
+        "title": "LinkedAmount",
+        "type": "object"
+      },
+      "LinkedCount": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "link": {
+            "title": "Link",
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "link"
+        ],
+        "title": "LinkedCount",
         "type": "object"
       },
       "LoginIn": {
@@ -3105,6 +3483,37 @@
         "title": "OnboardingIn",
         "type": "object"
       },
+      "OpenClaims": {
+        "properties": {
+          "aging": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AgingBucket"
+            },
+            "title": "Aging",
+            "type": "object"
+          },
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "link": {
+            "title": "Link",
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "amount",
+          "aging",
+          "link"
+        ],
+        "title": "OpenClaims",
+        "type": "object"
+      },
       "OrgOut": {
         "properties": {
           "abs_tolerance": {
@@ -3404,11 +3813,11 @@
         "title": "Page[CreditOut]",
         "type": "object"
       },
-      "Page_ResultOut_": {
+      "Page_PeriodResultOut_": {
         "properties": {
           "items": {
             "items": {
-              "$ref": "#/components/schemas/app__api__routes__runs__ResultOut"
+              "$ref": "#/components/schemas/PeriodResultOut"
             },
             "title": "Items",
             "type": "array"
@@ -3428,7 +3837,7 @@
         "required": [
           "items"
         ],
-        "title": "Page[ResultOut]",
+        "title": "Page[PeriodResultOut]",
         "type": "object"
       },
       "Page_RunOut_": {
@@ -3506,6 +3915,225 @@
           "new_password"
         ],
         "title": "PasswordChangeIn",
+        "type": "object"
+      },
+      "PeriodResultOut": {
+        "properties": {
+          "agreement_id": {
+            "format": "uuid",
+            "title": "Agreement Id",
+            "type": "string"
+          },
+          "agreement_version_id": {
+            "format": "uuid",
+            "title": "Agreement Version Id",
+            "type": "string"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/ComponentValueOut"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "due_date": {
+            "format": "date",
+            "title": "Due Date",
+            "type": "string"
+          },
+          "eligible_count": {
+            "title": "Eligible Count",
+            "type": "integer"
+          },
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "excluded_counts": {
+            "additionalProperties": true,
+            "title": "Excluded Counts",
+            "type": "object"
+          },
+          "expected": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected"
+          },
+          "expected_unrounded": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Unrounded"
+          },
+          "full_period_end": {
+            "format": "date",
+            "title": "Full Period End",
+            "type": "string"
+          },
+          "full_period_start": {
+            "format": "date",
+            "title": "Full Period Start",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "input_hash": {
+            "title": "Input Hash",
+            "type": "string"
+          },
+          "measure": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Measure",
+            "type": "string"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_label": {
+            "title": "Period Label",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "quantity": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReasonOut"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "run_id": {
+            "format": "uuid",
+            "title": "Run Id",
+            "type": "string"
+          },
+          "spend": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Spend",
+            "type": "string"
+          },
+          "stale_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stale At"
+          },
+          "stale_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stale Reason"
+          },
+          "statuses": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Statuses",
+            "type": "array"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          },
+          "tier_reached": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier Reached"
+          },
+          "version_no": {
+            "title": "Version No",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "run_id",
+          "agreement_id",
+          "agreement_version_id",
+          "version_no",
+          "supplier_id",
+          "period_start",
+          "period_end",
+          "full_period_start",
+          "full_period_end",
+          "period_label",
+          "expected",
+          "expected_unrounded",
+          "spend",
+          "quantity",
+          "measure",
+          "tier_reached",
+          "statuses",
+          "reasons",
+          "components",
+          "eligible_count",
+          "excluded_counts",
+          "due_date",
+          "input_hash",
+          "engine_version",
+          "stale_at",
+          "stale_reason"
+        ],
+        "title": "PeriodResultOut",
         "type": "object"
       },
       "PeriodType": {
@@ -3666,6 +4294,198 @@
         "title": "PreviewIn",
         "type": "object"
       },
+      "PreviewResultOut": {
+        "properties": {
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/ComponentValue"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "eligible_count": {
+            "title": "Eligible Count",
+            "type": "integer"
+          },
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "excluded_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Excluded Counts",
+            "type": "object"
+          },
+          "expected": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected"
+          },
+          "expected_unrounded": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Unrounded"
+          },
+          "full_period_end": {
+            "format": "date",
+            "title": "Full Period End",
+            "type": "string"
+          },
+          "full_period_start": {
+            "format": "date",
+            "title": "Full Period Start",
+            "type": "string"
+          },
+          "input_hash": {
+            "title": "Input Hash",
+            "type": "string"
+          },
+          "measure": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Measure",
+            "type": "string"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "quantity": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReasonOut"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "spend": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Spend",
+            "type": "string"
+          },
+          "statuses": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Statuses",
+            "type": "array"
+          },
+          "tier_reached": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier Reached"
+          },
+          "trace": {
+            "items": {
+              "$ref": "#/components/schemas/TraceStepOut"
+            },
+            "title": "Trace",
+            "type": "array"
+          }
+        },
+        "required": [
+          "period_start",
+          "period_end",
+          "full_period_start",
+          "full_period_end",
+          "expected",
+          "expected_unrounded",
+          "spend",
+          "quantity",
+          "measure",
+          "tier_reached",
+          "eligible_count",
+          "excluded_counts",
+          "statuses",
+          "reasons",
+          "components",
+          "trace",
+          "engine_version",
+          "input_hash"
+        ],
+        "title": "PreviewResultOut",
+        "type": "object"
+      },
+      "PreviewRowOut": {
+        "properties": {
+          "cells": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Cells",
+            "type": "array"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/RowIssueOut"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "row": {
+            "title": "Row",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "row",
+          "cells",
+          "ok",
+          "issues"
+        ],
+        "title": "PreviewRowOut",
+        "type": "object"
+      },
       "PriorPeriodOffset": {
         "description": "Which earlier period a computed baseline is measured over.\n\nSPEC \u00a74.4.2 says \"the corresponding prior period\" without defining it, so the\nchoice is explicit per component instead of a hidden default (ADR 0010).",
         "enum": [
@@ -3801,6 +4621,24 @@
           }
         },
         "title": "ProfileSettingsIn",
+        "type": "object"
+      },
+      "ReasonOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ReasonOut",
         "type": "object"
       },
       "ReconRow": {
@@ -4327,6 +5165,98 @@
         "title": "ResolveIn",
         "type": "object"
       },
+      "ResultChange": {
+        "properties": {
+          "after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "after_statuses": {
+            "items": {
+              "type": "string"
+            },
+            "title": "After Statuses",
+            "type": "array"
+          },
+          "after_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After Version"
+          },
+          "agreement_id": {
+            "title": "Agreement Id",
+            "type": "string"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before"
+          },
+          "before_statuses": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Before Statuses",
+            "type": "array"
+          },
+          "before_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before Version"
+          },
+          "inputs_changed": {
+            "title": "Inputs Changed",
+            "type": "boolean"
+          },
+          "period_end": {
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "title": "Period Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agreement_id",
+          "period_start",
+          "period_end",
+          "before",
+          "after",
+          "before_version",
+          "after_version",
+          "before_statuses",
+          "after_statuses",
+          "inputs_changed"
+        ],
+        "title": "ResultChange",
+        "type": "object"
+      },
       "ResultDetail": {
         "properties": {
           "agreement_id": {
@@ -4341,8 +5271,7 @@
           },
           "components": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/ComponentValueOut"
             },
             "title": "Components",
             "type": "array"
@@ -4446,8 +5375,7 @@
           },
           "reasons": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/ReasonOut"
             },
             "title": "Reasons",
             "type": "array"
@@ -4517,8 +5445,7 @@
           },
           "trace": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/TraceStepOut"
             },
             "title": "Trace",
             "type": "array"
@@ -4592,6 +5519,44 @@
         ],
         "title": "RoundingMode",
         "type": "string"
+      },
+      "RowIssueOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "column": {
+            "title": "Column",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "row": {
+            "title": "Row",
+            "type": "integer"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "row",
+          "column",
+          "value",
+          "code",
+          "message",
+          "severity"
+        ],
+        "title": "RowIssueOut",
+        "type": "object"
       },
       "RuleAction": {
         "enum": [
@@ -4678,6 +5643,74 @@
           "field"
         ],
         "title": "RuleIn",
+        "type": "object"
+      },
+      "RunDiffOut": {
+        "properties": {
+          "batches_added": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Batches Added",
+            "type": "array"
+          },
+          "batches_removed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Batches Removed",
+            "type": "array"
+          },
+          "engine_version_changed": {
+            "title": "Engine Version Changed",
+            "type": "boolean"
+          },
+          "from_run": {
+            "title": "From Run",
+            "type": "integer"
+          },
+          "results_changed": {
+            "items": {
+              "$ref": "#/components/schemas/ResultChange"
+            },
+            "title": "Results Changed",
+            "type": "array"
+          },
+          "to_run": {
+            "title": "To Run",
+            "type": "integer"
+          },
+          "tolerance_changed": {
+            "title": "Tolerance Changed",
+            "type": "boolean"
+          },
+          "versions_added": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Versions Added",
+            "type": "array"
+          },
+          "versions_removed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Versions Removed",
+            "type": "array"
+          }
+        },
+        "required": [
+          "from_run",
+          "to_run",
+          "results_changed",
+          "batches_added",
+          "batches_removed",
+          "versions_added",
+          "versions_removed",
+          "tolerance_changed",
+          "engine_version_changed"
+        ],
+        "title": "RunDiffOut",
         "type": "object"
       },
       "RunIn": {
@@ -5114,6 +6147,24 @@
           "explanation"
         ],
         "title": "SuggestionOut",
+        "type": "object"
+      },
+      "SupplierAmount": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "supplier_name": {
+            "title": "Supplier Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "supplier_name",
+          "amount"
+        ],
+        "title": "SupplierAmount",
         "type": "object"
       },
       "SupplierDetail": {
@@ -5656,6 +6707,43 @@
         "title": "TemplatePatch",
         "type": "object"
       },
+      "TermsCheckOut": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "valid",
+          "summary",
+          "warnings"
+        ],
+        "title": "TermsCheckOut",
+        "type": "object"
+      },
       "ThresholdComparison": {
         "enum": [
           "gte",
@@ -6154,6 +7242,30 @@
         "title": "UserInfo",
         "type": "object"
       },
+      "ValidatePreviewOut": {
+        "properties": {
+          "config_problems": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Config Problems",
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/PreviewRowOut"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "config_problems",
+          "rows"
+        ],
+        "title": "ValidatePreviewOut",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -6455,388 +7567,6 @@
         ],
         "title": "ZeroBaselinePolicy",
         "type": "string"
-      },
-      "app__api__routes__agreements__ResultOut": {
-        "properties": {
-          "components": {
-            "items": {
-              "$ref": "#/components/schemas/ComponentValue"
-            },
-            "title": "Components",
-            "type": "array"
-          },
-          "eligible_count": {
-            "title": "Eligible Count",
-            "type": "integer"
-          },
-          "engine_version": {
-            "title": "Engine Version",
-            "type": "string"
-          },
-          "excluded_counts": {
-            "additionalProperties": {
-              "type": "integer"
-            },
-            "title": "Excluded Counts",
-            "type": "object"
-          },
-          "expected": {
-            "anyOf": [
-              {
-                "examples": [
-                  "1234.50"
-                ],
-                "pattern": "^-?\\d+(\\.\\d+)?$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expected"
-          },
-          "expected_unrounded": {
-            "anyOf": [
-              {
-                "examples": [
-                  "1234.50"
-                ],
-                "pattern": "^-?\\d+(\\.\\d+)?$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expected Unrounded"
-          },
-          "full_period_end": {
-            "format": "date",
-            "title": "Full Period End",
-            "type": "string"
-          },
-          "full_period_start": {
-            "format": "date",
-            "title": "Full Period Start",
-            "type": "string"
-          },
-          "input_hash": {
-            "title": "Input Hash",
-            "type": "string"
-          },
-          "measure": {
-            "examples": [
-              "1234.50"
-            ],
-            "pattern": "^-?\\d+(\\.\\d+)?$",
-            "title": "Measure",
-            "type": "string"
-          },
-          "period_end": {
-            "format": "date",
-            "title": "Period End",
-            "type": "string"
-          },
-          "period_start": {
-            "format": "date",
-            "title": "Period Start",
-            "type": "string"
-          },
-          "quantity": {
-            "examples": [
-              "1234.50"
-            ],
-            "pattern": "^-?\\d+(\\.\\d+)?$",
-            "title": "Quantity",
-            "type": "string"
-          },
-          "reasons": {
-            "items": {
-              "additionalProperties": {
-                "type": "string"
-              },
-              "type": "object"
-            },
-            "title": "Reasons",
-            "type": "array"
-          },
-          "spend": {
-            "examples": [
-              "1234.50"
-            ],
-            "pattern": "^-?\\d+(\\.\\d+)?$",
-            "title": "Spend",
-            "type": "string"
-          },
-          "statuses": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Statuses",
-            "type": "array"
-          },
-          "tier_reached": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tier Reached"
-          },
-          "trace": {
-            "items": {
-              "$ref": "#/components/schemas/TraceStepOut"
-            },
-            "title": "Trace",
-            "type": "array"
-          }
-        },
-        "required": [
-          "period_start",
-          "period_end",
-          "full_period_start",
-          "full_period_end",
-          "expected",
-          "expected_unrounded",
-          "spend",
-          "quantity",
-          "measure",
-          "tier_reached",
-          "eligible_count",
-          "excluded_counts",
-          "statuses",
-          "reasons",
-          "components",
-          "trace",
-          "engine_version",
-          "input_hash"
-        ],
-        "title": "ResultOut",
-        "type": "object"
-      },
-      "app__api__routes__runs__ResultOut": {
-        "properties": {
-          "agreement_id": {
-            "format": "uuid",
-            "title": "Agreement Id",
-            "type": "string"
-          },
-          "agreement_version_id": {
-            "format": "uuid",
-            "title": "Agreement Version Id",
-            "type": "string"
-          },
-          "components": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "title": "Components",
-            "type": "array"
-          },
-          "due_date": {
-            "format": "date",
-            "title": "Due Date",
-            "type": "string"
-          },
-          "eligible_count": {
-            "title": "Eligible Count",
-            "type": "integer"
-          },
-          "engine_version": {
-            "title": "Engine Version",
-            "type": "string"
-          },
-          "excluded_counts": {
-            "additionalProperties": true,
-            "title": "Excluded Counts",
-            "type": "object"
-          },
-          "expected": {
-            "anyOf": [
-              {
-                "examples": [
-                  "1234.50"
-                ],
-                "pattern": "^-?\\d+(\\.\\d+)?$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expected"
-          },
-          "expected_unrounded": {
-            "anyOf": [
-              {
-                "examples": [
-                  "1234.50"
-                ],
-                "pattern": "^-?\\d+(\\.\\d+)?$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expected Unrounded"
-          },
-          "full_period_end": {
-            "format": "date",
-            "title": "Full Period End",
-            "type": "string"
-          },
-          "full_period_start": {
-            "format": "date",
-            "title": "Full Period Start",
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "input_hash": {
-            "title": "Input Hash",
-            "type": "string"
-          },
-          "measure": {
-            "examples": [
-              "1234.50"
-            ],
-            "pattern": "^-?\\d+(\\.\\d+)?$",
-            "title": "Measure",
-            "type": "string"
-          },
-          "period_end": {
-            "format": "date",
-            "title": "Period End",
-            "type": "string"
-          },
-          "period_label": {
-            "title": "Period Label",
-            "type": "string"
-          },
-          "period_start": {
-            "format": "date",
-            "title": "Period Start",
-            "type": "string"
-          },
-          "quantity": {
-            "examples": [
-              "1234.50"
-            ],
-            "pattern": "^-?\\d+(\\.\\d+)?$",
-            "title": "Quantity",
-            "type": "string"
-          },
-          "reasons": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "title": "Reasons",
-            "type": "array"
-          },
-          "run_id": {
-            "format": "uuid",
-            "title": "Run Id",
-            "type": "string"
-          },
-          "spend": {
-            "examples": [
-              "1234.50"
-            ],
-            "pattern": "^-?\\d+(\\.\\d+)?$",
-            "title": "Spend",
-            "type": "string"
-          },
-          "stale_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Stale At"
-          },
-          "stale_reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Stale Reason"
-          },
-          "statuses": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Statuses",
-            "type": "array"
-          },
-          "supplier_id": {
-            "format": "uuid",
-            "title": "Supplier Id",
-            "type": "string"
-          },
-          "tier_reached": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tier Reached"
-          },
-          "version_no": {
-            "title": "Version No",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "run_id",
-          "agreement_id",
-          "agreement_version_id",
-          "version_no",
-          "supplier_id",
-          "period_start",
-          "period_end",
-          "full_period_start",
-          "full_period_end",
-          "period_label",
-          "expected",
-          "expected_unrounded",
-          "spend",
-          "quantity",
-          "measure",
-          "tier_reached",
-          "statuses",
-          "reasons",
-          "components",
-          "eligible_count",
-          "excluded_counts",
-          "due_date",
-          "input_hash",
-          "engine_version",
-          "stale_at",
-          "stale_reason"
-        ],
-        "title": "ResultOut",
-        "type": "object"
       }
     }
   },
@@ -6882,6 +7612,48 @@
           }
         },
         "summary": "Download Attachment",
+        "tags": [
+          "agreements"
+        ]
+      }
+    },
+    "/api/v1/agreement-terms/check": {
+      "post": {
+        "description": "Validate draft terms and return the plain-English summary without saving (live rule builder).",
+        "operationId": "check_terms_api_v1_agreement_terms_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VersionTermsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TermsCheckOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Check Terms",
         "tags": [
           "agreements"
         ]
@@ -7122,7 +7894,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__api__routes__agreements__ResultOut"
+                  "$ref": "#/components/schemas/PreviewResultOut"
                 }
               }
             },
@@ -8765,7 +9537,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AttachmentOut"
+                  "$ref": "#/components/schemas/ClaimAttachmentOut"
                 }
               }
             },
@@ -9276,9 +10048,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Dashboard Api V1 Dashboard Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/DashboardOut"
                 }
               }
             },
@@ -9945,9 +10715,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Error Page Api V1 Imports  Batch Id  Errors Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ErrorPageOut"
                 }
               }
             },
@@ -10031,9 +10799,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Preview Import Api V1 Imports  Batch Id  Preview Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ImportPreviewOut"
                 }
               }
             },
@@ -10173,9 +10939,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Validate Preview Api V1 Imports  Batch Id  Validate Preview Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ValidatePreviewOut"
                 }
               }
             },
@@ -11906,7 +12670,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/app__api__routes__runs__ResultOut"
+                    "$ref": "#/components/schemas/PeriodResultOut"
                   },
                   "title": "Response Result History Api V1 Results  Result Id  History Get",
                   "type": "array"
@@ -12168,9 +12932,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Diff Runs Api V1 Runs  Run Id  Diff  Other Run Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RunDiffOut"
                 }
               }
             },
@@ -12242,7 +13004,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page_ResultOut_"
+                  "$ref": "#/components/schemas/Page_PeriodResultOut_"
                 }
               }
             },

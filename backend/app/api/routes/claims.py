@@ -125,7 +125,7 @@ class RecoveryOut(Out):
     linked_at: datetime
 
 
-class AttachmentOut(Out):
+class ClaimAttachmentOut(Out):
     id: uuid.UUID
     filename: str
     content_type: str
@@ -161,7 +161,7 @@ class ClaimDetail(ClaimOut):
     items: list[ClaimItemOut]
     events: list[EventOut]
     recoveries: list[RecoveryOut]
-    attachments: list[AttachmentOut]
+    attachments: list[ClaimAttachmentOut]
     allowed_transitions: list[str]
 
 
@@ -199,7 +199,7 @@ def _detail(ctx: Ctx, c: Claim, response: Response | None = None) -> ClaimDetail
             ).scalars()
         ],
         attachments=[
-            AttachmentOut.model_validate(a)
+            ClaimAttachmentOut.model_validate(a)
             for a in db.execute(
                 select(ClaimAttachment)
                 .where(ClaimAttachment.claim_id == c.id)
@@ -323,10 +323,10 @@ def remove_recovery(claim_id: uuid.UUID, recovery_id: uuid.UUID, ctx: Edit) -> O
     return Ok()
 
 
-@router.post("/{claim_id}/attachments", response_model=AttachmentOut, status_code=201)
+@router.post("/{claim_id}/attachments", response_model=ClaimAttachmentOut, status_code=201)
 def upload_attachment(
     claim_id: uuid.UUID, ctx: Edit, file: Annotated[UploadFile, File()]
-) -> AttachmentOut:
+) -> ClaimAttachmentOut:
     c = svc.get(ctx.db, ctx.tenant_uuid, claim_id)
     name = (file.filename or "document").replace("/", "_").replace("\\", "_")[-200:]
     ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
@@ -371,7 +371,7 @@ def upload_attachment(
         object_type="claim",
         object_id=c.id,
     )
-    return AttachmentOut.model_validate(att)
+    return ClaimAttachmentOut.model_validate(att)
 
 
 @router.get("/attachments/{attachment_id}/download")

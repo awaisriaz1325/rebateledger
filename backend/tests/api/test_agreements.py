@@ -385,3 +385,17 @@ def test_merge_suppliers(setup: Any) -> None:
     assert r.status_code == 200 and "ACME-OLD" in r.json()["codes"]
     assert c.get(f"/api/v1/suppliers/{other}").status_code == 404
     assert c.get(f"/api/v1/agreements/{a2['id']}").json()["supplier_id"] == sid
+
+
+def test_terms_check_returns_live_summary(setup: Any) -> None:
+    c, _, _, _ = setup
+    r = c.post("/api/v1/agreement-terms/check", json=tiered_terms())
+    assert r.status_code == 200 and r.json()["valid"] is True
+    assert r.json()["summary"].startswith("Pays 2.00% once quarterly")
+    bad = tiered_terms()
+    bad["components"][0]["tiers"] = [
+        {"threshold": "500", "rate": "0.02"},
+        {"threshold": "100", "rate": "0.03"},
+    ]
+    out = c.post("/api/v1/agreement-terms/check", json=bad).json()
+    assert out["valid"] is False and "ascending" in out["error"]

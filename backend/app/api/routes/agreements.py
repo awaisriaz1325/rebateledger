@@ -16,6 +16,7 @@ from sqlalchemy import select
 from app.api.deps import Ctx, Requires, if_match
 from app.api.etag import check_if_match, etag
 from app.api.schemas.common import DecimalStr, In, Name, Ok, Out, Page
+from app.api.schemas.views import ReasonOut, TraceStepOut
 from app.core.errors import AppError, not_found
 from app.core.permissions import Permission
 from app.core.storage import get_storage, new_key
@@ -117,14 +118,7 @@ class ComponentValue(Out):
     tier_reached: int | None
 
 
-class TraceStepOut(Out):
-    step: int
-    name: str
-    description: str
-    values: dict[str, str]
-
-
-class ResultOut(Out):
+class PreviewResultOut(Out):
     period_start: date
     period_end: date
     full_period_start: date
@@ -138,15 +132,15 @@ class ResultOut(Out):
     eligible_count: int
     excluded_counts: dict[str, int]
     statuses: list[str]
-    reasons: list[dict[str, str]]
+    reasons: list[ReasonOut]
     components: list[ComponentValue]
     trace: list[TraceStepOut]
     engine_version: str
     input_hash: str
 
 
-def result_out(r: PeriodResult) -> ResultOut:
-    return ResultOut(
+def result_out(r: PeriodResult) -> PreviewResultOut:
+    return PreviewResultOut(
         period_start=r.period.start,
         period_end=r.period.end,
         full_period_start=r.full_period.start,
@@ -160,7 +154,7 @@ def result_out(r: PeriodResult) -> ResultOut:
         eligible_count=r.eligible_count,
         excluded_counts=dict(r.excluded_counts),
         statuses=[s.value for s in r.statuses],
-        reasons=[{"code": x.code, "message": x.message} for x in r.reasons],
+        reasons=[ReasonOut(code=x.code, message=x.message) for x in r.reasons],
         components=[
             ComponentValue(
                 component_id=c.component_id,
@@ -213,6 +207,33 @@ def _agreement_out(a: Agreement, versions: list[AgreementVersion]) -> AgreementO
         latest_version_status=latest.status if latest else None,
         summary=shown.summary if (shown := active or latest) is not None else "",
     )
+
+
+class TermsCheckOut(Out):
+    valid: bool
+    summary: str
+    warnings: list[str]
+    error: str | None = None
+
+
+@router.post("/agreement-terms/check", response_model=TermsCheckOut)
+def check_terms(body: VersionTermsIn, ctx: Edit) -> TermsCheckOut:
+    """Validate draft terms and return the plain-English summary without saving (live rule builder)."""
+    from app.services.agreement_terms import summarize, to_snapshot, warnings_for
+
+    assert ctx.tenant is not None
+    try:
+        snap = to_snapshot(
+            body,
+            agreement_id="draft",
+            version_id="draft",
+            version_no=1,
+            supplier_id="draft",
+            fiscal_start=ctx.tenant.fiscal_year_start_month,
+        )
+    except AppError as exc:
+        return TermsCheckOut(valid=False, summary="", warnings=warnings_for(body), error=exc.detail)
+    return TermsCheckOut(valid=True, summary=summarize(snap), warnings=warnings_for(body))
 
 
 @router.get("/agreements", response_model=Page[AgreementOut])
@@ -354,8 +375,8 @@ def activate_version(version_id: uuid.UUID, body: ActivateIn, ctx: Activate) -> 
     return _version_out(ctx, svc.request_activation(ctx.db, ctx, version_id, body.note))
 
 
-@router.post("/agreement-versions/{version_id}/preview", response_model=ResultOut)
-def preview_version(version_id: uuid.UUID, body: PreviewIn, ctx: View) -> ResultOut:
+@router.post("/agreement-versions/{version_id}/preview", response_model=PreviewResultOut)
+def preview_version(version_id: uuid.UUID, body: PreviewIn, ctx: View) -> PreviewResultOut:
     return result_out(svc.preview(ctx.db, ctx, version_id, body.period_containing))
 
 

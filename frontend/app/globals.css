@@ -1,26 +1,137 @@
 @import "tailwindcss";
 
+/* Dark mode follows the data-theme attribute set by next-themes (system by default). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Semantic design tokens (docs/design-brief.md). Contrast verified ≥ 4.5:1 for text. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --canvas: #f7f8f6;
+  --surface: #ffffff;
+  --surface-2: #f1f3f1;
+  --ink: #15201b;
+  --muted: #56645d;
+  --rule: #dde3df;
+  --border-strong: #7d8a83; /* form controls: ≥ 3:1 against surface (WCAG 1.4.11) */
+  --brand: #1d4f3c;
+  --brand-hover: #163d2f;
+  --brand-soft: #e5efe9;
+  --on-brand: #ffffff;
+  --negative: #a3291c;
+  --negative-soft: #fbeceb;
+  --warning: #8a5a00;
+  --warning-soft: #fdf4e3;
+  --positive: #1f6b46;
+  --positive-soft: #e7f3ec;
+  --info: #2f5a8a;
+  --info-soft: #e8f0fa;
+  --focus: #1d4f3c;
+  --shadow: 0 1px 2px rgb(21 32 27 / 0.06), 0 2px 8px rgb(21 32 27 / 0.06);
+}
+
+[data-theme="dark"] {
+  --canvas: #0f1512;
+  --surface: #151d19;
+  --surface-2: #1b2520;
+  --ink: #e6ece8;
+  --muted: #9aa8a0;
+  --rule: #26322c;
+  --border-strong: #6d7d75;
+  --brand: #5fb38d;
+  --brand-hover: #74c39f;
+  --brand-soft: #1c2f26;
+  --on-brand: #0f1512;
+  --negative: #f08a7e;
+  --negative-soft: #3a1d19;
+  --warning: #e0b25a;
+  --warning-soft: #33280f;
+  --positive: #6cc79a;
+  --positive-soft: #16301f;
+  --info: #8ab4e6;
+  --info-soft: #182637;
+  --focus: #74c39f;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 2px 8px rgb(0 0 0 / 0.3);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-border-strong: var(--border-strong);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-brand: var(--on-brand);
+  --color-negative: var(--negative);
+  --color-negative-soft: var(--negative-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --shadow-card: var(--shadow);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Figures: tabular numerals everywhere numbers are shown. */
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--rule) 37%, var(--surface-2) 63%);
+  background-size: 400% 100%;
+  animation: skeleton 1.4s ease infinite;
+  border-radius: 4px;
+}
+@keyframes skeleton {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.sr-only-focusable:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
 }

@@ -13,6 +13,7 @@ from sqlalchemy import select
 
 from app.api.deps import Ctx, Requires, idempotency_key
 from app.api.schemas.common import In, Ok, Out, Page
+from app.api.schemas.views import ErrorPageOut, ImportPreviewOut, ValidatePreviewOut
 from app.core.csv_safe import csv_string
 from app.core.errors import not_found
 from app.core.permissions import Permission
@@ -194,11 +195,13 @@ def get_import(batch_id: uuid.UUID, ctx: View) -> BatchOut:
     return BatchOut.model_validate(svc.get_batch(ctx.db, ctx.tenant_uuid, batch_id))
 
 
-@router.get("/imports/{batch_id}/preview")
+@router.get("/imports/{batch_id}/preview", response_model=ImportPreviewOut)
 def preview_import(
     batch_id: uuid.UUID, ctx: Annotated[Ctx, Depends(Requires(Permission.MANAGE_IMPORTS))]
-) -> dict[str, Any]:
-    return svc.preview(ctx.db, ctx, svc.get_batch(ctx.db, ctx.tenant_uuid, batch_id))
+) -> ImportPreviewOut:
+    return ImportPreviewOut.model_validate(
+        svc.preview(ctx.db, ctx, svc.get_batch(ctx.db, ctx.tenant_uuid, batch_id))
+    )
 
 
 @router.put("/imports/{batch_id}/config", response_model=BatchOut)
@@ -209,11 +212,13 @@ def configure_import(batch_id: uuid.UUID, body: ConfigIn, ctx: Manage) -> BatchO
     )
 
 
-@router.post("/imports/{batch_id}/validate-preview")
+@router.post("/imports/{batch_id}/validate-preview", response_model=ValidatePreviewOut)
 def validate_preview(
     batch_id: uuid.UUID, ctx: Annotated[Ctx, Depends(Requires(Permission.MANAGE_IMPORTS))]
-) -> dict[str, Any]:
-    return svc.validate_preview(ctx.db, ctx, svc.get_batch(ctx.db, ctx.tenant_uuid, batch_id))
+) -> ValidatePreviewOut:
+    return ValidatePreviewOut.model_validate(
+        svc.validate_preview(ctx.db, ctx, svc.get_batch(ctx.db, ctx.tenant_uuid, batch_id))
+    )
 
 
 @router.post("/imports/{batch_id}/validate", status_code=202, response_model=JobAccepted)
@@ -273,10 +278,10 @@ def error_report(batch_id: uuid.UUID, ctx: View) -> StreamingResponse:
     )
 
 
-@router.get("/imports/{batch_id}/errors")
+@router.get("/imports/{batch_id}/errors", response_model=ErrorPageOut)
 def error_page(
     batch_id: uuid.UUID, ctx: View, limit: Annotated[int, Query(ge=1, le=200)] = 100
-) -> dict[str, Any]:
+) -> ErrorPageOut:
     batch = svc.get_batch(ctx.db, ctx.tenant_uuid, batch_id)
     items = []
     for i, e in enumerate(svc.error_rows(ctx.db, batch)):
@@ -292,7 +297,7 @@ def error_page(
                 "message": e.message,
             }
         )
-    return {"items": items, "total": svc.error_count(ctx.db, batch)}
+    return ErrorPageOut.model_validate({"items": items, "total": svc.error_count(ctx.db, batch)})
 
 
 # --------------------------------------------------------------------------- templates

@@ -3,3 +3,4 @@ allowBuilds:
   unrs-resolver: false
 minimumReleaseAgeExclude:
   - '@testing-library/user-event@14.6.9'
+  - lucide-react@1.71.0
