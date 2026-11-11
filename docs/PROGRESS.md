@@ -12,6 +12,37 @@ Template:
 - Next step:
 -->
 
+## 2026-11-11 — Phase 6: product screens + E2E
+- Changed: screens for suppliers (detail), agreements (list/new/detail with terms editor, live
+  summary, versions, compare, dry-run preview, documents), import wizard (upload → map → explicit
+  formats incl. never-guessed ambiguous dates → 200-row preview → background validation → unknown
+  supplier resolution → commit → result, templates, void), runs (start, progress, results, explain,
+  diff), results, discrepancies (filters, multi-select → claim), credits (unmatched + suggestions,
+  split allocation, manual entry, reversal), claims (list, lifecycle, recoveries via real credits,
+  notes, attachments, ETag edits, write-off), tier tracker (estimates labelled), approvals queue,
+  reports placeholder (Phase 7).
+- Backend: approvals now return a label, link and decision fields; `seed-e2e` CLI (refuses in
+  staging/production) for fresh MFA-enrolled E2E users.
+- Fixed (each with a failing test first): the worker process registered **no** job handlers
+  (`app/services/registry.py` was empty, so every queued email/import/run failed in `make worker`;
+  `tests/test_worker_registry.py`). axe findings: focusable chart inside aria-hidden, account menu
+  name mismatch, unnamed sort buttons on action columns, colour-only inline link.
+- CSP: Radix scroll-lock styles now carry the request nonce (`get-nonce`, already a transitive
+  dependency, MIT); sonner's CSS is imported as a stylesheet because its runtime `<style>` is blocked.
+- E2E: Playwright + axe on :3100/:8100 (no clash with dev servers), real worker, Mailpit API,
+  RFC 6238 TOTP helper (no new dependency). 14 journeys + 30 page accessibility checks pass.
+- Next step: Phase 7 (reports, exports, evidence packs).
+
+## 2026-11-11 — Phase 5: frontend foundation
+- Changed: design tokens (light/dark), IBM Plex, app shell (navigation, command palette,
+  notifications, user menu, breadcrumbs), nonce CSP via `proxy.ts`, generated OpenAPI client,
+  auth flows (login + MFA, MFA setup, reset, verify, email change, invite, unsubscribe), settings
+  (profile, organization, security incl. support access, reconciliation, approvals, members,
+  notifications, templates, plan, audit), dashboard with onboarding, first supplier screens.
+- Decisions (ADRs): 0011 Cache Components off so the CSP nonce applies to every page.
+- Open questions: design brief still needs founder approval (`docs/design-brief.md`).
+- Next step: Phase 6 (product screens).
+
 ## 2026-11-11 — Phase 4: runs, reconciliation, claims
 - Changed: calculation runs (scope, snapshot, one active per tenant via queue_key, cancel, immutable
   results + traces enforced by trigger, run diff, result history); deterministic credit auto-match during

@@ -54,3 +54,5 @@ app.py
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+frontend/e2e/.state/

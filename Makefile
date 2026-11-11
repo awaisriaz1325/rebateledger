@@ -7,7 +7,7 @@ WITH_ENV := set -a && . ./$(BACKEND_ENV) && set +a &&
 COMPOSE := docker compose
 
 .PHONY: help setup up down ps check check-backend check-frontend lint types test test-backend test-frontend \
-        e2e coverage-engine migrate migration seed api worker scheduler web pilot-sample openapi \
+        e2e e2e-seed e2e-api coverage-engine migrate migration seed api worker scheduler web pilot-sample openapi \
         audit secrets sast ci
 
 help: ## Show this help
@@ -51,8 +51,16 @@ test-backend: ## Backend tests only
 test-frontend: ## Frontend unit/component tests only
 	cd frontend && pnpm test
 
-e2e: ## Playwright end-to-end tests (starts API + web; needs `make up` and `make migrate`)
+e2e: ## Playwright end-to-end tests (starts API, worker and web on :8100/:3100; needs `make up` and `make migrate`)
 	cd frontend && pnpm e2e
+
+e2e-seed: ## Create a fresh E2E tenant; throwaway credentials go to frontend/e2e/.state (git-ignored)
+	cd backend && $(WITH_ENV) uv run rebateledger seed-e2e --out ../frontend/e2e/.state/seed.json
+
+e2e-api: ## API on :8100 plus a worker, configured for the E2E web origin (used by Playwright)
+	cd backend && $(WITH_ENV) export RL_APP_BASE_URL=http://localhost:3100 && \
+	  (uv run dramatiq app.workers.broker app.services.registry --processes 1 --threads 2 & \
+	   exec uv run uvicorn app.asgi:app --host 127.0.0.1 --port 8100)
 
 openapi: ## Regenerate frontend/generated/api.ts from the backend OpenAPI schema
 	cd backend && $(WITH_ENV) uv run python -m app.openapi > ../frontend/generated/openapi.json
