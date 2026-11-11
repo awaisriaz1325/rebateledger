@@ -18,8 +18,10 @@ from app.db.models.business import (
     Approval,
     BaselineRow,
     PurchaseLineRow,
+    Supplier,
     VersionStatus,
 )
+from app.db.models.runs import Claim
 from app.engine.calculate import PeriodResult, calculate
 from app.engine.models import Baseline, CalcOptions, Period, PurchaseLine, VersionSnapshot
 from app.engine.periods import clip, periods_overlapping
@@ -366,6 +368,39 @@ def list_approvals(db: Session, tenant_id: uuid.UUID, status: str = "pending") -
             .order_by(Approval.requested_at)
         ).scalars()
     )
+
+
+def describe_approvals(
+    db: Session, tenant_id: uuid.UUID, approvals: list[Approval]
+) -> dict[uuid.UUID, tuple[str, str]]:
+    """Human label and in-app link for each approval, resolved in two queries."""
+    version_ids = [a.object_id for a in approvals if a.object_type == "agreement_version"]
+    claim_ids = [a.object_id for a in approvals if a.object_type == "claim_write_off"]
+    out: dict[uuid.UUID, tuple[str, str]] = {}
+    if version_ids:
+        rows = db.execute(
+            select(
+                AgreementVersion.id,
+                AgreementVersion.version_no,
+                Agreement.id,
+                Agreement.name,
+                Supplier.name,
+            )
+            .join(Agreement, Agreement.id == AgreementVersion.agreement_id)
+            .join(Supplier, Supplier.id == Agreement.supplier_id)
+            .where(AgreementVersion.tenant_id == tenant_id, AgreementVersion.id.in_(version_ids))
+        ).all()
+        for vid, vno, aid, aname, sname in rows:
+            out[vid] = (f"Activate {aname} v{vno} ({sname})", f"/app/agreements/{aid}")
+    if claim_ids:
+        claim_rows = db.execute(
+            select(Claim.id, Claim.number, Claim.title).where(
+                Claim.tenant_id == tenant_id, Claim.id.in_(claim_ids)
+            )
+        ).all()
+        for cid, number, title in claim_rows:
+            out[cid] = (f"Write off claim #{number}: {title}", f"/app/claims/{cid}")
+    return out
 
 
 def _approval(db: Session, ctx: Any, approval_id: uuid.UUID) -> Approval:

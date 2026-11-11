@@ -2044,11 +2044,27 @@ export interface components {
         };
         /** ApprovalOut */
         ApprovalOut: {
+            /** Decided At */
+            decided_at: string | null;
+            /** Decided By */
+            decided_by: string | null;
+            /** Decision Note */
+            decision_note: string;
             /**
              * Id
              * Format: uuid
              */
             id: string;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+            /**
+             * Link
+             * @default
+             */
+            link: string;
             /**
              * Object Id
              * Format: uuid

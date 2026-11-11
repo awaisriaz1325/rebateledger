@@ -20,7 +20,7 @@ from app.api.schemas.views import ReasonOut, TraceStepOut
 from app.core.errors import AppError, not_found
 from app.core.permissions import Permission
 from app.core.storage import get_storage, new_key
-from app.db.models.business import Agreement, AgreementAttachment, AgreementVersion
+from app.db.models.business import Agreement, AgreementAttachment, AgreementVersion, Approval
 from app.engine.calculate import PeriodResult
 from app.services import agreements as svc
 from app.services import subscriptions
@@ -104,6 +104,20 @@ class ApprovalOut(Out):
     requested_by: uuid.UUID
     requested_at: datetime
     request_note: str
+    decided_by: uuid.UUID | None
+    decided_at: datetime | None
+    decision_note: str
+    label: str = ""
+    link: str = ""
+
+
+def _approvals_out(ctx: Ctx, approvals: list[Approval]) -> list[ApprovalOut]:
+    names = svc.describe_approvals(ctx.db, ctx.tenant_uuid, approvals)
+    out = []
+    for a in approvals:
+        label, link = names.get(a.object_id, ("", ""))
+        out.append(ApprovalOut.model_validate(a).model_copy(update={"label": label, "link": link}))
+    return out
 
 
 class PreviewIn(In):
@@ -384,16 +398,14 @@ def preview_version(version_id: uuid.UUID, body: PreviewIn, ctx: View) -> Previe
 def list_approvals(
     ctx: View, status: Literal["pending", "approved", "rejected", "cancelled"] = "pending"
 ) -> list[ApprovalOut]:
-    return [
-        ApprovalOut.model_validate(a) for a in svc.list_approvals(ctx.db, ctx.tenant_uuid, status)
-    ]
+    return _approvals_out(ctx, svc.list_approvals(ctx.db, ctx.tenant_uuid, status))
 
 
 @router.post("/approvals/{approval_id}/decision", response_model=ApprovalOut)
 def decide_approval(approval_id: uuid.UUID, body: DecisionIn, ctx: Approve) -> ApprovalOut:
-    return ApprovalOut.model_validate(
-        svc.decide(ctx.db, ctx, approval_id, body.decision == "approve", body.note)
-    )
+    return _approvals_out(
+        ctx, [svc.decide(ctx.db, ctx, approval_id, body.decision == "approve", body.note)]
+    )[0]
 
 
 @router.post("/approvals/{approval_id}/cancel", response_model=Ok)

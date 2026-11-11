@@ -114,6 +114,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--purchase-lines", type=int, default=100_000)
     s.add_argument("--owner-email", default="demo.owner@example.com")
     s.set_defaults(handler=_seed_demo)
+
+    e = sub.add_parser(
+        "seed-e2e", help="create a fresh tenant and MFA-enrolled users for E2E tests (local only)"
+    )
+    e.add_argument("--out", required=True, help="write the throwaway credentials (JSON) here")
+    e.set_defaults(handler=_seed_e2e)
     return parser
 
 
@@ -142,6 +148,22 @@ def _seed_demo(args: argparse.Namespace) -> int:
     from app.services.seed import seed_demo
 
     print(seed_demo(purchase_lines=args.purchase_lines, owner_email=args.owner_email))
+    return 0
+
+
+def _seed_e2e(args: argparse.Namespace) -> int:
+    import json
+    import os
+    from pathlib import Path
+
+    from app.services.e2e_seed import seed_e2e
+
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(out, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as fh:
+        json.dump(seed_e2e(), fh)
+    print(f"E2E tenant created; credentials written to {out}")
     return 0
 
 

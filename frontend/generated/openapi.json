@@ -491,9 +491,47 @@
       },
       "ApprovalOut": {
         "properties": {
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          },
+          "decision_note": {
+            "title": "Decision Note",
+            "type": "string"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "default": "",
+            "title": "Label",
+            "type": "string"
+          },
+          "link": {
+            "default": "",
+            "title": "Link",
             "type": "string"
           },
           "object_id": {
@@ -531,7 +569,10 @@
           "status",
           "requested_by",
           "requested_at",
-          "request_note"
+          "request_note",
+          "decided_by",
+          "decided_at",
+          "decision_note"
         ],
         "title": "ApprovalOut",
         "type": "object"

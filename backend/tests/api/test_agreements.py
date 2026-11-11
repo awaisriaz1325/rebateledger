@@ -297,11 +297,16 @@ def test_reject_returns_to_draft(app_client: TestClient, world: World) -> None:
     sid = app_client.post("/api/v1/suppliers", json={"name": "Acme", "codes": ["ACME"]}).json()[
         "id"
     ]
-    vid = create(app_client, sid)["versions"][0]["id"]
+    agreement = create(app_client, sid)
+    vid = agreement["versions"][0]["id"]
     app_client.post(f"/api/v1/agreement-versions/{vid}/activate", json={})
     ac = _client(app_client)
     login(ac, admin)
     ap = ac.get("/api/v1/approvals").json()[0]
+    # The queue names what is being approved and links to it (no client-side id lookups).
+    assert ap["label"] == "Activate Volume v1 (Acme)"
+    assert ap["link"] == f"/app/agreements/{agreement['id']}"
+    assert ap["decided_at"] is None
     assert (
         ac.post(
             f"/api/v1/approvals/{ap['id']}/decision",
