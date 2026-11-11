@@ -12,6 +12,17 @@ Template:
 - Next step:
 -->
 
+## 2026-11-11 — Phase 3: suppliers, agreements, imports
+- Changed: suppliers/aliases/contacts/merge; agreements with versioned terms in SPEC tables,
+  plain-English summary, dry-run preview, approvals (four-eyes), attachments; DB triggers make
+  non-draft versions immutable; import pipeline (CSV/XLSX upload with signature + zip-bomb checks,
+  encoding/delimiter detection, mapping templates, explicit formats, 200-row preview, background
+  validation, single-transaction commit with dedupe, error report, unknown-supplier resolution, void);
+  plans + subscriptions + limit checks; demo seed; 1M-row load test.
+- Decisions (ADRs): 0012 agreement versioning and import pipeline.
+- Open questions: upload size vs row limit conflict (ADR 0012 §7); supersession rule (§3).
+- Next step: Phase 4 (runs, reconciliation, claims).
+
 ## 2026-11-10 — Phases 0, 1, 2: foundations, engine + pilot CLI, backend core
 - Changed: monorepo scaffold (backend/frontend/infra/docs), compose stack with owner/app DB roles,
   Makefile, CI (check, audit, SAST, secret scan, e2e job), Dependabot. Pure rebate engine with

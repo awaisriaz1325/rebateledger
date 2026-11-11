@@ -1,0 +1,4 @@
+Vendor,Invoice,Line,Item,Qty,Ext,Inv Date,Currency
+ACME,I1,1,A,1,10.00,01/15/2026,USD
+ACME,I1,1,A,1,10.00,01/15/2026,USD
+ACME,I1,2,A,1,10.00,01/15/2026,USD

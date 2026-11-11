@@ -1,7 +1,7 @@
 # Threat model (STRIDE)
 
 Living document (SPEC §8.6). Updated each phase that adds attack surface.
-Last update: 2026-11-10 — Phase 2 (identity, tenancy, sessions, audit, jobs).
+Last update: 2026-11-11 — Phase 3 (uploads, imports, agreements).
 
 ## Assets
 1. Supplier pricing, purchase lines, credits, agreements (commercially sensitive).
@@ -66,9 +66,16 @@ Ops console = same apps, separate role enforced server-side.
 Rate-limit keys hold hashed identifiers only. Not a system of record; loss = rate
 limit reset and re-queued jobs (jobs table is durable). Private network only (P11).
 
-### Object storage (P3)
-Tenant-prefixed random keys; never served inline; download re-checks authorization;
-signed URLs ≤ 15 min; magic-byte validation; zip-bomb limits.
+### Object storage + file uploads (P3)
+| Threat | Mitigation | Status |
+|---|---|---|
+| T/E: malicious upload (macro workbook, polyglot) | Extension AND magic bytes checked; .xlsm/.xlsb/.xls refused; `vbaProject` parts refused | Done, tested |
+| D: zip bomb | Member count, per-member ratio and total uncompressed size checked before parsing | Done, tested |
+| I: XXE | openpyxl uses defusedxml (verified `openpyxl.xml.DEFUSEDXML is True`); parser errors → 422 | Done, tested |
+| D: huge files | 50 MB / 1M rows / 200 columns; streaming parse; ≤ 768 MB worker budget (measured 258 MB) | Done, measured |
+| I: path traversal | Keys `{tenant}/{kind}/{random}`; local adapter refuses paths outside its root | Done |
+| I: content served inline | Downloads only via authorised endpoint, `attachment` + `nosniff` | Done |
+| T: formula injection in exports | `csv_safe.neutralize` on every exported cell (error report, audit CSV) | Done, tested |
 
 ### Email
 Tokens single-use, hashed, short-lived. Security emails cannot be disabled.

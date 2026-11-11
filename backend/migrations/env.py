@@ -20,12 +20,12 @@ def run_migrations_online() -> None:
     engine = create_engine(url.get_secret_value())
     with engine.connect() as connection:
         connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {SCHEMA}"))
-        connection.execute(text(f"SET search_path TO {SCHEMA}"))
         connection.commit()
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
             version_table_schema=SCHEMA,
+            include_schemas=True,
             include_object=lambda obj, name, type_, reflected, compare_to: (
                 name != "alembic_version"
             ),

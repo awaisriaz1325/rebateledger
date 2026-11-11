@@ -52,7 +52,7 @@ def _clean(request: pytest.FixtureRequest) -> Iterator[None]:
         tables = (
             conn.execute(
                 text(
-                    "SELECT tablename FROM pg_tables WHERE schemaname = 'rl' AND tablename <> 'alembic_version'"
+                    "SELECT tablename FROM pg_tables WHERE schemaname = 'rl' AND tablename NOT IN ('alembic_version', 'plans')"
                 )
             )
             .scalars()

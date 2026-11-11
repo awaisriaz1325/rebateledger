@@ -72,3 +72,50 @@ is not listed here.
 |---|---|
 | `JOB_FAILED` | The job raised; message is user-safe |
 | `WORKER_LOST` | The worker stopped mid-job too many times |
+
+## Suppliers & agreements
+| Code | Status | Meaning |
+|---|---|---|
+| `CODE_REQUIRED` | 422 | A supplier needs at least one code |
+| `CODE_IN_USE` | 409 | Supplier code already belongs to another supplier |
+| `MERGE_SAME_SUPPLIER` | 409 | Choose two different suppliers |
+| `MERGE_OVERLAPPING_AGREEMENTS` | 409 | Both suppliers have overlapping active agreements |
+| `REFERENCE_IN_USE` | 409 | Agreement external reference already used |
+| `TERMS_INVALID` | 422 | Agreement terms fail engine validation (detail says why) |
+| `AGREEMENT_ARCHIVED` | 409 | Unarchive first |
+| `DRAFT_EXISTS` | 409 | Finish or delete the open draft before another version |
+| `LAST_VERSION` | 409 | An agreement keeps at least one version |
+| `VERSION_NOT_EDITABLE` | 409 | Only drafts change; active versions are immutable |
+| `VERSION_NOT_DRAFT` | 409 | Activation requested on a non-draft |
+| `VERSION_NOT_PENDING` | 409 | Version is no longer awaiting approval |
+| `VERSION_OVERLAP` | 409 | Effective ranges would overlap |
+| `PERIOD_INVALID` | 422 | No period of the agreement contains the date / period dates invalid |
+| `SELF_APPROVAL` | 403 | Four-eyes: a different approver is required |
+| `APPROVAL_DECIDED` | 409 | Request already approved/rejected/cancelled |
+| `PLAN_LIMIT_REACHED` | 403 | The plan's limit blocks this new action; existing data is unaffected |
+| `CURSOR_INVALID` | 422 | Restart pagination |
+
+## Imports
+| Code | Status | Meaning |
+|---|---|---|
+| `FILE_TYPE_NOT_ALLOWED` | 422 | Only .csv/.xlsx; macro formats refused |
+| `FILE_SIGNATURE_MISMATCH` | 422 | Contents don't match the extension |
+| `FILE_TOO_LARGE` / `FILE_EMPTY` | 422 | Over 50 MB / empty |
+| `XLSX_TOO_LARGE` / `XLSX_TOO_COMPLEX` | 422 | Zip-bomb protection triggered |
+| `XLSX_UNREADABLE` | 422 | Workbook refused by the safe parser (e.g. external entities) |
+| `TOO_MANY_ROWS` / `TOO_MANY_COLUMNS` | 422 | Over 1,000,000 rows / 200 columns |
+| `ENCODING_MISMATCH` | 422 | File is not valid in the chosen encoding |
+| `ENCODING_INVALID` / `DELIMITER_INVALID` / `SHEET_INVALID` | 422 | Unsupported choice |
+| `CSV_MALFORMED` | 422 | CSV could not be parsed |
+| `HEADER_NOT_FOUND` | 422 | The chosen header row is beyond the end of the file |
+| `FILE_ALREADY_IMPORTED` | 409 | Identical file uploaded before; resend with `confirm_duplicate=true` |
+| `IMPORT_NOT_CONFIGURED` | 409 | Confirm mapping and formats first |
+| `IMPORT_NOT_EDITABLE` / `IMPORT_BUSY` / `IMPORT_NOT_COMMITTABLE` / `IMPORT_NOT_COMMITTED` | 409 | Wrong state for this action |
+| `COMMIT_MODE_INVALID` | 422 | Use `all_or_nothing` or `skip_invalid` |
+| `ACTION_INVALID` | 422 | Unknown-supplier resolution must be `create` or `map` |
+
+Row-level codes (in the error report, not HTTP): `REQUIRED`, `NOT_A_NUMBER`,
+`TOO_MANY_DECIMALS`, `NEGATIVE_STYLE`, `INVALID_DATE`, `DATE_TOO_OLD`, `DATE_IN_FUTURE`,
+`NO_DATE`, `UNKNOWN_SUPPLIER`, `UNKNOWN_AGREEMENT`, `AGREEMENT_AMBIGUOUS`,
+`CURRENCY_NOT_USD`, `RAGGED_ROW`, `TOO_LONG`, `TOO_LARGE`, `NOT_A_BOOLEAN`,
+`PERIOD_INVALID`; warnings `SKU_SCIENTIFIC`, `AMOUNT_MISMATCH`, `DUPLICATE_ROW`.

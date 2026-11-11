@@ -35,7 +35,8 @@ def new_id() -> uuid.UUID:
 class Base(DeclarativeBase):
     metadata = MetaData(schema=SCHEMA, naming_convention=NAMING)
     type_annotation_map: ClassVar[dict[Any, Any]] = {
-        dict[str, Any]: JSON().with_variant(JSONB(), "postgresql")
+        dict[str, Any]: JSON().with_variant(JSONB(), "postgresql"),
+        list[dict[str, Any]]: JSON().with_variant(JSONB(), "postgresql"),
     }
 
 

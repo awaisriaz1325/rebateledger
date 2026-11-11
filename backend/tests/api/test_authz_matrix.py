@@ -140,9 +140,15 @@ SAMPLE_BODIES: dict[tuple[str, str], dict[str, Any]] = {
 """Valid bodies so permitted calls reach the object lookup (not 422). Later phases add more."""
 
 
+SAMPLE_FILES: dict[tuple[str, str], dict[str, Any]] = {}
+"""Multipart routes: (files, form data)."""
+
+
 def _call(client: TestClient, method: str, path: str, template: str = "") -> Any:
     kwargs: dict[str, Any] = {"headers": {"If-Match": '"v1"', "Idempotency-Key": str(uuid.uuid4())}}
-    if method in ("POST", "PUT", "PATCH"):
+    if (method, template) in SAMPLE_FILES:
+        kwargs.update(SAMPLE_FILES[(method, template)])
+    elif method in ("POST", "PUT", "PATCH"):
         kwargs["json"] = SAMPLE_BODIES.get((method, template), {})
     return client.request(method, path, **kwargs)
 
