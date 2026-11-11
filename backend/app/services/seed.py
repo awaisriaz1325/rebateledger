@@ -130,7 +130,8 @@ def seed_demo(purchase_lines: int, owner_email: str) -> str:
     url = settings.migration_database_url
     if url is None:
         raise SystemExit("RL_MIGRATION_DATABASE_URL (owner role) is required")
-    rng = random.Random(2026)  # noqa: S311 - fake demo data, not security relevant
+    # fake demo data only; not security relevant
+    rng = random.Random(2026)  # noqa: S311  # nosec B311
     engine = create_engine(url.get_secret_value(), hide_parameters=True)
     password = secrets.token_urlsafe(12)
     today = utcnow().date()

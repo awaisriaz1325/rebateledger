@@ -41,7 +41,7 @@ def enqueue_for_all_tenants(job_type: str) -> int:
     return len(tenant_ids)
 
 
-DAILY: dict[str, int] = {"verify_audit_chain": 3}
+DAILY: dict[str, int] = {"verify_audit_chain": 3, "claim_reminders": 13, "tier_alerts": 14}
 """job type → UTC hour at which it runs once a day."""
 HOURLY: list[str] = []
 

@@ -1180,7 +1180,7 @@ def _security() -> None:
         CREATE FUNCTION rl.guard_agreement_version() RETURNS trigger LANGUAGE plpgsql AS $$
         BEGIN
           IF TG_OP = 'DELETE' THEN
-            IF OLD.status <> 'draft' THEN
+            IF OLD.status <> 'draft' AND current_user <> 'rl_owner' THEN
               RAISE EXCEPTION 'agreement version % is %, not a draft; it cannot be deleted', OLD.id, OLD.status
                 USING ERRCODE = 'check_violation';
             END IF;
@@ -1219,6 +1219,7 @@ def _security() -> None:
             v_id := NEW.version_id;
           END IF;
           SELECT status INTO v_status FROM rl.agreement_versions WHERE id = v_id;
+          IF TG_OP = 'DELETE' AND current_user = 'rl_owner' THEN RETURN OLD; END IF;
           IF v_status IS NOT NULL AND v_status <> 'draft' THEN
             RAISE EXCEPTION 'rules of agreement version % (%) are immutable', v_id, v_status
               USING ERRCODE = 'check_violation';

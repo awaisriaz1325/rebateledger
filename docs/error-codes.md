@@ -119,3 +119,29 @@ Row-level codes (in the error report, not HTTP): `REQUIRED`, `NOT_A_NUMBER`,
 `NO_DATE`, `UNKNOWN_SUPPLIER`, `UNKNOWN_AGREEMENT`, `AGREEMENT_AMBIGUOUS`,
 `CURRENCY_NOT_USD`, `RAGGED_ROW`, `TOO_LONG`, `TOO_LARGE`, `NOT_A_BOOLEAN`,
 `PERIOD_INVALID`; warnings `SKU_SCIENTIFIC`, `AMOUNT_MISMATCH`, `DUPLICATE_ROW`.
+
+## Runs, reconciliation, claims
+| Code | Status | Meaning |
+|---|---|---|
+| `RANGE_INVALID` / `RANGE_TOO_LONG` | 422 | Run range end before start / longer than 3 years |
+| `NOTHING_TO_RUN` | 409 | No active agreements in the chosen scope |
+| `RUN_FINISHED` | 409 | Run already finished; cannot cancel |
+| `PERIOD_NOT_CALCULATED` | 422 | Allocate only to periods present in the latest run |
+| `SUPPLIER_MISMATCH` | 422 | Credit and agreement/claim belong to different suppliers |
+| `ALLOCATION_EXCEEDS_CREDIT` | 422 | Split allocations would exceed the credit amount |
+| `ALLOCATION_LINKED_TO_CLAIM` | 409 | Remove the claim recovery instead of the allocation |
+| `CREDIT_VOIDED` | 409 | The credit's import was voided |
+| `CREDIT_REFERENCE_EXISTS` | 409 | Manual credit duplicates an existing reference — link that credit |
+| `CREDIT_REQUIRED` | 422 | Recovery needs an existing credit or a new one (reference, date, amount) |
+| `NO_DISCREPANCIES` / `MIXED_SUPPLIERS` | 422 | Claim needs ≥ 1 discrepancy of one supplier |
+| `NOT_CLAIMABLE` | 409 | Only SHORT_PAID / MISSING items can be claimed |
+| `ALREADY_CLAIMED` | 409 | The period already has an open claim |
+| `REASON_REQUIRED` | 422 | Amount edits and write-offs need a reason |
+| `AMOUNT_INVALID` | 422 | Amount must be positive / a number |
+| `ASSIGNEE_INVALID` / `CONTACT_INVALID` | 422 | Assignee must be an active member; contact must belong to the supplier |
+| `TRANSITION_NOT_ALLOWED` | 409 | Claim status change not permitted from the current status |
+| `WRITE_OFF_PENDING` | 409 | A write-off awaits four-eyes approval |
+| `RECOVERY_INCOMPLETE` / `NO_RECOVERY` | 409 | Link recovering credits before resolving |
+| `ALLOCATIONS_REQUIRED` | 422 | Multi-period claims need a per-period split of the recovery |
+| `CLAIM_CLOSED` | 409 | Closed claims cannot change |
+| `PREFERENCE_UNKNOWN` | 422 | Security/account emails cannot be turned off |

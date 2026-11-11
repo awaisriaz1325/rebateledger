@@ -846,6 +846,10 @@ def void(db: Session, ctx: Any, batch: ImportBatch, reason: str) -> ImportBatch:
         )
     batch.status = BatchStatus.VOIDED.value
     batch.voided_at, batch.voided_by, batch.void_reason = utcnow(), ctx.user.id, reason
+    if batch.import_type == ImportType.CREDITS.value:
+        from app.services.reconciliation import reverse_for_voided_credits
+
+        reverse_for_voided_credits(db, ctx, batch.id)
     record(
         db,
         tenant_id=ctx.tenant_uuid,

@@ -181,3 +181,124 @@ SAMPLE_FILES.update(
         },
     }
 )
+
+
+def run(w: World, t: uuid.UUID) -> uuid.UUID:
+    rid = uuid.uuid7()
+    w.sql(
+        "INSERT INTO rl.calculation_runs (id, tenant_id, number, status, scope, period_start, period_end, snapshot, engine_version, totals, error, created_at, updated_at) "
+        "VALUES (:r, :t, (SELECT coalesce(max(number), 0) + 1 FROM rl.calculation_runs WHERE tenant_id = :t), 'succeeded', '{}', '2026-01-01', '2026-03-31', '{}', '1.0.0', '{}', '', now(), now())",
+        r=rid,
+        t=t,
+    )
+    return rid
+
+
+def result(w: World, t: uuid.UUID) -> uuid.UUID:
+    vid, aid = version_and_agreement(w, t)
+    sid = w.sql("SELECT supplier_id FROM rl.agreements WHERE id = :a", a=aid)[0][0]
+    rid, res = run(w, t), uuid.uuid7()
+    w.sql(
+        "INSERT INTO rl.period_results (id, tenant_id, run_id, agreement_id, agreement_version_id, supplier_id, version_no, period_start, period_end, full_period_start, "
+        "full_period_end, period_label, expected, spend, quantity, measure, components, statuses, reasons, eligible_count, excluded_counts, payment_terms_days, due_date, "
+        "input_hash, engine_version, created_at) VALUES (:i, :t, :r, :a, :v, :s, 1, '2026-01-01', '2026-03-31', '2026-01-01', '2026-03-31', '2026-Q1', 100, 0, 0, 0, "
+        "'[]', '{OK}', '[]', 0, '{}', 30, '2026-04-30', 'h', '1.0.0', now())",
+        i=res,
+        t=t,
+        r=rid,
+        a=aid,
+        v=vid,
+        s=sid,
+    )
+    return res
+
+
+def credit(w: World, t: uuid.UUID) -> uuid.UUID:
+    cid = uuid.uuid7()
+    w.sql(
+        "INSERT INTO rl.credit_lines (id, tenant_id, supplier_id, credit_reference, credit_date, amount, memo, possible_duplicate, voided, created_at) "
+        "VALUES (:c, :t, :s, :r, '2026-05-01', 100, '', false, false, now())",
+        c=cid,
+        t=t,
+        s=supplier(w, t),
+        r=f"CR-{cid.hex[-8:]}",
+    )
+    return cid
+
+
+def allocation(w: World, t: uuid.UUID) -> uuid.UUID:
+    res = result(w, t)
+    aid = w.sql("SELECT agreement_id FROM rl.period_results WHERE id = :r", r=res)[0][0]
+    al = uuid.uuid7()
+    w.sql(
+        "INSERT INTO rl.credit_allocations (id, tenant_id, credit_id, agreement_id, period_start, period_end, amount, method, created_at) "
+        "VALUES (:i, :t, :c, :a, '2026-01-01', '2026-03-31', 10, 'manual', now())",
+        i=al,
+        t=t,
+        c=credit(w, t),
+        a=aid,
+    )
+    return al
+
+
+def claim(w: World, t: uuid.UUID) -> uuid.UUID:
+    cl = uuid.uuid7()
+    w.sql(
+        "INSERT INTO rl.claims (id, tenant_id, number, supplier_id, title, status, identified_amount, claimed_amount, claimed_amount_reason, channel, notes, "
+        "write_off_reason, pending_write_off, last_reminder, row_version, created_at, updated_at) VALUES (:i, :t, (SELECT coalesce(max(number), 0) + 1 FROM rl.claims WHERE tenant_id = :t), :s, 'X', 'draft', 10, 10, '', 'email', '', '', false, '{}', 1, now(), now())",
+        i=cl,
+        t=t,
+        s=supplier(w, t),
+    )
+    return cl
+
+
+def recovery(w: World, t: uuid.UUID) -> uuid.UUID:
+    rec = uuid.uuid7()
+    w.sql(
+        "INSERT INTO rl.claim_recoveries (id, tenant_id, claim_id, credit_id, amount, linked_by, linked_at) VALUES (:i, :t, :c, :cr, 5, :u, now())",
+        i=rec,
+        t=t,
+        c=claim(w, t),
+        cr=credit(w, t),
+        u=uuid.uuid7(),
+    )
+    return rec
+
+
+EXTRA_FACTORIES.update(
+    {
+        "run_id": run,
+        "other_run_id": run,
+        "result_id": result,
+        "credit_id": credit,
+        "allocation_id": allocation,
+        "claim_id": claim,
+        "recovery_id": recovery,
+    }
+)
+SAMPLE_BODIES.update(
+    {
+        ("POST", "/api/v1/credits/{credit_id}/allocations"): {
+            "parts": [
+                {
+                    "agreement_id": str(uuid.uuid4()),
+                    "period_start": "2026-01-01",
+                    "period_end": "2026-03-31",
+                    "amount": "1",
+                }
+            ]
+        },
+        ("PATCH", "/api/v1/claims/{claim_id}"): {"title": "X"},
+        ("POST", "/api/v1/claims/{claim_id}/transition"): {"to": "ready"},
+        ("POST", "/api/v1/claims/{claim_id}/notes"): {"text": "hello"},
+        ("POST", "/api/v1/claims/{claim_id}/recoveries"): {"credit_id": str(uuid.uuid4())},
+    }
+)
+SAMPLE_FILES.update(
+    {
+        ("POST", "/api/v1/claims/{claim_id}/attachments"): {
+            "files": {"file": ("x.pdf", b"%PDF-1.4", "application/pdf")}
+        },
+    }
+)

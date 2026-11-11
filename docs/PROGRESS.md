@@ -12,6 +12,19 @@ Template:
 - Next step:
 -->
 
+## 2026-11-11 — Phase 4: runs, reconciliation, claims
+- Changed: calculation runs (scope, snapshot, one active per tenant via queue_key, cancel, immutable
+  results + traces enforced by trigger, run diff, result history); deterministic credit auto-match during
+  runs; live reconciliation (tenant-timezone due dates, run-snapshot tolerances); manual split allocation +
+  reversal; unmatched credits with suggestions; stale detection for every SPEC §4.7 trigger; discrepancy
+  queue; claims lifecycle with events, attachments, four-eyes write-off, recoveries that link real credits;
+  tier tracker + accrual estimates; notifications (in-app + email, preferences, signed unsubscribe);
+  claim reminders and tier alerts (daily jobs); dashboard KPIs.
+- Measured: 50 agreements / 1,000,000 lines full-year run in 242.7 s (target 300 s), 591 MB peak.
+- Decisions: latest result per agreement + *full* period (split windows replace older results);
+  recovered = credits linked to claims only.
+- Next step: Phase 5 (frontend foundation).
+
 ## 2026-11-11 — Phase 3: suppliers, agreements, imports
 - Changed: suppliers/aliases/contacts/merge; agreements with versioned terms in SPEC tables,
   plain-English summary, dry-run preview, approvals (four-eyes), attachments; DB triggers make
