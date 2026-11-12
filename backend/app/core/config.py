@@ -72,6 +72,8 @@ class Settings(BaseSettings):
     verify_ttl_hours: int = 24
     reset_ttl_minutes: int = 30
     platform_admin_ip_allowlist: list[str] = []
+    ops_notify_email: str | None = None
+    """Where new pilot requests are announced (operator inbox address). Unset = no email."""
     trusted_origins: list[str] = []
     """Extra origins accepted by the CSRF Origin check (app_base_url is always accepted)."""
 

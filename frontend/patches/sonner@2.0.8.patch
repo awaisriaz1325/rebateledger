@@ -1,0 +1,24 @@
+diff --git a/dist/index.js b/dist/index.js
+index 394dbc2272f43b84642b0f9d5cc7eb1eacb0ffb3..22aab4361f740420e952d419ba89a886405c23a6 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1,5 +1,7 @@
+ 'use client';
+ function __insertCSS(code) {
++  // RebateLedger patch: styles ship as sonner/dist/styles.css; runtime <style> injection is blocked by our CSP.
++  return
+   if (!code || typeof document == 'undefined') return
+   let head = document.head || document.getElementsByTagName('head')[0]
+   let style = document.createElement('style')
+diff --git a/dist/index.mjs b/dist/index.mjs
+index c124f821a68f7070647a5a04441d0caa53689662..db08986725671de7511741c74ea2b9080b20a395 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -1,5 +1,7 @@
+ 'use client';
+ function __insertCSS(code) {
++  // RebateLedger patch: styles ship as sonner/dist/styles.css; runtime <style> injection is blocked by our CSP.
++  return
+   if (!code || typeof document == 'undefined') return
+   let head = document.head || document.getElementsByTagName('head')[0]
+   let style = document.createElement('style')

@@ -208,8 +208,13 @@ class PilotIn(In):
     email: Email
     company: Name
     role: Annotated[str, Field(max_length=100)] = ""
+    segment: Annotated[str, Field(max_length=60)] = ""
+    erp_system: Annotated[str, Field(max_length=100)] = ""
     supplier_count: Annotated[str, Field(max_length=40)] = ""
+    """Approximate number of supplier rebate agreements."""
     message: Annotated[str, Field(max_length=2000)] = ""
+    consent: Literal[True]
+    """The visitor agrees to be contacted about the pilot (required)."""
     website: Annotated[str, Field(max_length=200)] = ""
     """Honeypot: humans never fill it."""
 
@@ -220,6 +225,8 @@ class PilotOut(Out):
     email: str
     company: str
     role: str
+    segment: str
+    erp_system: str
     supplier_count: str
     message: str
     status: str
@@ -603,3 +610,18 @@ def pilot_request(body: PilotIn, request: Request, db: DB) -> Ok:
             db, request.client.host if request.client else "", body.model_dump(exclude={"website"})
         )
     return Ok()
+
+
+class PublicPlan(Out):
+    code: str
+    name: str
+    monthly_price: DecimalStr
+    max_active_agreements: int | None
+    max_users: int | None
+    max_import_rows_per_month: int | None
+
+
+@router.get("/public/plans", response_model=list[PublicPlan], dependencies=[Depends(Public())])
+def public_plans(db: DB) -> list[PublicPlan]:
+    """Pricing page: public plans only (prices are [PROPOSED DEFAULT] until confirmed)."""
+    return [PublicPlan.model_validate(p) for p in svc.public_plans(db)]

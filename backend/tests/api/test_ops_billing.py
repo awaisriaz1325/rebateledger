@@ -362,14 +362,25 @@ def test_ops_console_tenants_flags_pilots_announcements_jobs(
     assert (
         anon.post(
             "/api/v1/pilot-requests",
-            json={"name": "Pat", "email": "pat@dist.example", "company": "Dist Co"},
+            json={
+                "name": "Pat",
+                "email": "pat@dist.example",
+                "company": "Dist Co",
+                "consent": True,
+            },
         ).status_code
         == 202
     )
     assert (
         anon.post(
             "/api/v1/pilot-requests",
-            json={"name": "Bot", "email": "b@x.example", "company": "X", "website": "spam"},
+            json={
+                "name": "Bot",
+                "email": "b@x.example",
+                "company": "X",
+                "website": "spam",
+                "consent": True,
+            },
         ).status_code
         == 202
     )
@@ -397,3 +408,68 @@ def test_ops_console_tenants_flags_pilots_announcements_jobs(
     jobs = oc.get("/api/v1/ops/jobs").json()
     assert set(jobs["counts"]) >= {"queued", "running", "dead"}
     assert any(e["action"] == "ops.tenant_created" for e in oc.get("/api/v1/ops/audit").json())
+
+
+def test_pilot_request_reaches_inbox_and_sends_both_emails(
+    app_client: TestClient, world: World, outbox: list[Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "ops_notify_email", "ops-inbox@rebateledger.invalid")
+    anon = _client(app_client)
+    body = {
+        "name": "Riley",
+        "email": f"riley-{uuid.uuid4().hex[:6]}@distributor.example",
+        "company": "Riley Wholesale",
+        "role": "Controller",
+        "segment": "Electrical",
+        "erp_system": "Epicor Eclipse",
+        "supplier_count": "20-50",
+        "message": "We have ~30 programs.",
+        "consent": True,
+    }
+    missing_consent = {k: v for k, v in body.items() if k != "consent"}
+    assert anon.post("/api/v1/pilot-requests", json=missing_consent).status_code == 422
+    assert anon.post("/api/v1/pilot-requests", json={**body, "consent": False}).status_code == 422
+    assert anon.post("/api/v1/pilot-requests", json=body).status_code == 202
+
+    to_requester = [e for e in outbox if e.to == body["email"]]
+    to_ops = [e for e in outbox if e.to == "ops-inbox@rebateledger.invalid"]
+    assert len(to_requester) == 1 and "received your" in to_requester[0].subject
+    assert body["message"] not in to_requester[0].text  # nothing reflected back
+    assert (
+        len(to_ops) == 1
+        and "Riley Wholesale" in to_ops[0].subject
+        and "/ops/requests" in to_ops[0].text
+    )
+
+    oc, _ = _ops(app_client, world)
+    stored = next(
+        p for p in oc.get("/api/v1/ops/pilot-requests").json() if p["email"] == body["email"]
+    )
+    assert (stored["segment"], stored["erp_system"], stored["status"]) == (
+        "Electrical",
+        "Epicor Eclipse",
+        "new",
+    )
+    # Per-email limit: 3 per day.
+    for _ in range(2):
+        anon.post("/api/v1/pilot-requests", json=body)
+    assert anon.post("/api/v1/pilot-requests", json=body).status_code == 429
+
+
+def test_public_plans_lists_only_public_plans(app_client: TestClient) -> None:
+    anon = _client(app_client)
+    plans = anon.get("/api/v1/public/plans").json()
+    assert plans and all(
+        set(p)
+        == {
+            "code",
+            "name",
+            "monthly_price",
+            "max_active_agreements",
+            "max_users",
+            "max_import_rows_per_month",
+        }
+        for p in plans
+    )

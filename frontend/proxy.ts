@@ -17,14 +17,16 @@ export function proxy(request: NextRequest) {
 
   const nonce = btoa(crypto.randomUUID());
   const dev = process.env.NODE_ENV === "development";
+  // Optional cookieless analytics: allowed only outside the app, the console and auth pages.
+  const analytics = analyticsOrigin(pathname);
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ""}${analytics ? ` ${analytics}` : ""}`,
     // Inline style attributes are used by React for virtualised rows; no style elements without nonce.
     `style-src 'self' 'nonce-${nonce}' 'unsafe-inline'`,
     "img-src 'self' data: blob:",
     "font-src 'self'",
-    "connect-src 'self'",
+    `connect-src 'self'${analytics ? ` ${analytics}` : ""}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -46,6 +48,18 @@ export function proxy(request: NextRequest) {
     response.headers.set("Cache-Control", "private, no-store");
   }
   return response;
+}
+
+const PRIVATE_PREFIXES = ["/app", "/ops", "/login", "/mfa", "/accept-invite", "/reset-password", "/forgot-password", "/verify-email", "/confirm-email-change", "/unsubscribe"];
+
+function analyticsOrigin(pathname: string): string | null {
+  const src = process.env.NEXT_PUBLIC_ANALYTICS_SRC;
+  if (!src || PRIVATE_PREFIXES.some((p) => pathname.startsWith(p))) return null;
+  try {
+    return new URL(src).origin;
+  } catch {
+    return null;
+  }
 }
 
 export const config = {

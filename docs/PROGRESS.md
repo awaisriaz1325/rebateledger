@@ -12,6 +12,20 @@ Template:
 - Next step:
 -->
 
+## 2026-11-12 — Phase 9: marketing website
+- Changed: public site (Home, How it works, Features, Security, Pricing from the plan catalog,
+  About, Contact, Request a pilot, hidden Blog, legal templates with [LEGAL REVIEW REQUIRED],
+  404/500), sitemap, robots, generated social image, JSON-LD (no ratings); pilot form with
+  consent, honeypot and rate limits, confirmation + operator emails (migration 0006); optional
+  cookieless analytics behind config with route-scoped CSP; sonner CSS-injection patch.
+- Verified: Lighthouse (local prod build) Home 100/100/100/100, Pricing 99/100/100/100,
+  Security 100/100/100/100; copy audit and axe on every marketing page; pilot request reaches
+  the ops inbox and both emails arrive in Mailpit. 62 E2E tests pass.
+- Decisions (ADRs): 0015.
+- Open questions: analytics provider; bot challenge (third-party); legal review; real proof and
+  team bios to replace placeholders; prices.
+- Next step: Phase 10 (hardening).
+
 ## 2026-11-12 — Phase 8: billing, ops console, support access
 - Changed: invoices + lines (RLS, immutability triggers), gap-free yearly numbering, invoice
   PDF and emails, mark paid, void + reissue, daily lapse job (reminders, past_due), tenant

@@ -5010,11 +5010,22 @@
             "title": "Company",
             "type": "string"
           },
+          "consent": {
+            "const": true,
+            "title": "Consent",
+            "type": "boolean"
+          },
           "email": {
             "maxLength": 254,
             "minLength": 3,
             "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
             "title": "Email",
+            "type": "string"
+          },
+          "erp_system": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Erp System",
             "type": "string"
           },
           "message": {
@@ -5035,6 +5046,12 @@
             "title": "Role",
             "type": "string"
           },
+          "segment": {
+            "default": "",
+            "maxLength": 60,
+            "title": "Segment",
+            "type": "string"
+          },
           "supplier_count": {
             "default": "",
             "maxLength": 40,
@@ -5051,7 +5068,8 @@
         "required": [
           "name",
           "email",
-          "company"
+          "company",
+          "consent"
         ],
         "title": "PilotIn",
         "type": "object"
@@ -5069,6 +5087,10 @@
           },
           "email": {
             "title": "Email",
+            "type": "string"
+          },
+          "erp_system": {
+            "title": "Erp System",
             "type": "string"
           },
           "id": {
@@ -5092,6 +5114,10 @@
             "title": "Role",
             "type": "string"
           },
+          "segment": {
+            "title": "Segment",
+            "type": "string"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -5107,6 +5133,8 @@
           "email",
           "company",
           "role",
+          "segment",
+          "erp_system",
           "supplier_count",
           "message",
           "status",
@@ -5815,6 +5843,69 @@
           }
         },
         "title": "ProfileSettingsIn",
+        "type": "object"
+      },
+      "PublicPlan": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "max_active_agreements": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Active Agreements"
+          },
+          "max_import_rows_per_month": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Import Rows Per Month"
+          },
+          "max_users": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Users"
+          },
+          "monthly_price": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Monthly Price",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "monthly_price",
+          "max_active_agreements",
+          "max_users",
+          "max_import_rows_per_month"
+        ],
+        "title": "PublicPlan",
         "type": "object"
       },
       "ReasonOut": {
@@ -16403,6 +16494,32 @@
           }
         },
         "summary": "Pilot Request",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/public/plans": {
+      "get": {
+        "description": "Pricing page: public plans only (prices are [PROPOSED DEFAULT] until confirmed).",
+        "operationId": "public_plans_api_v1_public_plans_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PublicPlan"
+                  },
+                  "title": "Response Public Plans Api V1 Public Plans Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Public Plans",
         "tags": [
           "ops"
         ]

@@ -2134,6 +2134,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Public Plans
+         * @description Pricing page: public plans only (prices are [PROPOSED DEFAULT] until confirmed).
+         */
+        get: operations["public_plans_api_v1_public_plans_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reconciliation": {
         parameters: {
             query?: never;
@@ -4318,8 +4338,18 @@ export interface components {
         PilotIn: {
             /** Company */
             company: string;
+            /**
+             * Consent
+             * @constant
+             */
+            consent: true;
             /** Email */
             email: string;
+            /**
+             * Erp System
+             * @default
+             */
+            erp_system: string;
             /**
              * Message
              * @default
@@ -4332,6 +4362,11 @@ export interface components {
              * @default
              */
             role: string;
+            /**
+             * Segment
+             * @default
+             */
+            segment: string;
             /**
              * Supplier Count
              * @default
@@ -4354,6 +4389,8 @@ export interface components {
             created_at: string;
             /** Email */
             email: string;
+            /** Erp System */
+            erp_system: string;
             /**
              * Id
              * Format: uuid
@@ -4367,6 +4404,8 @@ export interface components {
             operator_notes: string;
             /** Role */
             role: string;
+            /** Segment */
+            segment: string;
             /** Status */
             status: string;
             /** Supplier Count */
@@ -4604,6 +4643,24 @@ export interface components {
             name?: string | null;
             /** Timezone */
             timezone?: string | null;
+        };
+        /** PublicPlan */
+        PublicPlan: {
+            /** Code */
+            code: string;
+            /** Max Active Agreements */
+            max_active_agreements: number | null;
+            /** Max Import Rows Per Month */
+            max_import_rows_per_month: number | null;
+            /** Max Users */
+            max_users: number | null;
+            /**
+             * Monthly Price
+             * @example 1234.50
+             */
+            monthly_price: string;
+            /** Name */
+            name: string;
         };
         /** ReasonOut */
         ReasonOut: {
@@ -10417,6 +10474,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    public_plans_api_v1_public_plans_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicPlan"][];
                 };
             };
         };

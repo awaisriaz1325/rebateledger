@@ -265,11 +265,52 @@ def save_plan(
 def submit_pilot_request(db: Session, ip: str, values: dict[str, Any]) -> PilotRequest:
     """Public form (marketing site). Rate limited; stored for the operator inbox only."""
     ratelimit.hit("pilot-ip", ip or "unknown", 5, 3600)
+    ratelimit.hit("pilot-email", values["email"].lower(), 3, 86400)
     set_platform_context(db, True)
     req = PilotRequest(**values)
     db.add(req)
     db.flush()
+    _pilot_emails(db, req)
     return req
+
+
+def _pilot_emails(db: Session, req: PilotRequest) -> None:
+    """Confirmation to the requester and a notice to the operator inbox (SPEC §4.16).
+    Queued as system emails; the request content is not repeated to the requester."""
+    from app.core.config import get_settings
+    from app.emails.service import queue_email
+
+    settings = get_settings()
+    queue_email(
+        db,
+        to=req.email,
+        template="generic",
+        context={
+            "subject": f"We received your {settings.product_name} pilot request",
+            "text": f"Hi {req.name}, thanks for your interest. We will reply within two business days to arrange a short call. If you did not submit this request, you can ignore this email.",
+            "url": "",
+            "link_label": "",
+        },
+    )
+    if settings.ops_notify_email:
+        queue_email(
+            db,
+            to=settings.ops_notify_email,
+            template="generic",
+            context={
+                "subject": f"New pilot request: {req.company}",
+                "text": f"{req.name} ({req.role or 'role not given'}) at {req.company} asked for a pilot. Segment: {req.segment or '—'}; ERP: {req.erp_system or '—'}; agreements: {req.supplier_count or '—'}.",
+                "url": f"{settings.app_base_url}/ops/requests",
+                "link_label": "Open the inbox",
+            },
+        )
+
+
+def public_plans(db: Session) -> list[Plan]:
+    """Plans are readable by everyone (RLS policy read_all)."""
+    return list(
+        db.execute(select(Plan).where(Plan.is_public.is_(True)).order_by(Plan.sort_order)).scalars()
+    )
 
 
 def update_pilot_request(
