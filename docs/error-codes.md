@@ -156,3 +156,19 @@ Row-level codes (in the error report, not HTTP): `REQUIRED`, `NOT_A_NUMBER`,
 | `EXPORT_IN_PROGRESS` | 409 | A full data export is already being prepared |
 | `EXPORT_NOT_READY` | 409 | The export is still running, failed or has expired |
 | `LINK_INVALID` | 403 | The download link expired, was altered, or belongs to someone else |
+
+## Billing and operations (Phase 8)
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `LINES_REQUIRED` | 422 | An invoice needs at least one line |
+| `INVOICE_NOT_DRAFT` | 409 | Issued invoices cannot change (void and reissue) |
+| `INVOICE_NOT_ISSUED` | 409 | Only issued (unpaid) invoices can be paid, voided or sent |
+| `INVOICE_NOT_VOID` | 409 | Void the invoice before reissuing it |
+| `INVOICE_TENANT_FIXED` | 409 | An invoice cannot move to another organization |
+| `BILLING_NOT_CONFIGURED` | 422 | Seller details / payment instructions missing in ops settings |
+| `BILLING_CONTACT_MISSING` | 422 | The subscription has no billing contact email |
+| `PLAN_UNKNOWN` / `PLAN_CODE_TAKEN` | 422 / 409 | Plan code not in the catalog / already used |
+| `FLAG_UNKNOWN` | 422 | Feature flag is not defined |
+| `JOB_NOT_FAILED` | 409 | Only failed jobs can be retried |
+| `SUPPORT_ACCESS_REQUIRED` | 403 | The organization has not granted (or has revoked) support access |

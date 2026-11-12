@@ -10,6 +10,7 @@ from app.api.routes import (
     insights,
     jobs,
     me,
+    ops,
     org,
     plan,
     reconciliation,
@@ -32,4 +33,5 @@ ROUTERS = [
     claims.router,
     insights.router,
     exports.router,
+    ops.router,
 ]

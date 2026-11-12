@@ -159,3 +159,14 @@ def _register_verification_job() -> None:
 
 
 _register_verification_job()
+
+
+def record_in_tenant(db: Session, tenant_id: uuid.UUID, **kwargs: Any) -> AuditEvent:
+    """Operator actions that also belong in a tenant's own log (SPEC §4.15). Runs the
+    insert inside that tenant's RLS context, then restores the caller's context."""
+    previous = db.execute(text("SELECT current_setting('app.tenant_id', true)")).scalar() or ""
+    db.execute(text("SELECT set_config('app.tenant_id', :t, true)"), {"t": str(tenant_id)})
+    try:
+        return record(db, tenant_id=tenant_id, **kwargs)
+    finally:
+        db.execute(text("SELECT set_config('app.tenant_id', :t, true)"), {"t": previous})

@@ -52,6 +52,17 @@
       },
       "ActiveOrg": {
         "properties": {
+          "billing_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billing Status"
+          },
           "fiscal_year_start_month": {
             "title": "Fiscal Year Start Month",
             "type": "integer"
@@ -489,6 +500,98 @@
         "title": "AllocationPart",
         "type": "object"
       },
+      "AnnouncementIn": {
+        "additionalProperties": false,
+        "properties": {
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "level": {
+            "default": "info",
+            "enum": [
+              "info",
+              "warning"
+            ],
+            "title": "Level",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "AnnouncementIn",
+        "type": "object"
+      },
+      "AnnouncementOut": {
+        "properties": {
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "level": {
+            "title": "Level",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "message",
+          "level",
+          "starts_at",
+          "ends_at"
+        ],
+        "title": "AnnouncementOut",
+        "type": "object"
+      },
       "ApprovalOut": {
         "properties": {
           "decided_at": {
@@ -641,67 +744,6 @@
         "title": "AttachmentOut",
         "type": "object"
       },
-      "AuditOut": {
-        "properties": {
-          "action": {
-            "title": "Action",
-            "type": "string"
-          },
-          "actor_label": {
-            "title": "Actor Label",
-            "type": "string"
-          },
-          "actor_type": {
-            "title": "Actor Type",
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "object_id": {
-            "title": "Object Id",
-            "type": "string"
-          },
-          "object_type": {
-            "title": "Object Type",
-            "type": "string"
-          },
-          "occurred_at": {
-            "format": "date-time",
-            "title": "Occurred At",
-            "type": "string"
-          },
-          "request_id": {
-            "title": "Request Id",
-            "type": "string"
-          },
-          "seq": {
-            "title": "Seq",
-            "type": "integer"
-          },
-          "summary": {
-            "additionalProperties": true,
-            "title": "Summary",
-            "type": "object"
-          }
-        },
-        "required": [
-          "id",
-          "seq",
-          "occurred_at",
-          "actor_type",
-          "actor_label",
-          "action",
-          "object_type",
-          "object_id",
-          "summary",
-          "request_id"
-        ],
-        "title": "AuditOut",
-        "type": "object"
-      },
       "BaselineSource": {
         "enum": [
           "imported",
@@ -847,6 +889,86 @@
           "job_id"
         ],
         "title": "BatchOut",
+        "type": "object"
+      },
+      "BillingSettingsIn": {
+        "additionalProperties": false,
+        "properties": {
+          "grace_days": {
+            "anyOf": [
+              {
+                "maximum": 90.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grace Days"
+          },
+          "number_prefix": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Z]{2,6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number Prefix"
+          },
+          "payment_instructions": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Instructions"
+          },
+          "payment_terms_days": {
+            "anyOf": [
+              {
+                "maximum": 120.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Terms Days"
+          },
+          "seller": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "maxLength": 500,
+                  "type": "string"
+                },
+                "propertyNames": {
+                  "enum": [
+                    "name",
+                    "address",
+                    "email",
+                    "tax_id"
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller"
+          }
+        },
+        "title": "BillingSettingsIn",
         "type": "object"
       },
       "Body_upload_attachment_api_v1_agreements__agreement_id__attachments_post": {
@@ -2612,6 +2734,21 @@
         "title": "EmailChangeIn",
         "type": "object"
       },
+      "EnterIn": {
+        "additionalProperties": false,
+        "properties": {
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenant_id"
+        ],
+        "title": "EnterIn",
+        "type": "object"
+      },
       "ErrorPageOut": {
         "properties": {
           "items": {
@@ -2886,6 +3023,26 @@
         "title": "FieldSpecOut",
         "type": "object"
       },
+      "FlagIn": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "key": {
+            "maxLength": 60,
+            "title": "Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "enabled"
+        ],
+        "title": "FlagIn",
+        "type": "object"
+      },
       "ForgotIn": {
         "additionalProperties": false,
         "properties": {
@@ -2974,6 +3131,55 @@
           "stale"
         ],
         "title": "FreshnessRow",
+        "type": "object"
+      },
+      "GrantOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "scope",
+          "reason",
+          "created_at",
+          "expires_at",
+          "revoked_at"
+        ],
+        "title": "GrantOut",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -3144,6 +3350,453 @@
         "title": "InvitePreviewOut",
         "type": "object"
       },
+      "InvoiceDetail": {
+        "properties": {
+          "buyer": {
+            "additionalProperties": true,
+            "title": "Buyer",
+            "type": "object"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "emailed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emailed At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/InvoiceLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "paid_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid On"
+          },
+          "payment_instructions": {
+            "title": "Payment Instructions",
+            "type": "string"
+          },
+          "payment_reference": {
+            "title": "Payment Reference",
+            "type": "string"
+          },
+          "period_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period End"
+          },
+          "period_start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Start"
+          },
+          "replaces_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replaces Id"
+          },
+          "seller": {
+            "additionalProperties": true,
+            "title": "Seller",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "total": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Total",
+            "type": "string"
+          },
+          "void_reason": {
+            "title": "Void Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tenant_id",
+          "number",
+          "status",
+          "currency",
+          "period_start",
+          "period_end",
+          "issue_date",
+          "due_date",
+          "buyer",
+          "total",
+          "paid_on",
+          "payment_reference",
+          "void_reason",
+          "replaces_id",
+          "emailed_at",
+          "created_at",
+          "lines",
+          "seller",
+          "payment_instructions",
+          "notes"
+        ],
+        "title": "InvoiceDetail",
+        "type": "object"
+      },
+      "InvoiceIn": {
+        "additionalProperties": false,
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/LineIn"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Lines",
+            "type": "array"
+          },
+          "notes": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Notes",
+            "type": "string"
+          },
+          "period_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period End"
+          },
+          "period_start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Start"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "lines"
+        ],
+        "title": "InvoiceIn",
+        "type": "object"
+      },
+      "InvoiceLineOut": {
+        "properties": {
+          "amount": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "quantity": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "unit_price": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Unit Price",
+            "type": "string"
+          }
+        },
+        "required": [
+          "description",
+          "quantity",
+          "unit_price",
+          "amount"
+        ],
+        "title": "InvoiceLineOut",
+        "type": "object"
+      },
+      "InvoiceOut": {
+        "properties": {
+          "buyer": {
+            "additionalProperties": true,
+            "title": "Buyer",
+            "type": "object"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "emailed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emailed At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "paid_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid On"
+          },
+          "payment_reference": {
+            "title": "Payment Reference",
+            "type": "string"
+          },
+          "period_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period End"
+          },
+          "period_start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Start"
+          },
+          "replaces_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replaces Id"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "total": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Total",
+            "type": "string"
+          },
+          "void_reason": {
+            "title": "Void Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tenant_id",
+          "number",
+          "status",
+          "currency",
+          "period_start",
+          "period_end",
+          "issue_date",
+          "due_date",
+          "buyer",
+          "total",
+          "paid_on",
+          "payment_reference",
+          "void_reason",
+          "replaces_id",
+          "emailed_at",
+          "created_at"
+        ],
+        "title": "InvoiceOut",
+        "type": "object"
+      },
       "JobAccepted": {
         "properties": {
           "batch_id": {
@@ -3164,103 +3817,62 @@
         "title": "JobAccepted",
         "type": "object"
       },
-      "JobOut": {
+      "JobsOverview": {
         "properties": {
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "jobs": {
+            "items": {
+              "$ref": "#/components/schemas/app__api__routes__ops__JobOut"
+            },
+            "title": "Jobs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "counts",
+          "jobs"
+        ],
+        "title": "JobsOverview",
+        "type": "object"
+      },
+      "LineIn": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Description",
             "type": "string"
           },
-          "error": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
+          "quantity": {
+            "examples": [
+              "1234.50"
             ],
-            "title": "Error"
-          },
-          "finished_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Finished At"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Quantity",
             "type": "string"
           },
-          "progress": {
-            "title": "Progress",
-            "type": "integer"
-          },
-          "result": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
+          "unit_price": {
+            "examples": [
+              "1234.50"
             ],
-            "title": "Result"
-          },
-          "started_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Started At"
-          },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          },
-          "total": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total"
-          },
-          "type": {
-            "title": "Type",
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Unit Price",
             "type": "string"
           }
         },
         "required": [
-          "id",
-          "type",
-          "status",
-          "progress",
-          "total",
-          "result",
-          "error",
-          "created_at",
-          "started_at",
-          "finished_at"
+          "description",
+          "quantity",
+          "unit_price"
         ],
-        "title": "JobOut",
+        "title": "LineIn",
         "type": "object"
       },
       "LinkOut": {
@@ -3929,7 +4541,7 @@
         "properties": {
           "items": {
             "items": {
-              "$ref": "#/components/schemas/AuditOut"
+              "$ref": "#/components/schemas/app__api__routes__org__AuditOut"
             },
             "title": "Items",
             "type": "array"
@@ -4112,6 +4724,28 @@
           "items"
         ],
         "title": "Page[SupplierOut]",
+        "type": "object"
+      },
+      "PaidIn": {
+        "additionalProperties": false,
+        "properties": {
+          "paid_on": {
+            "format": "date",
+            "title": "Paid On",
+            "type": "string"
+          },
+          "reference": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Reference",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paid_on",
+          "reference"
+        ],
+        "title": "PaidIn",
         "type": "object"
       },
       "PasswordChangeIn": {
@@ -4366,6 +5000,346 @@
         ],
         "title": "PeriodType",
         "type": "string"
+      },
+      "PilotIn": {
+        "additionalProperties": false,
+        "properties": {
+          "company": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Company",
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 254,
+            "minLength": 3,
+            "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+            "title": "Email",
+            "type": "string"
+          },
+          "message": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Message",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Role",
+            "type": "string"
+          },
+          "supplier_count": {
+            "default": "",
+            "maxLength": 40,
+            "title": "Supplier Count",
+            "type": "string"
+          },
+          "website": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Website",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "company"
+        ],
+        "title": "PilotIn",
+        "type": "object"
+      },
+      "PilotOut": {
+        "properties": {
+          "company": {
+            "title": "Company",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "operator_notes": {
+            "title": "Operator Notes",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "supplier_count": {
+            "title": "Supplier Count",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "company",
+          "role",
+          "supplier_count",
+          "message",
+          "status",
+          "operator_notes",
+          "created_at"
+        ],
+        "title": "PilotOut",
+        "type": "object"
+      },
+      "PilotPatch": {
+        "additionalProperties": false,
+        "properties": {
+          "operator_notes": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operator Notes"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "new",
+                  "contacted",
+                  "converted",
+                  "declined",
+                  "spam"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "title": "PilotPatch",
+        "type": "object"
+      },
+      "PlanIn": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "maxLength": 40,
+            "minLength": 2,
+            "pattern": "^[a-z][a-z0-9_-]*$",
+            "title": "Code",
+            "type": "string"
+          },
+          "is_public": {
+            "default": true,
+            "title": "Is Public",
+            "type": "boolean"
+          },
+          "max_active_agreements": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Active Agreements"
+          },
+          "max_import_rows_per_month": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Import Rows Per Month"
+          },
+          "max_storage_mb": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Storage Mb"
+          },
+          "max_users": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Users"
+          },
+          "monthly_price": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Monthly Price",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "sort_order": {
+            "default": 0,
+            "title": "Sort Order",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "monthly_price"
+        ],
+        "title": "PlanIn",
+        "type": "object"
+      },
+      "PlanOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "features": {
+            "additionalProperties": true,
+            "title": "Features",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_public": {
+            "title": "Is Public",
+            "type": "boolean"
+          },
+          "max_active_agreements": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Active Agreements"
+          },
+          "max_import_rows_per_month": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Import Rows Per Month"
+          },
+          "max_storage_mb": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Storage Mb"
+          },
+          "max_users": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Users"
+          },
+          "monthly_price": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Monthly Price",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sort_order": {
+            "title": "Sort Order",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "monthly_price",
+          "max_active_agreements",
+          "max_users",
+          "max_import_rows_per_month",
+          "max_storage_mb",
+          "features",
+          "is_public",
+          "sort_order"
+        ],
+        "title": "PlanOut",
+        "type": "object"
       },
       "PlanUsageOut": {
         "properties": {
@@ -6512,6 +7486,196 @@
         "title": "StepUpIn",
         "type": "object"
       },
+      "SubscriptionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "billing_contact_email": {
+            "anyOf": [
+              {
+                "maxLength": 254,
+                "minLength": 3,
+                "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billing Contact Email"
+          },
+          "billing_contact_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billing Contact Name"
+          },
+          "limit_overrides": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "propertyNames": {
+                  "enum": [
+                    "max_active_agreements",
+                    "max_users",
+                    "max_import_rows_per_month",
+                    "max_storage_mb"
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Overrides"
+          },
+          "plan_code": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Code"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "pilot",
+                  "active",
+                  "past_due",
+                  "suspended",
+                  "cancelled"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "term_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Term End"
+          },
+          "term_start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Term Start"
+          }
+        },
+        "title": "SubscriptionIn",
+        "type": "object"
+      },
+      "SubscriptionOut": {
+        "properties": {
+          "billing_contact_email": {
+            "title": "Billing Contact Email",
+            "type": "string"
+          },
+          "billing_contact_name": {
+            "title": "Billing Contact Name",
+            "type": "string"
+          },
+          "limit_overrides": {
+            "additionalProperties": true,
+            "title": "Limit Overrides",
+            "type": "object"
+          },
+          "past_due_since": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Past Due Since"
+          },
+          "plan_id": {
+            "format": "uuid",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "term_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Term End"
+          },
+          "term_start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Term Start"
+          }
+        },
+        "required": [
+          "plan_id",
+          "status",
+          "term_start",
+          "term_end",
+          "limit_overrides",
+          "billing_contact_name",
+          "billing_contact_email",
+          "past_due_since"
+        ],
+        "title": "SubscriptionOut",
+        "type": "object"
+      },
       "SuggestionOut": {
         "properties": {
           "agreement_id": {
@@ -7107,6 +8271,325 @@
           }
         },
         "title": "TemplatePatch",
+        "type": "object"
+      },
+      "TenantDetail": {
+        "properties": {
+          "active_agreements": {
+            "title": "Active Agreements",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "flags": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Flags",
+            "type": "object"
+          },
+          "grants": {
+            "items": {
+              "$ref": "#/components/schemas/GrantOut"
+            },
+            "title": "Grants",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_demo": {
+            "title": "Is Demo",
+            "type": "boolean"
+          },
+          "last_import_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Import At"
+          },
+          "last_run_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run At"
+          },
+          "members": {
+            "title": "Members",
+            "type": "integer"
+          },
+          "members_list": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "title": "Members List",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "open_claims": {
+            "title": "Open Claims",
+            "type": "integer"
+          },
+          "past_due_since": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Past Due Since"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan"
+          },
+          "purchase_lines": {
+            "title": "Purchase Lines",
+            "type": "integer"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "subscription": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubscriptionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "is_demo",
+          "created_at",
+          "plan",
+          "status",
+          "past_due_since",
+          "members",
+          "active_agreements",
+          "purchase_lines",
+          "open_claims",
+          "last_import_at",
+          "last_run_at",
+          "timezone",
+          "subscription",
+          "members_list",
+          "grants",
+          "flags"
+        ],
+        "title": "TenantDetail",
+        "type": "object"
+      },
+      "TenantIn": {
+        "additionalProperties": false,
+        "properties": {
+          "billing_email": {
+            "anyOf": [
+              {
+                "maxLength": 254,
+                "minLength": 3,
+                "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billing Email"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "owner_email": {
+            "maxLength": 254,
+            "minLength": 3,
+            "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+            "title": "Owner Email",
+            "type": "string"
+          },
+          "plan_code": {
+            "default": "pilot",
+            "maxLength": 40,
+            "title": "Plan Code",
+            "type": "string"
+          },
+          "timezone": {
+            "default": "America/Chicago",
+            "maxLength": 60,
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "owner_email"
+        ],
+        "title": "TenantIn",
+        "type": "object"
+      },
+      "TenantRow": {
+        "properties": {
+          "active_agreements": {
+            "title": "Active Agreements",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_demo": {
+            "title": "Is Demo",
+            "type": "boolean"
+          },
+          "last_import_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Import At"
+          },
+          "last_run_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run At"
+          },
+          "members": {
+            "title": "Members",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "open_claims": {
+            "title": "Open Claims",
+            "type": "integer"
+          },
+          "past_due_since": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Past Due Since"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan"
+          },
+          "purchase_lines": {
+            "title": "Purchase Lines",
+            "type": "integer"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "is_demo",
+          "created_at",
+          "plan",
+          "status",
+          "past_due_since",
+          "members",
+          "active_agreements",
+          "purchase_lines",
+          "open_claims",
+          "last_import_at",
+          "last_run_at"
+        ],
+        "title": "TenantRow",
         "type": "object"
       },
       "TermsCheckOut": {
@@ -7969,6 +9452,285 @@
         ],
         "title": "ZeroBaselinePolicy",
         "type": "string"
+      },
+      "app__api__routes__jobs__JobOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "progress": {
+            "title": "Progress",
+            "type": "integer"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "status",
+          "progress",
+          "total",
+          "result",
+          "error",
+          "created_at",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "JobOut",
+        "type": "object"
+      },
+      "app__api__routes__ops__AuditOut": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "actor_label": {
+            "title": "Actor Label",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "object_id": {
+            "title": "Object Id",
+            "type": "string"
+          },
+          "object_type": {
+            "title": "Object Type",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "occurred_at",
+          "actor_label",
+          "action",
+          "object_type",
+          "object_id"
+        ],
+        "title": "AuditOut",
+        "type": "object"
+      },
+      "app__api__routes__ops__JobOut": {
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "max_attempts": {
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "tenant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Id"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tenant_id",
+          "type",
+          "status",
+          "attempts",
+          "max_attempts",
+          "error",
+          "created_at",
+          "finished_at"
+        ],
+        "title": "JobOut",
+        "type": "object"
+      },
+      "app__api__routes__org__AuditOut": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "actor_label": {
+            "title": "Actor Label",
+            "type": "string"
+          },
+          "actor_type": {
+            "title": "Actor Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "object_id": {
+            "title": "Object Id",
+            "type": "string"
+          },
+          "object_type": {
+            "title": "Object Type",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "title": "Summary",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "seq",
+          "occurred_at",
+          "actor_type",
+          "actor_label",
+          "action",
+          "object_type",
+          "object_id",
+          "summary",
+          "request_id"
+        ],
+        "title": "AuditOut",
+        "type": "object"
       }
     }
   },
@@ -8865,6 +10627,31 @@
         ]
       }
     },
+    "/api/v1/announcements": {
+      "get": {
+        "operationId": "announcements_api_v1_announcements_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AnnouncementOut"
+                  },
+                  "title": "Response Announcements Api V1 Announcements Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Announcements",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
     "/api/v1/approvals": {
       "get": {
         "operationId": "list_approvals_api_v1_approvals_get",
@@ -9567,6 +11354,72 @@
         "summary": "Switch Organization",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/v1/billing/invoices": {
+      "get": {
+        "operationId": "tenant_invoices_api_v1_billing_invoices_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InvoiceOut"
+                  },
+                  "title": "Response Tenant Invoices Api V1 Billing Invoices Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Tenant Invoices",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/billing/invoices/{invoice_id}/pdf": {
+      "get": {
+        "operationId": "tenant_invoice_pdf_api_v1_billing_invoices__invoice_id__pdf_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Tenant Invoice Pdf",
+        "tags": [
+          "ops"
         ]
       }
     },
@@ -10910,6 +12763,31 @@
         ]
       }
     },
+    "/api/v1/feature-flags": {
+      "get": {
+        "operationId": "feature_flags_api_v1_feature_flags_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Feature Flags Api V1 Feature Flags Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Feature Flags",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
     "/api/v1/import-templates": {
       "get": {
         "operationId": "list_templates_api_v1_import_templates_get",
@@ -11709,7 +13587,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JobOut"
+                  "$ref": "#/components/schemas/app__api__routes__jobs__JobOut"
                 }
               }
             },
@@ -12163,6 +14041,1270 @@
         "summary": "Mark Read",
         "tags": [
           "insights"
+        ]
+      }
+    },
+    "/api/v1/ops/announcements": {
+      "get": {
+        "operationId": "ops_announcements_api_v1_ops_announcements_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AnnouncementOut"
+                  },
+                  "title": "Response Ops Announcements Api V1 Ops Announcements Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ops Announcements",
+        "tags": [
+          "ops"
+        ]
+      },
+      "post": {
+        "operationId": "ops_create_announcement_api_v1_ops_announcements_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Create Announcement",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/announcements/{announcement_id}": {
+      "patch": {
+        "operationId": "ops_update_announcement_api_v1_ops_announcements__announcement_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "announcement_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Announcement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Update Announcement",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/audit": {
+      "get": {
+        "operationId": "ops_audit_api_v1_ops_audit_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/app__api__routes__ops__AuditOut"
+                  },
+                  "title": "Response Ops Audit Api V1 Ops Audit Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ops Audit",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/billing-settings": {
+      "get": {
+        "operationId": "ops_billing_settings_api_v1_ops_billing_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Ops Billing Settings Api V1 Ops Billing Settings Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ops Billing Settings",
+        "tags": [
+          "ops"
+        ]
+      },
+      "put": {
+        "operationId": "ops_save_billing_settings_api_v1_ops_billing_settings_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BillingSettingsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Ops Save Billing Settings Api V1 Ops Billing Settings Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Save Billing Settings",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/feature-flags": {
+      "get": {
+        "operationId": "ops_flags_catalog_api_v1_ops_feature_flags_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Ops Flags Catalog Api V1 Ops Feature Flags Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ops Flags Catalog",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/invoices": {
+      "get": {
+        "operationId": "ops_invoices_api_v1_ops_invoices_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tenant_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tenant Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InvoiceOut"
+                  },
+                  "title": "Response Ops Invoices Api V1 Ops Invoices Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Invoices",
+        "tags": [
+          "ops"
+        ]
+      },
+      "post": {
+        "operationId": "ops_create_invoice_api_v1_ops_invoices_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Create Invoice",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/invoices/{invoice_id}": {
+      "get": {
+        "operationId": "ops_invoice_api_v1_ops_invoices__invoice_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Invoice",
+        "tags": [
+          "ops"
+        ]
+      },
+      "put": {
+        "operationId": "ops_update_invoice_api_v1_ops_invoices__invoice_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Update Invoice",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/invoices/{invoice_id}/issue": {
+      "post": {
+        "operationId": "ops_issue_api_v1_ops_invoices__invoice_id__issue_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Issue",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/invoices/{invoice_id}/paid": {
+      "post": {
+        "operationId": "ops_paid_api_v1_ops_invoices__invoice_id__paid_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaidIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Paid",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/invoices/{invoice_id}/pdf": {
+      "get": {
+        "operationId": "ops_invoice_pdf_api_v1_ops_invoices__invoice_id__pdf_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Invoice Pdf",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/invoices/{invoice_id}/reissue": {
+      "post": {
+        "operationId": "ops_reissue_api_v1_ops_invoices__invoice_id__reissue_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Reissue",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/invoices/{invoice_id}/resend": {
+      "post": {
+        "operationId": "ops_resend_api_v1_ops_invoices__invoice_id__resend_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Resend",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/invoices/{invoice_id}/void": {
+      "post": {
+        "operationId": "ops_void_api_v1_ops_invoices__invoice_id__void_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoidIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Void",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/jobs": {
+      "get": {
+        "operationId": "ops_jobs_api_v1_ops_jobs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "queued",
+                    "running",
+                    "succeeded",
+                    "failed",
+                    "cancelled",
+                    "dead"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobsOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Jobs",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/jobs/{job_id}/retry": {
+      "post": {
+        "operationId": "ops_retry_job_api_v1_ops_jobs__job_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Retry Job",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/pilot-requests": {
+      "get": {
+        "operationId": "ops_pilot_requests_api_v1_ops_pilot_requests_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PilotOut"
+                  },
+                  "title": "Response Ops Pilot Requests Api V1 Ops Pilot Requests Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ops Pilot Requests",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/pilot-requests/{request_id}": {
+      "patch": {
+        "operationId": "ops_update_pilot_api_v1_ops_pilot_requests__request_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PilotPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PilotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Update Pilot",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/plans": {
+      "get": {
+        "operationId": "ops_plans_api_v1_ops_plans_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PlanOut"
+                  },
+                  "title": "Response Ops Plans Api V1 Ops Plans Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ops Plans",
+        "tags": [
+          "ops"
+        ]
+      },
+      "post": {
+        "operationId": "ops_create_plan_api_v1_ops_plans_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Create Plan",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/plans/{plan_id}": {
+      "patch": {
+        "operationId": "ops_update_plan_api_v1_ops_plans__plan_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Update Plan",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/support/enter": {
+      "post": {
+        "operationId": "ops_enter_api_v1_ops_support_enter_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnterIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Enter",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/support/exit": {
+      "post": {
+        "operationId": "ops_exit_api_v1_ops_support_exit_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ops Exit",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/tenants": {
+      "get": {
+        "operationId": "ops_tenants_api_v1_ops_tenants_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TenantRow"
+                  },
+                  "title": "Response Ops Tenants Api V1 Ops Tenants Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ops Tenants",
+        "tags": [
+          "ops"
+        ]
+      },
+      "post": {
+        "operationId": "ops_create_tenant_api_v1_ops_tenants_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TenantIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantRow"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Create Tenant",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/tenants/{tenant_id}": {
+      "get": {
+        "operationId": "ops_tenant_api_v1_ops_tenants__tenant_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Tenant",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/tenants/{tenant_id}/flags": {
+      "put": {
+        "operationId": "ops_flag_api_v1_ops_tenants__tenant_id__flags_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlagIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Flag",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/tenants/{tenant_id}/subscription": {
+      "patch": {
+        "operationId": "ops_subscription_api_v1_ops_tenants__tenant_id__subscription_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ops Subscription",
+        "tags": [
+          "ops"
         ]
       }
     },
@@ -13221,6 +16363,48 @@
         "summary": "Revoke Support Access",
         "tags": [
           "organization"
+        ]
+      }
+    },
+    "/api/v1/pilot-requests": {
+      "post": {
+        "description": "Public 'request a pilot' form. Same answer whether stored or dropped as spam.",
+        "operationId": "pilot_request_api_v1_pilot_requests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PilotIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pilot Request",
+        "tags": [
+          "ops"
         ]
       }
     },

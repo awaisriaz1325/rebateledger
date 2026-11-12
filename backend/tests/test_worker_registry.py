@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 EXPECTED = {
+    "billing_lapse",
     "build_export",
     "calculation_run",
     "expire_exports",

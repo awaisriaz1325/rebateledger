@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Invoice {{ inv.number }}</title>
+<style>
+  @page { size: Letter; margin: 18mm 16mm; @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 7.5pt sans-serif; color: #5b6660; } }
+  body { font-family: "IBM Plex Sans", "DejaVu Sans", Arial, sans-serif; font-size: 9.5pt; color: #17201b; }
+  h1 { font-size: 20pt; margin: 0; } .muted { color: #5b6660; }
+  .head { display: flex; justify-content: space-between; margin-bottom: 10mm; }
+  .parties { display: flex; gap: 20mm; margin-bottom: 8mm; } .parties div { flex: 1; }
+  table { width: 100%; border-collapse: collapse; margin-top: 4mm; }
+  th { text-align: left; font-size: 8pt; text-transform: uppercase; color: #5b6660; border-bottom: 1px solid #9aa5a0; padding: 2mm; }
+  td { border-bottom: 0.5pt solid #e1e6e3; padding: 2mm; } .num { text-align: right; white-space: nowrap; }
+  tr.total td { font-weight: 700; font-size: 11pt; border-top: 1px solid #17201b; border-bottom: none; }
+  .box { border: 1px solid #c9d1cc; border-radius: 2mm; padding: 4mm; margin-top: 8mm; white-space: pre-wrap; }
+  .void { color: #a3271c; font-weight: 700; font-size: 14pt; }
+</style></head>
+<body>
+  <div class="head">
+    <div><h1>Invoice</h1><p class="muted">{{ inv.number }}</p>{% if inv.status == "void" %}<p class="void">VOID — {{ inv.void_reason }}</p>{% endif %}</div>
+    <div style="text-align:right">
+      <p>Issue date: {{ inv.issue_date }}<br>Due date: <strong>{{ inv.due_date }}</strong>{% if inv.period_start %}<br>Service period: {{ inv.period_start }} – {{ inv.period_end }}{% endif %}</p>
+    </div>
+  </div>
+  <div class="parties">
+    <div><p class="muted">From</p><p><strong>{{ inv.seller.name }}</strong><br>{{ inv.seller.address }}<br>{{ inv.seller.email }}{% if inv.seller.tax_id %}<br>Tax ID: {{ inv.seller.tax_id }}{% endif %}</p></div>
+    <div><p class="muted">Bill to</p><p><strong>{{ inv.buyer.name }}</strong>{% if inv.buyer.contact %}<br>{{ inv.buyer.contact }}{% endif %}<br>{{ inv.buyer.email }}</p></div>
+  </div>
+  <table>
+    <thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Amount</th></tr></thead>
+    <tbody>
+      {% for ln in lines %}<tr><td>{{ ln.description }}</td><td class="num">{{ "{:,f}".format(ln.quantity.normalize()) }}</td><td class="num">${{ "{:,.2f}".format(ln.unit_price) }}</td><td class="num">${{ "{:,.2f}".format(ln.amount) }}</td></tr>{% endfor %}
+      <tr class="total"><td colspan="3">Total ({{ inv.currency }})</td><td class="num">${{ "{:,.2f}".format(inv.total) }}</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">No tax has been charged on this invoice.</p>
+  <div class="box"><strong>How to pay</strong>
+{{ inv.payment_instructions }}
+Please quote {{ inv.number }} as the payment reference.</div>
+  {% if inv.notes %}<p>{{ inv.notes }}</p>{% endif %}
+</body></html>

@@ -318,3 +318,19 @@ def export(w: World, t: uuid.UUID) -> uuid.UUID:
 
 EXTRA_FACTORIES["export_id"] = export
 SAMPLE_BODIES[("POST", "/api/v1/exports")] = {"report": "claims_register", "format": "csv"}
+
+
+def invoice(w: World, t: uuid.UUID) -> uuid.UUID:
+    iid = uuid.uuid7()
+    w.sql(
+        "INSERT INTO rl.invoices (id, tenant_id, number, status, currency, seller, buyer, payment_instructions, notes, total, payment_reference, void_reason, created_by, created_at) "
+        "VALUES (:i, :t, :n, 'issued', 'USD', '{}', '{}', '', '', 1, '', '', :u, now())",
+        i=iid,
+        t=t,
+        n=f"T-{iid.hex[-10:]}",
+        u=uuid.uuid7(),
+    )
+    return iid
+
+
+EXTRA_FACTORIES["invoice_id"] = invoice

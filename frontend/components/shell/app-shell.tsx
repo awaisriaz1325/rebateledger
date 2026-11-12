@@ -17,6 +17,7 @@ import {
   Settings,
   Target,
 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
@@ -276,25 +277,64 @@ function OrgSwitcher({ session }: { session: SessionInfo }) {
 }
 
 function Banners({ session }: { session: SessionInfo }) {
+  const status = session.organization?.billing_status;
   return (
     <div className="flex flex-col">
-      {session.support_access ? (
+      {session.support_access ? <SupportSessionBanner session={session} /> : null}
+      <SupportGrantBanner session={session} />
+      {status === "suspended" ? (
+        <div role="status" className="border-b border-negative/30 bg-negative-soft px-4 py-2 text-sm">
+          <strong>This organization is read-only.</strong> You can view and export everything; imports, runs and edits are paused. {can(session, "view_billing") ? <Link href="/app/settings/plan#invoices" className="font-medium underline">See invoices</Link> : "Contact your account owner."}
+        </div>
+      ) : status === "past_due" ? (
         <div role="status" className="border-b border-warning/30 bg-warning-soft px-4 py-2 text-sm">
-          Support access is active ({session.support_access.scope.replace("_", "-")}) until {formatDateTime(session.support_access.expires_at)}. Every action is recorded in the audit log.
+          A {PRODUCT_NAME} invoice is overdue. {can(session, "view_billing") ? <Link href="/app/settings/plan#invoices" className="font-medium underline">See invoices</Link> : "Your account owner has the details."}
         </div>
       ) : null}
-      <SupportGrantBanner session={session} />
+      <AnnouncementBanner />
     </div>
+  );
+}
+
+function SupportSessionBanner({ session }: { session: SessionInfo }) {
+  const router = useRouter();
+  const qc = useQueryClient();
+  const access = session.support_access;
+  if (!access) return null;
+  return (
+    <div role="status" className="flex flex-wrap items-center gap-3 border-b border-warning/30 bg-warning-soft px-4 py-2 text-sm">
+      Support access is active ({access.scope.replace("_", "-")}) until {formatDateTime(access.expires_at)}. Every action is recorded in the organization&rsquo;s audit log.
+      <Button size="sm" variant="secondary" onClick={async () => { unwrap(await api.POST("/api/v1/ops/support/exit")); await qc.invalidateQueries(); router.push("/ops"); }}>Exit support access</Button>
+    </div>
+  );
+}
+
+function AnnouncementBanner() {
+  const query = useQuery({ queryKey: ["announcements"], queryFn: async () => unwrap(await api.GET("/api/v1/announcements")), staleTime: 300_000 });
+  const [dismissed, setDismissed] = useState<string[]>([]);
+  const items = (query.data ?? []).filter((a) => !dismissed.includes(a.id));
+  if (!items.length) return null;
+  return (
+    <>
+      {items.map((a) => (
+        <div key={a.id} role="status" className={`flex items-center justify-between gap-3 border-b px-4 py-2 text-sm ${a.level === "warning" ? "border-warning/30 bg-warning-soft" : "border-info/30 bg-info-soft"}`}>
+          <span>{a.message}</span>
+          <button type="button" className="text-xs underline" onClick={() => setDismissed([...dismissed, a.id])}>Dismiss</button>
+        </div>
+      ))}
+    </>
   );
 }
 
 /** Tenant members see an active support-access grant and can revoke it (SPEC §4.15). */
 function SupportGrantBanner({ session }: { session: SessionInfo }) {
-  const [grants, setGrants] = useState<{ id: string; scope: string; expires_at: string }[]>([]);
-  useEffect(() => {
-    if (session.support_access) return;
-    void api.GET("/api/v1/org/support-access").then((r) => setGrants(r.data ?? []));
-  }, [session.support_access]);
+  // Same query key as the security settings page, so granting or revoking updates this banner at once.
+  const query = useQuery({
+    queryKey: ["support-access"],
+    enabled: !session.support_access,
+    queryFn: async () => unwrap(await api.GET("/api/v1/org/support-access")),
+  });
+  const grants = query.data ?? [];
   if (!grants.length) return null;
   const g = grants[0];
   return (

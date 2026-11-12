@@ -1,9 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { StatusBadge } from "@/components/ui/finance";
+import { DateText, Money, StatusBadge } from "@/components/ui/finance";
 import { Card } from "@/components/ui/core";
-import { QueryState } from "@/components/ui/states";
+import { EmptyState, QueryState } from "@/components/ui/states";
 import { api, unwrap } from "@/lib/api";
 
 const LABELS: Record<string, [string, string]> = {
@@ -16,6 +16,7 @@ const LABELS: Record<string, [string, string]> = {
 export default function PlanPage() {
   const query = useQuery({ queryKey: ["plan"], queryFn: async () => unwrap(await api.GET("/api/v1/org/plan")) });
   return (
+    <div className="flex flex-col gap-6">
     <Card title="Plan & usage">
       <QueryState query={query}>
         {(p) => (
@@ -37,10 +38,41 @@ export default function PlanPage() {
                 );
               })}
             </dl>
-            <p className="mt-4 text-xs text-muted">Limits block only new actions; existing data always stays available. Invoices appear here once billing is set up.</p>
+            <p className="mt-4 text-xs text-muted">Limits block only new actions; existing data always stays available.</p>
           </>
         )}
       </QueryState>
     </Card>
+    <Invoices />
+    </div>
+  );
+}
+
+function Invoices() {
+  const query = useQuery({ queryKey: ["invoices"], queryFn: async () => unwrap(await api.GET("/api/v1/billing/invoices")) });
+  return (
+    <section id="invoices">
+      <Card title="Invoices">
+        <QueryState query={query} isEmpty={(i) => i.length === 0} empty={<EmptyState title="No invoices yet">Invoices are issued by the RebateLedger team and appear here.</EmptyState>}>
+          {(rows) => (
+            <table className="w-full text-sm" aria-label="Invoices">
+              <thead><tr className="text-left text-xs text-muted uppercase"><th className="py-1">Invoice</th><th>Issued</th><th>Due</th><th>Status</th><th className="text-right">Total</th><th /></tr></thead>
+              <tbody>
+                {rows.map((i) => (
+                  <tr key={i.id} className="border-t border-rule">
+                    <td className="py-2 font-mono">{i.number}</td>
+                    <td><DateText value={i.issue_date} /></td>
+                    <td><DateText value={i.due_date} /></td>
+                    <td><StatusBadge status={i.status} />{i.status === "paid" && i.paid_on ? <span className="ml-2 text-xs text-muted">on {i.paid_on}</span> : null}</td>
+                    <td className="text-right"><Money value={i.total} /></td>
+                    <td className="text-right"><a className="text-brand underline" href={`/api/v1/billing/invoices/${i.id}/pdf`}>PDF</a></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </QueryState>
+      </Card>
+    </section>
   );
 }

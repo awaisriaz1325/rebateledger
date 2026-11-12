@@ -44,6 +44,7 @@ def enqueue_for_all_tenants(job_type: str) -> int:
 DAILY: dict[str, int] = {
     "verify_audit_chain": 3,
     "expire_exports": 4,
+    "billing_lapse": 6,
     "claim_reminders": 13,
     "tier_alerts": 14,
 }

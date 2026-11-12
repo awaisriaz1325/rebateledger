@@ -17,7 +17,7 @@ from app.core.clock import utcnow
 from app.core.config import get_settings
 from app.core.security import encrypt_secret, hash_password, new_totp_secret
 from app.db.models.business import Plan, Subscription, Supplier, SupplierAlias
-from app.db.models.identity import Membership, MfaFactor, Tenant, User
+from app.db.models.identity import Membership, MfaFactor, PlatformAdmin, Tenant, User
 
 
 def seed_e2e() -> dict[str, Any]:
@@ -62,6 +62,30 @@ def seed_e2e() -> dict[str, Any]:
                 )
                 db.add(Membership(tenant_id=tenant.id, user_id=user.id, role=role))
                 users[role] = {"email": email, "password": password, "totp_secret": totp}
+            # An operator (platform admin) for the ops-console journeys; no membership.
+            op_password, op_totp = secrets.token_urlsafe(16), new_totp_secret()
+            operator = User(
+                email=f"e2e-ops-{tag}@example.com",
+                name="E2E Operator",
+                password_hash=hash_password(op_password),
+                email_verified_at=utcnow(),
+                password_changed_at=utcnow(),
+            )
+            db.add(operator)
+            db.flush()
+            db.add(
+                MfaFactor(
+                    user_id=operator.id,
+                    secret_encrypted=encrypt_secret(op_totp),
+                    confirmed_at=utcnow(),
+                )
+            )
+            db.add(PlatformAdmin(user_id=operator.id))
+            users["ops"] = {
+                "email": operator.email,
+                "password": op_password,
+                "totp_secret": op_totp,
+            }
             supplier = Supplier(tenant_id=tenant.id, name="Acme Electrical Supply")
             db.add(supplier)
             db.flush()

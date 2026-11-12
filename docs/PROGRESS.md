@@ -12,6 +12,23 @@ Template:
 - Next step:
 -->
 
+## 2026-11-12 — Phase 8: billing, ops console, support access
+- Changed: invoices + lines (RLS, immutability triggers), gap-free yearly numbering, invoice
+  PDF and emails, mark paid, void + reissue, daily lapse job (reminders, past_due), tenant
+  invoices on Plan & usage; ops console (`/ops`): organizations (create + invite owner,
+  subscription, flags, usage via guarded aggregate function), invoices, plans, pilot-request
+  inbox (public rate-limited form), announcements, job monitor with retry, billing settings,
+  operator audit; support sessions only with a tenant grant; billing, announcement and
+  exit-support banners.
+- Fixed: support-grant banner did not update after granting (now shares the query).
+- Verified: 12 concurrent issuers get RL-YYYY-0001…0012 with no gaps and a rolled-back issue
+  consumes no number; suspended tenant is read-only but exports; platform context reads zero
+  business rows and needs an active grant. E2E: operator issues an invoice the owner sees;
+  support session with consent; axe on every ops page. 47 E2E tests pass.
+- Decisions (ADRs): 0014.
+- Open questions: reminder schedule and 14-day grace [PROPOSED DEFAULT]; tax treatment (SPEC §15).
+- Next step: Phase 9 (marketing website).
+
 ## 2026-11-12 — Phase 7: reports, exports, evidence packs
 - Changed: `exports` table (RLS) + `build_export`/`expire_exports` jobs; six reports
   (reconciliation summary, supplier statement, claims register, recovery report, agreement

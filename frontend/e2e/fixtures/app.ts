@@ -6,7 +6,7 @@ import path from "node:path";
 import { freshCode } from "./totp";
 
 export interface SeedUser { email: string; password: string; totp_secret: string }
-export interface Seed { tag: string; tenant_id: string; supplier_code: string; users: { owner: SeedUser; admin: SeedUser } }
+export interface Seed { tag: string; tenant_id: string; supplier_code: string; users: { owner: SeedUser; admin: SeedUser; ops: SeedUser } }
 
 export const STATE_DIR = path.join(__dirname, "..", ".state");
 export const MAILPIT = process.env.RL_E2E_MAILPIT ?? "http://localhost:8026";
@@ -16,14 +16,14 @@ export function seed(): Seed {
 }
 
 /** Password + authenticator sign-in through the real UI. */
-export async function signIn(page: Page, user: SeedUser): Promise<void> {
+export async function signIn(page: Page, user: SeedUser, landing: RegExp = /\/app(\/|$)/): Promise<void> {
   await page.goto("/login");
   await page.getByLabel("Email").fill(user.email);
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.getByLabel("Authentication code").fill(await freshCode(user.totp_secret));
   await page.getByRole("button", { name: "Verify" }).click();
-  await page.waitForURL(/\/app(\/|$)/);
+  await page.waitForURL(landing);
 }
 
 /** Complete the step-up dialog (password + authenticator code) if the API asks for it. */

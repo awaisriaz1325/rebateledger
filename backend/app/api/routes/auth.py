@@ -56,6 +56,8 @@ class ActiveOrg(OrgSummary):
     permissions: list[str]
     timezone: str
     fiscal_year_start_month: int
+    billing_status: str | None = None
+    """Subscription status; ``suspended`` means read-only, ``past_due`` shows a banner."""
 
 
 class SupportAccessInfo(Out):
@@ -82,6 +84,15 @@ class SessionInfo(Out):
     organizations: list[OrgSummary] = Field(default_factory=list)
     support_access: SupportAccessInfo | None = None
     mfa_required: bool = False
+
+
+def _billing_status(db: Session, tenant_id: uuid.UUID) -> str | None:
+    from app.db.session import set_tenant_context
+    from app.services.subscriptions import subscription
+
+    set_tenant_context(db, tenant_id)  # the active tenant; subscriptions are tenant-readable
+    sub = subscription(db, tenant_id)
+    return sub.status if sub else None
 
 
 def session_info(db: Session, request: Request, ctx: Ctx | None = None) -> SessionInfo:
@@ -145,6 +156,7 @@ def session_info(db: Session, request: Request, ctx: Ctx | None = None) -> Sessi
                 permissions=sorted(p.value for p in permissions_for(m.role)),
                 timezone=t.timezone,
                 fiscal_year_start_month=t.fiscal_year_start_month,
+                billing_status=_billing_status(db, t.id),
             )
             info.mfa_required = Role(m.role) in MFA_REQUIRED_ROLES or t.require_mfa_all
     return info

@@ -87,6 +87,16 @@ limit reset and re-queued jobs (jobs table is durable). Private network only (P1
 | I: secrets in full export | Internal tables and secret columns excluded; members without credentials | Done, tested |
 | D: export flooding | Background jobs; one full export in progress per tenant | Partial — per-user export rate limit not yet added (Low) |
 
+### Billing and operations console (P8, ADR 0014)
+| Threat | Control | Status |
+|---|---|---|
+| I: operator reads tenant business data | No platform RLS policy on business tables; usage via guarded aggregate function; support only with tenant grant | Done, tested |
+| E: support session exceeds consent | Grant scope → permission set (read-only = view/export); expiry and revocation checked per request; revoke detaches sessions | Done, tested |
+| R: operator actions deniable | Platform hash chain + tenant log entries for support and billing actions | Done, tested |
+| T: invoice tampering after issue | DB triggers on invoices and lines; void + reissue only | Done, tested |
+| T: duplicate/skipped invoice numbers | Locked sequence row in the issuing transaction | Done, tested (concurrency) |
+| D/S: pilot-form spam | Rate limit per IP, honeypot, no reflection | Done |
+
 ### Email
 Tokens single-use, hashed, short-lived. Security emails cannot be disabled.
 SPF/DKIM/DMARC (P11). No tracking pixels.

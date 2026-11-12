@@ -26,6 +26,11 @@ def test_seeded_owner_can_sign_in_with_totp(app_client: TestClient) -> None:
     me = app_client.get("/api/v1/auth/session").json()
     assert me["organization"]["role"] == "owner"
     assert data["users"]["admin"]["email"] != owner["email"]
+    ops = data["users"]["ops"]
+    r = app_client.post(
+        "/api/v1/auth/login", json={"email": ops["email"], "password": ops["password"]}
+    )
+    assert r.json()["is_platform_admin"] is True
 
 
 def test_refuses_in_production(monkeypatch: pytest.MonkeyPatch) -> None:

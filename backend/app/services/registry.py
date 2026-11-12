@@ -11,6 +11,7 @@ from __future__ import annotations
 import app.emails.service
 import app.exports.service
 import app.services.audit
+import app.services.billing
 import app.services.imports
 import app.services.notifications
 import app.services.runs  # noqa: F401
