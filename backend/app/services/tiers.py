@@ -96,8 +96,13 @@ def tracker(db: Session, tenant: Tenant, today: date | None = None) -> list[Tier
         window = clip(full, snap.effective_from, snap.effective_period.end)
         if window is None:
             continue
+        full_period = Period(full.start, full.end, full.label)
         lines = agreement_svc.purchase_lines(
-            db, tenant.id, agreement.supplier_id, date(full.start.year - 1, 1, 1), full.end
+            db,
+            tenant.id,
+            agreement.supplier_id,
+            agreement_svc.lines_needed_from(snap, full_period),
+            full.end,
         )
         result = calculate(
             snap,
@@ -108,7 +113,7 @@ def tracker(db: Session, tenant: Tenant, today: date | None = None) -> list[Tier
                 data_coverage_start=agreement_svc.data_coverage_start(
                     db, tenant.id, agreement.supplier_id
                 ),
-                full_period=Period(full.start, full.end, full.label),
+                full_period=full_period,
             ),
         )
         m = result.measure

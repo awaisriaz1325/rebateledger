@@ -61,6 +61,9 @@ def create_app() -> FastAPI:
     application.add_exception_handler(RequestValidationError, validation_handler)
     application.add_exception_handler(StarletteHTTPException, http_handler)
     application.add_exception_handler(Exception, unhandled_handler)
+    from app.core.body_limit import BodySizeLimit
+
+    application.add_middleware(BodySizeLimit)
 
     @application.middleware("http")
     async def request_context(

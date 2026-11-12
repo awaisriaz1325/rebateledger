@@ -16,6 +16,7 @@ from app.emails.service import RenderedEmail, render
 from app.workers import jobs
 from app.workers.jobs import JobContext, enqueue, handler, recover_stale
 from tests.api.conftest import PASSWORD, World
+from tests.api.test_workflow import world_setup  # noqa: F401 - shared pytest fixture
 
 calls: list[str] = []
 
@@ -238,3 +239,36 @@ def test_password_login_unknown_tenantless_user(
         "/api/v1/auth/login", json={"email": "lonely@example.com", "password": PASSWORD}
     )
     assert r.status_code == 401
+
+
+def test_broker_outage_at_commit_keeps_the_request_ok_and_the_job_recoverable(
+    world_setup: object,  # noqa: F811 - the fixture imported above
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression (Phase 10 resilience drill): with Redis down, the after-commit dispatch
+    raised, so a committed import/run answered 500 and its job stayed queued forever."""
+    from app.workers import jobs
+
+    app_client, world = world_setup[0], world_setup[1]  # type: ignore[index]
+
+    def broker_down(*args: object, **kwargs: object) -> None:
+        raise ConnectionError("Redis unavailable")
+
+    monkeypatch.setattr(jobs, "dispatch", broker_down)
+    r = app_client.post(
+        "/api/v1/runs",
+        json={"scope": {"type": "all"}, "period_start": "2025-01-01", "period_end": "2025-03-31"},
+        headers={"Idempotency-Key": str(uuid.uuid4())},
+    )
+    assert r.status_code == 202, r.text  # committed work is reported as accepted
+    job_id = uuid.UUID(r.json()["job_id"])
+    assert _job(world, job_id)["status"] == "queued"
+    monkeypatch.undo()
+
+    # Orphaned queued jobs (never picked up) are re-dispatched by the scheduler's recovery.
+    world.sql(
+        "UPDATE rl.jobs SET created_at = now() - interval '20 minutes' WHERE id = :j", j=job_id
+    )
+    calls.clear()
+    assert job_id in recover_stale()
+    assert _job(world, job_id)["status"] == "succeeded"

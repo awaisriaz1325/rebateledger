@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, timedelta
-from typing import Any
+from decimal import Decimal
+from typing import Any, Protocol
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -24,7 +25,7 @@ from app.db.models.business import (
 from app.db.models.runs import Claim
 from app.engine.calculate import PeriodResult, calculate
 from app.engine.models import Baseline, CalcOptions, Period, PurchaseLine, VersionSnapshot
-from app.engine.periods import clip, periods_overlapping
+from app.engine.periods import clip, periods_overlapping, prior_period
 from app.services import subscriptions, suppliers
 from app.services.agreement_terms import (
     VersionTermsIn,
@@ -503,12 +504,30 @@ def set_archived(db: Session, ctx: Any, agreement_id: uuid.UUID, archived: bool)
 # --------------------------------------------------------------------------- engine inputs from the DB
 
 
+_LINE_COLUMNS = (
+    PurchaseLineRow.id,
+    PurchaseLineRow.supplier_id,
+    PurchaseLineRow.quantity,
+    PurchaseLineRow.amount,
+    PurchaseLineRow.sku,
+    PurchaseLineRow.invoice_date,
+    PurchaseLineRow.ship_date,
+    PurchaseLineRow.receipt_date,
+    PurchaseLineRow.branch,
+    PurchaseLineRow.category,
+    PurchaseLineRow.flags,
+)
+
+
 def purchase_lines(
     db: Session, tenant_id: uuid.UUID, supplier_id: uuid.UUID, start: date, end: date
 ) -> list[PurchaseLine]:
-    """Non-voided lines of a supplier with any basis date (or none) touching the range."""
+    """Non-voided lines of a supplier with any basis date (or none) touching the range.
+
+    Selects plain columns rather than ORM entities: at 100k lines entity hydration was
+    most of the cost of a tier-tracker or run request (Phase 10 load test)."""
     rows = db.execute(
-        select(PurchaseLineRow).where(
+        select(*_LINE_COLUMNS).where(
             PurchaseLineRow.tenant_id == tenant_id,
             PurchaseLineRow.supplier_id == supplier_id,
             PurchaseLineRow.voided.is_(False),
@@ -523,11 +542,38 @@ def purchase_lines(
                 )
             ),
         )
-    ).scalars()
+    )
     return [to_line(r) for r in rows]
 
 
-def to_line(r: PurchaseLineRow) -> PurchaseLine:
+class _LineLike(Protocol):
+    """A purchase-line ORM row or a column-tuple Row with the same names."""
+
+    @property
+    def id(self) -> object: ...
+    @property
+    def supplier_id(self) -> uuid.UUID: ...
+    @property
+    def quantity(self) -> Decimal: ...
+    @property
+    def amount(self) -> Decimal: ...
+    @property
+    def sku(self) -> str: ...
+    @property
+    def invoice_date(self) -> date | None: ...
+    @property
+    def ship_date(self) -> date | None: ...
+    @property
+    def receipt_date(self) -> date | None: ...
+    @property
+    def branch(self) -> str | None: ...
+    @property
+    def category(self) -> str | None: ...
+    @property
+    def flags(self) -> dict[str, Any]: ...
+
+
+def to_line(r: _LineLike) -> PurchaseLine:
     return PurchaseLine(
         line_id=str(r.id),
         supplier_id=str(r.supplier_id),
@@ -541,6 +587,24 @@ def to_line(r: PurchaseLineRow) -> PurchaseLine:
         category=r.category,
         flags=PurchaseLine.make_flags({k: bool(v) for k, v in r.flags.items()}),
     )
+
+
+def lines_needed_from(snap: VersionSnapshot, full: Period) -> date:
+    """Earliest basis date the engine can read for ``full``: the period start, or the start
+    of a prior-period baseline when a growth component computes one from purchase lines."""
+    start = full.start
+    for comp in snap.components:
+        if comp.is_growth and comp.prior_period_offset is not None:
+            prior = prior_period(
+                full,
+                comp.prior_period_offset,
+                snap.period_type,
+                snap.fiscal_year_start_month,
+                snap.custom_periods,
+            )
+            if prior is not None:
+                start = min(start, prior.start)
+    return start
 
 
 def baselines(db: Session, tenant_id: uuid.UUID, agreement_id: uuid.UUID) -> list[Baseline]:

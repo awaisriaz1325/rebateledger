@@ -172,3 +172,9 @@ Row-level codes (in the error report, not HTTP): `REQUIRED`, `NOT_A_NUMBER`,
 | `FLAG_UNKNOWN` | 422 | Feature flag is not defined |
 | `JOB_NOT_FAILED` | 409 | Only failed jobs can be retried |
 | `SUPPORT_ACCESS_REQUIRED` | 403 | The organization has not granted (or has revoked) support access |
+
+## Platform limits (Phase 10)
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `PAYLOAD_TOO_LARGE` | 413 | Request body exceeds the endpoint limit (1 MiB for JSON; file size + 1 MiB for uploads) |

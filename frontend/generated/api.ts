@@ -770,7 +770,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Unmatched Credits */
+        /**
+         * Unmatched Credits
+         * @description Newest credits that still need allocating (at most ``limit``).
+         */
         get: operations["unmatched_credits_api_v1_credits_unmatched_get"];
         put?: never;
         post?: never;
@@ -7701,6 +7704,7 @@ export interface operations {
         parameters: {
             query?: {
                 supplier_id?: string | null;
+                limit?: number;
             };
             header?: never;
             path?: never;

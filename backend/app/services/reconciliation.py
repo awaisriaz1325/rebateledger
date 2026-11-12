@@ -13,7 +13,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.clock import today_in, utcnow
@@ -311,14 +311,45 @@ class UnmatchedCredit:
 
 
 def unmatched(
-    db: Session, tenant: Tenant, supplier_id: uuid.UUID | None = None
+    db: Session, tenant: Tenant, supplier_id: uuid.UUID | None = None, limit: int = 500
 ) -> list[UnmatchedCredit]:
-    q = select(CreditLineRow).where(
-        CreditLineRow.tenant_id == tenant.id, CreditLineRow.voided.is_(False)
+    """Credits with an unallocated remainder, newest first, at most ``limit``.
+
+    Allocations are loaded in one query (not one per credit) and only credits whose
+    active allocations do not already cover them are considered."""
+    allocated = (
+        select(CreditAllocation.credit_id, func.sum(CreditAllocation.amount).label("total"))
+        .where(CreditAllocation.tenant_id == tenant.id, CreditAllocation.reversed_at.is_(None))
+        .group_by(CreditAllocation.credit_id)
+        .subquery()
+    )
+    q = (
+        select(CreditLineRow)
+        .outerjoin(allocated, allocated.c.credit_id == CreditLineRow.id)
+        .where(
+            CreditLineRow.tenant_id == tenant.id,
+            CreditLineRow.voided.is_(False),
+            func.coalesce(allocated.c.total, 0) != CreditLineRow.amount,
+        )
     )
     if supplier_id:
         q = q.where(CreditLineRow.supplier_id == supplier_id)
-    credits = list(db.execute(q.order_by(CreditLineRow.credit_date.desc())).scalars())
+    credits = list(
+        db.execute(
+            q.order_by(CreditLineRow.credit_date.desc(), CreditLineRow.id).limit(limit)
+        ).scalars()
+    )
+    if not credits:
+        return []
+    by_credit: dict[uuid.UUID, list[CreditAllocation]] = {}
+    for a in db.execute(
+        select(CreditAllocation).where(
+            CreditAllocation.tenant_id == tenant.id,
+            CreditAllocation.reversed_at.is_(None),
+            CreditAllocation.credit_id.in_([c.id for c in credits]),
+        )
+    ).scalars():
+        by_credit.setdefault(a.credit_id, []).append(a)
     items = live_items(db, tenant, supplier_id=supplier_id)
     outstanding = [
         Outstanding(
@@ -334,7 +365,9 @@ def unmatched(
     tol = run_svc.tolerance_for(tenant)
     out = []
     for c in credits:
-        rem = remainder(db, c)
+        rem = allocation_remainder(
+            run_svc.to_credit(c), [run_svc.to_alloc(a) for a in by_credit.get(c.id, [])]
+        )
         if rem != 0:
             out.append(
                 UnmatchedCredit(c, rem, tuple(suggest(run_svc.to_credit(c), outstanding, tol)))

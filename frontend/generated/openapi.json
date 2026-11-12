@@ -12298,6 +12298,7 @@
     },
     "/api/v1/credits/unmatched": {
       "get": {
+        "description": "Newest credits that still need allocating (at most ``limit``).",
         "operationId": "unmatched_credits_api_v1_credits_unmatched_get",
         "parameters": [
           {
@@ -12315,6 +12316,18 @@
                 }
               ],
               "title": "Supplier Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 500,
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
             }
           }
         ],

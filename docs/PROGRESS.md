@@ -58,6 +58,19 @@ Template:
 - Open questions: report/evidence file retention 7 days [PROPOSED DEFAULT]; per-user export rate limit.
 - Next step: Phase 8 (invoice billing, ops console, support access, suspended mode).
 
+## 2026-11-12 — Phase 10: hardening
+- Changed: request-body size limit middleware (413 before parsing); `/credits/unmatched` N+1
+  removed and `limit` added; after-commit job dispatch survives a broker outage (orphaned queued
+  jobs re-dispatched by `recover_stale`); tier tracker/dashboard load column tuples with a
+  bounded look-back (p95 4.1 s → 0.7 s); hardening tests; frontend component tests; resilience
+  drill (5/5 pass), backup/restore rehearsal, API latency script; reports in `docs/hardening/`
+  (security review F1–F9, load tests, resilience, backup/restore, a11y/performance); threat model updated.
+- Decisions (ADRs): none new. Cache for the tier tracker rejected (staleness on money figures).
+- Open questions: tiers/dashboard ~0.7 s (accept / precompute / engine option); backup RPO 5 min /
+  RTO 4 h proposals; manual keyboard + screen-reader pass (UNVERIFIED); third-party pentest;
+  HIBP check; re-measure the 50×1M run on staging.
+- Next step: Phase 11 (deploy preparation only), after approval.
+
 ## 2026-11-11 — Phase 6: product screens + E2E
 - Changed: screens for suppliers (detail), agreements (list/new/detail with terms editor, live
   summary, versions, compare, dry-run preview, documents), import wizard (upload → map → explicit

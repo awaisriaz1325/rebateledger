@@ -9,3 +9,9 @@ paths = [
   '''(^|/)\.env\.example$''',
   '''^backend/tests/conftest\.py$''',
 ]
+
+[[allowlists]]
+description = "RFC 6238 Appendix B public test-vector key used by the TOTP helper's unit test"
+paths = [
+  '''^frontend/e2e/fixtures/totp\.test\.ts$''',
+]

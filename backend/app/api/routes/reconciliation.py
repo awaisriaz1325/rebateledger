@@ -260,7 +260,12 @@ def list_credits(
 
 
 @router.get("/credits/unmatched", response_model=list[UnmatchedOut])
-def unmatched_credits(ctx: View, supplier_id: uuid.UUID | None = None) -> list[UnmatchedOut]:
+def unmatched_credits(
+    ctx: View,
+    supplier_id: uuid.UUID | None = None,
+    limit: Annotated[int, Query(ge=1, le=2000)] = 500,
+) -> list[UnmatchedOut]:
+    """Newest credits that still need allocating (at most ``limit``)."""
     assert ctx.tenant is not None
     return [
         UnmatchedOut(
@@ -277,7 +282,7 @@ def unmatched_credits(ctx: View, supplier_id: uuid.UUID | None = None) -> list[U
                 for s in u.suggestions
             ],
         )
-        for u in svc.unmatched(ctx.db, ctx.tenant, supplier_id)
+        for u in svc.unmatched(ctx.db, ctx.tenant, supplier_id, limit)
     ]
 
 

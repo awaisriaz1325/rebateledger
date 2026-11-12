@@ -123,7 +123,10 @@ def enqueue(
 def _dispatch_after_commit(db: Session) -> None:
     pending: list[tuple[uuid.UUID, uuid.UUID | None]] = db.info.pop("after_commit_jobs", [])
     for job_id, tenant_id in pending:
-        dispatch(job_id, tenant_id)
+        try:
+            dispatch(job_id, tenant_id)
+        except Exception as exc:  # noqa: BLE001 - the job row is committed; recovery re-dispatches it
+            log.warning("job_dispatch_failed", job_id=str(job_id), error_type=type(exc).__name__)
 
 
 @event.listens_for(Session, "after_rollback")
@@ -230,8 +233,12 @@ def _finish(
             job.payload = {}  # wipe sealed secrets once used
 
 
+ORPHAN_AFTER = timedelta(minutes=5)
+
+
 def recover_stale(max_age: timedelta = timedelta(minutes=10)) -> list[uuid.UUID]:
-    """Jobs left `running` by a killed worker go back to the queue (or dead)."""
+    """Jobs left `running` by a killed worker go back to the queue (or dead); queued jobs
+    that were never picked up (lost dispatch) are dispatched again."""
     cutoff = utcnow() - max_age
     recovered: list[tuple[uuid.UUID, uuid.UUID | None]] = []
     with session_factory()() as db, db.begin():
@@ -245,6 +252,22 @@ def recover_stale(max_age: timedelta = timedelta(minutes=10)) -> list[uuid.UUID]
             .scalars()
             .all()
         )
+        orphaned = (
+            db.execute(
+                select(Job)
+                .where(
+                    Job.status == JobStatus.QUEUED.value,
+                    Job.started_at.is_(None),
+                    Job.cancel_requested.is_(False),
+                    Job.created_at < utcnow() - ORPHAN_AFTER,
+                )
+                .with_for_update(skip_locked=True)
+            )
+            .scalars()
+            .all()
+        )
+        # Queued jobs whose dispatch was lost (broker outage at commit): send them again.
+        recovered.extend((job.id, job.tenant_id) for job in orphaned)
         for job in stale:
             if job.attempts >= job.max_attempts:
                 job.status, job.finished_at = JobStatus.DEAD.value, utcnow()
@@ -256,5 +279,8 @@ def recover_stale(max_age: timedelta = timedelta(minutes=10)) -> list[uuid.UUID]
                 job.status = JobStatus.QUEUED.value
                 recovered.append((job.id, job.tenant_id))
     for job_id, tenant_id in recovered:
-        dispatch(job_id, tenant_id)
+        try:
+            dispatch(job_id, tenant_id)
+        except Exception as exc:  # noqa: BLE001 - next scheduler tick retries
+            log.warning("job_dispatch_failed", job_id=str(job_id), error_type=type(exc).__name__)
     return [j for j, _ in recovered]

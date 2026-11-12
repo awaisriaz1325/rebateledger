@@ -44,7 +44,7 @@ Ops console = same apps, separate role enforced server-side.
 | T: IDOR | Every object query filters by `tenant_id` AND RLS; other-tenant ids return 404; generated authz matrix covers every route | Done, tested |
 | R: repudiation | Hash-chained audit log written in the same transaction; daily verification job | Done, tested |
 | I: error leakage | Problem Details only; SQLAlchemy `hide_parameters`; logs scrub secrets/emails/cookies | Done |
-| D: abuse of expensive endpoints | Rate limits on auth, invites; background jobs for long work; statement timeout 60 s | Partial (imports P3) |
+| D: abuse of expensive endpoints | Rate limits on auth, invites; background jobs for long work; statement timeout 60 s; request bodies capped before parsing (1 MiB JSON, file limit on uploads); N+1 in unmatched credits removed; 100k-row latency test (`docs/hardening/load-tests.md`) | Done, tested (P10) |
 | E: privilege escalation | Named permissions per route (walker test); Owner-only owner management; last-owner lock; step-up for sensitive actions | Done, tested |
 
 ### Worker
@@ -53,6 +53,7 @@ Ops console = same apps, separate role enforced server-side.
 | I: secrets in job payloads | Email payloads sealed (Fernet) and wiped after send | Done |
 | T: cross-tenant job | Job carries tenant id; runner sets the same RLS context | Done |
 | D: poison jobs | Retries with backoff, `dead` state, stale-heartbeat recovery | Done, tested |
+| D: worker killed / broker down | Single-transaction commits (no partial data); orphaned queued jobs re-dispatched; dispatch failure never fails a committed request | Done, drilled (P10, `docs/hardening/resilience.md`) |
 
 ### Postgres
 | Threat | Mitigation | Status |
@@ -60,7 +61,7 @@ Ops console = same apps, separate role enforced server-side.
 | E: app bug bypasses tenancy | App role `rl_app` is not owner and `NOBYPASSRLS`; RLS on every `tenant_id` table (tested) | Done, tested |
 | T: audit tampering by app | No UPDATE/DELETE grant on `audit_events`; chain verification | Done, tested |
 | E: create platform admin via app | App role has SELECT only on `platform_admins` | Done, tested |
-| I: backups | Encrypted at rest (cloud); PITR; restore test | P11 |
+| I: backups | Encrypted at rest (cloud); PITR; restore rehearsal passed locally (`docs/hardening/backup-restore.md`) | Local done; cloud P11 |
 
 ### Redis
 Rate-limit keys hold hashed identifiers only. Not a system of record; loss = rate
@@ -112,3 +113,6 @@ request under support access is audited in the tenant's log.
   allowing this single outbound call from the request path.
 - Progressive delay and rate limits rely on Redis availability (fail-closed:
   a Redis outage blocks logins). Low/Medium — documented in runbooks (P11).
+- No per-user quota on export creation (exports are queued and plan-limited). Low.
+- Tier tracker and dashboard p95 ≈ 0.7 s at 100k lines, so repeated requests are a mild
+  load vector. Low. Precompute proposal in `docs/hardening/load-tests.md` §3.
