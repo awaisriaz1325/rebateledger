@@ -24,3 +24,6 @@ export type ClaimDetail = S["ClaimDetail"];
 export type Approval = S["ApprovalOut"];
 export type TierRow = S["TierOut"];
 export type Member = S["MemberOut"];
+export type ExportRecord = S["ExportOut"];
+export type ReportInfo = S["ReportInfo"];
+export type ReportPreview = S["ReportPreviewOut"];

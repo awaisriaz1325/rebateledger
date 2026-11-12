@@ -145,3 +145,14 @@ Row-level codes (in the error report, not HTTP): `REQUIRED`, `NOT_A_NUMBER`,
 | `ALLOCATIONS_REQUIRED` | 422 | Multi-period claims need a per-period split of the recovery |
 | `CLAIM_CLOSED` | 409 | Closed claims cannot change |
 | `PREFERENCE_UNKNOWN` | 422 | Security/account emails cannot be turned off |
+
+## Reports and exports (Phase 7)
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `REPORT_PARAMS_INVALID` | 422 | A report filter is not a valid date or id |
+| `SUPPLIER_REQUIRED` | 422 | The supplier statement needs one supplier |
+| `FORMAT_UNAVAILABLE` | 422 | This report has no PDF version (use CSV or XLSX) |
+| `EXPORT_IN_PROGRESS` | 409 | A full data export is already being prepared |
+| `EXPORT_NOT_READY` | 409 | The export is still running, failed or has expired |
+| `LINK_INVALID` | 403 | The download link expired, was altered, or belongs to someone else |

@@ -100,6 +100,7 @@ const STATUS: Record<string, { label: string; tone: Tone }> = {
   void: { label: "Void", tone: "neutral" },
   deactivated: { label: "Deactivated", tone: "neutral" },
   STALE: { label: "Stale", tone: "warning" },
+  expired: { label: "Expired", tone: "neutral" },
 };
 
 export function statusLabel(status: string): string {

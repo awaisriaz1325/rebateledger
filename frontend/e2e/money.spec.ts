@@ -173,3 +173,23 @@ test("a claim goes from discrepancy to fully recovered", async ({ page }) => {
   await toast(page, /now recovered/i);
   await expect(page.locator("dt", { hasText: /^Recovered$/ }).locator("..")).toContainText("$350.00");
 });
+
+test("reports export a reconciliation CSV and the claim's evidence pack", async ({ page }) => {
+  await page.goto("/app/reports");
+  await expect(page.getByRole("heading", { name: "Reconciliation summary" })).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: `${Y}-Q1` })).toContainText("$300.00");
+  await expectAccessible(page);
+  const [csv] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.getByRole("button", { name: "Download CSV" }).click()]);
+  expect(csv.suggestedFilename()).toMatch(/^reconciliation-summary-.*\.csv$/);
+  const text = (await (await import("node:fs/promises")).readFile(await csv.path())).toString("utf8");
+  expect(text).toContain(`${Y}-Q1`);
+  expect(text).toMatch(/Total,+700\.00/);
+  await expect(page.locator("#exports").getByText(/reconciliation-summary-.*\.csv/)).toBeVisible();
+
+  await page.goto("/app/claims");
+  await page.getByLabel("Status").selectOption("all"); // the recovered claim is closed
+  await page.getByRole("link", { name: /^#\d+$/ }).first().click();
+  await page.waitForURL(/\/app\/claims\/[0-9a-f-]{36}$/);
+  const [pack] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.getByRole("button", { name: "Download evidence pack" }).click()]);
+  expect(pack.suggestedFilename()).toMatch(/^claim-\d+-evidence-.*\.zip$/);
+});

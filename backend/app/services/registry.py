@@ -9,6 +9,7 @@ from __future__ import annotations
 
 # Imported for their side effect (handler registration); `--fix` must not remove them.
 import app.emails.service
+import app.exports.service
 import app.services.audit
 import app.services.imports
 import app.services.notifications

@@ -302,3 +302,19 @@ SAMPLE_FILES.update(
         },
     }
 )
+
+
+def export(w: World, t: uuid.UUID) -> uuid.UUID:
+    eid = uuid.uuid7()
+    w.sql(
+        "INSERT INTO rl.exports (id, tenant_id, kind, report, format, params, status, filename, requested_by, error, created_at) "
+        "VALUES (:e, :t, 'report', 'claims_register', 'csv', '{}', 'succeeded', 'x.csv', :u, '', now())",
+        e=eid,
+        t=t,
+        u=uuid.uuid7(),
+    )
+    return eid
+
+
+EXTRA_FACTORIES["export_id"] = export
+SAMPLE_BODIES[("POST", "/api/v1/exports")] = {"report": "claims_register", "format": "csv"}

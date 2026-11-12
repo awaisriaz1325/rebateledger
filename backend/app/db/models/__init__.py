@@ -1,3 +1,3 @@
 """Import every model module so Base.metadata is complete (Alembic, tests)."""
 
-from app.db.models import business, identity, runs  # noqa: F401
+from app.db.models import business, exports, identity, runs  # noqa: F401

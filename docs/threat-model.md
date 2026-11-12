@@ -77,6 +77,16 @@ limit reset and re-queued jobs (jobs table is durable). Private network only (P1
 | I: content served inline | Downloads only via authorised endpoint, `attachment` + `nosniff` | Done |
 | T: formula injection in exports | `csv_safe.neutralize` on every exported cell (error report, audit CSV) | Done, tested |
 
+### Reports and exports (P7, ADR 0013)
+| Threat | Control | Status |
+|---|---|---|
+| T: formula injection (CSV/XLSX) | Every text cell neutralised; XLSX text cells forced to string type; numbers typed | Done, tested in every format |
+| I: SSRF / local file read via PDF | WeasyPrint `NoNetworkFetcher` refuses all but `data:`; Jinja autoescape | Done, tested with live HTTP server + `file://` |
+| I: link leakage / replay | HMAC link bound to export + user + tenant, 15 min; session also required; audit on download | Done, tested |
+| I: other users' exports | 404 unless own export or `full_export` permission | Done, tested |
+| I: secrets in full export | Internal tables and secret columns excluded; members without credentials | Done, tested |
+| D: export flooding | Background jobs; one full export in progress per tenant | Partial — per-user export rate limit not yet added (Low) |
+
 ### Email
 Tokens single-use, hashed, short-lived. Security emails cannot be disabled.
 SPF/DKIM/DMARC (P11). No tracking pixels.

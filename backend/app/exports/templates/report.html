@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>{{ t.title }}</title>
+{% set product = "RebateLedger" %}{% include "_style.html" %}</head>
+<body>
+  <h1>{{ t.title }}</h1>
+  <p class="meta muted">{{ organization }}{% if t.subtitle %} · {{ t.subtitle }}{% endif %} · generated {{ generated_at.strftime("%Y-%m-%d %H:%M UTC") }}
+  {% for label, value in t.filters %} · {{ label }}: {{ value }}{% endfor %}</p>
+  {% if not t.rows %}<p>No rows match these filters.</p>{% else %}
+  <table>
+    <thead><tr>{% for c in t.columns %}<th{% if c.kind in ("money", "number", "int") %} class="num"{% endif %}>{{ c.label }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for r in t.rows %}<tr>{% for c in t.columns %}<td{% if c.kind in ("money", "number", "int") %} class="num"{% endif %}>{{ r.get(c.key) | show(c.kind) }}</td>{% endfor %}</tr>
+    {% endfor %}
+    {% if t.totals %}<tr class="total">{% for c in t.columns %}<td{% if c.kind in ("money", "number", "int") %} class="num"{% endif %}>{% if loop.first %}Total{% else %}{{ t.totals.get(c.key) | show(c.kind) if c.key in t.totals else "" }}{% endif %}</td>{% endfor %}</tr>{% endif %}
+    </tbody>
+  </table>
+  <p class="muted">{{ t.rows | length }} row(s). Amounts in USD. Figures come from the latest calculation run; see each result's Explain view for the full calculation.</p>
+  {% endif %}
+</body></html>

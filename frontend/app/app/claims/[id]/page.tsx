@@ -10,8 +10,9 @@ import { Button, Card, Field, Input, Notice, PageHeader, Select, Textarea } from
 import { DateText, Money, StatusBadge, statusLabel } from "@/components/ui/finance";
 import { ConfirmDialog, Dialog } from "@/components/ui/overlay";
 import { QueryState } from "@/components/ui/states";
-import { api, errorMessage, unwrap, uploadForm } from "@/lib/api";
+import { api, errorMessage, idempotencyKey, unwrap, uploadForm } from "@/lib/api";
 import { isConflict, useVersioned } from "@/lib/etag";
+import { useExporter } from "@/lib/exports";
 import { formatDateTime } from "@/lib/format";
 import { useNames } from "@/lib/queries";
 import { can, useSession } from "@/lib/session";
@@ -50,7 +51,7 @@ function ClaimView({ claim, etag }: { claim: ClaimDetail; etag: string }) {
   const [explain, setExplain] = useState<string | null>(null);
   return (
     <>
-      <PageHeader title={`Claim #${claim.number}: ${claim.title}`} description={<>{names.data?.supplier.get(claim.supplier_id) ?? "Supplier"} · opened {formatDateTime(claim.created_at)}</>}>
+      <PageHeader title={`Claim #${claim.number}: ${claim.title}`} description={<>{names.data?.supplier.get(claim.supplier_id) ?? "Supplier"} · opened {formatDateTime(claim.created_at)}</>} actions={can(session, "export") ? <EvidencePack claimId={claim.id} /> : null}>
         <div className="mt-2 flex gap-2"><StatusBadge status={claim.status} />{claim.pending_write_off ? <span className="text-xs text-warning">Write-off awaiting approval</span> : null}</div>
       </PageHeader>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
@@ -333,5 +334,23 @@ function Attachments({ claim, edit }: { claim: ClaimDetail; edit: boolean }) {
         </div>
       ) : null}
     </Card>
+  );
+}
+
+/** PDF + CSV appendix for the supplier: amounts match the Results screen exactly (SPEC §4.8). */
+function EvidencePack({ claimId }: { claimId: string }) {
+  const exporter = useExporter();
+  return (
+    <Button
+      variant="secondary"
+      loading={exporter.busy !== null}
+      onClick={() =>
+        void exporter.run("pack", async () =>
+          unwrap(await api.POST("/api/v1/claims/{claim_id}/evidence-pack", { params: { path: { claim_id: claimId } }, headers: { "Idempotency-Key": idempotencyKey() } })),
+        )
+      }
+    >
+      Download evidence pack
+    </Button>
   );
 }

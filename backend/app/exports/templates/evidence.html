@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Claim #{{ claim.number }} evidence</title>
+{% set product = "RebateLedger" %}{% include "_style.html" %}</head>
+<body>
+  <h1>Rebate claim #{{ claim.number }}: {{ claim.title }}</h1>
+  <p class="meta muted">{{ organization }} · supplier {{ supplier }} · status {{ claim.status | replace("_", " ") }} · generated {{ generated_at.strftime("%Y-%m-%d %H:%M UTC") }}</p>
+
+  <div class="box">
+    <table>
+      <thead><tr><th>Agreement</th><th>Period</th><th class="num">Expected</th><th class="num">Received</th><th class="num">Variance</th></tr></thead>
+      <tbody>
+      {% for s in sections %}<tr><td>{{ s.agreement_name }} (v{{ s.result.version_no }})</td><td>{{ s.item.period_start }} – {{ s.item.period_end }}</td>
+        <td class="num">{{ s.expected | show("money") }}</td><td class="num">{{ s.received | show("money") }}</td><td class="num">{{ s.variance | show("money") }}</td></tr>
+      {% endfor %}
+      <tr class="total"><td colspan="2">Total</td><td class="num">{{ totals.expected | show("money") }}</td><td class="num">{{ totals.received | show("money") }}</td><td class="num">{{ totals.variance | show("money") }}</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">Received and variance are as of {{ as_of }}. Identified when the claim was opened: {{ claim.identified_amount | show("money") }} · claimed {{ claim.claimed_amount | show("money") }}{% if claim.claimed_amount_reason %} ({{ claim.claimed_amount_reason }}){% endif %} · recovered {{ recovered | show("money") }}.</p>
+  </div>
+
+  {% for s in sections %}
+  <h2>{{ s.agreement_name }} — {{ s.result.period_label }} ({{ s.item.period_start }} – {{ s.item.period_end }})</h2>
+  <dl class="kv">
+    <dt>Agreement version</dt><dd>v{{ s.result.version_no }}{% if s.reference %} · reference {{ s.reference }}{% endif %}</dd>
+    <dt>Terms in plain English</dt><dd>{{ s.summary }}</dd>
+    <dt>Calculation run</dt><dd>#{{ s.run_number }} · engine {{ s.result.engine_version }} · input hash {{ s.result.input_hash[:16] }}…{% if s.result.stale_at %} · <span class="warn">inputs changed since this run ({{ s.result.stale_reason }})</span>{% endif %}</dd>
+    <dt>Eligible lines</dt><dd>{{ s.lines.eligible_count }} lines, spend {{ s.lines.eligible_spend | show("money") }}{% if s.lines.excluded_count %}; {{ s.lines.excluded_count }} excluded{% endif %} · full listing in <em>eligible-lines.csv</em>
+      {% if s.lines.matches %}<span class="ok">— matches the run’s eligible spend</span>{% else %}<span class="warn">— differs from the run’s eligible spend {{ s.result.spend | show("money") }} (purchase data changed since the run)</span>{% endif %}</dd>
+    <dt>Due date</dt><dd>{{ s.due_date }}</dd>
+  </dl>
+
+  <h3>Calculation</h3>
+  <table>
+    <thead><tr><th>Step</th><th>What happened</th><th>Values</th></tr></thead>
+    <tbody>
+    {% for step in s.trace %}<tr><td>{{ step.step }}. {{ step.name }}</td><td>{{ step.description }}</td>
+      <td>{% for k, v in step["values"].items() %}{{ k }} = {{ v }}{% if not loop.last %}<br>{% endif %}{% endfor %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>Credits received for this period</h3>
+  {% if s.allocations %}
+  <table>
+    <thead><tr><th>Credit memo</th><th>Credit date</th><th>How allocated</th><th class="num">Amount</th></tr></thead>
+    <tbody>{% for a in s.allocations %}<tr><td>{{ a.reference }}</td><td>{{ a.credit_date }}</td><td>{{ a.method }}</td><td class="num">{{ a.amount | show("money") }}</td></tr>{% endfor %}</tbody>
+  </table>
+  {% else %}<p>No credit has been received for this period.</p>{% endif %}
+  {% endfor %}
+
+  <h2>Claim history</h2>
+  <table>
+    <thead><tr><th>When</th><th>Who</th><th>Event</th></tr></thead>
+    <tbody>{% for e in events %}<tr><td>{{ e.occurred_at | show("datetime") }}</td><td>{{ e.actor_label }}</td>
+      <td>{% if e.from_status and e.to_status %}{{ e.from_status | replace("_", " ") }} → {{ e.to_status | replace("_", " ") }}. {% endif %}{{ e.text }}</td></tr>{% endfor %}</tbody>
+  </table>
+  {% if claim.notes %}<h2>Notes</h2><p style="white-space: pre-wrap">{{ claim.notes }}</p>{% endif %}
+</body></html>

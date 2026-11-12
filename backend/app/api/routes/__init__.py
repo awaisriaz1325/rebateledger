@@ -4,6 +4,7 @@ from app.api.routes import (
     agreements,
     auth,
     claims,
+    exports,
     health,
     imports,
     insights,
@@ -30,4 +31,5 @@ ROUTERS = [
     reconciliation.router,
     claims.router,
     insights.router,
+    exports.router,
 ]

@@ -12,6 +12,21 @@ Template:
 - Next step:
 -->
 
+## 2026-11-12 — Phase 7: reports, exports, evidence packs
+- Changed: `exports` table (RLS) + `build_export`/`expire_exports` jobs; six reports
+  (reconciliation summary, supplier statement, claims register, recovery report, agreement
+  register, import history) with on-screen preview and CSV/XLSX/PDF export; claim evidence
+  pack (PDF + summary, eligible-lines and credits CSVs); Owner full data export ZIP (step-up);
+  15-minute signed, user-bound download links; Reports page with recent exports; evidence-pack
+  button on claims; "Your data" card in organization settings.
+- Verified: malicious-cell fixture neutralised in CSV, XLSX, evidence and full-export CSVs;
+  PDF renderer made zero requests to a live local server (and refused `file://`); evidence
+  pack amounts equal the Results screen string-for-string and its eligible lines sum to the
+  run's spend. E2E downloads a report CSV (total 700.00) and an evidence pack.
+- Decisions (ADRs): 0013 exports and evidence packs.
+- Open questions: report/evidence file retention 7 days [PROPOSED DEFAULT]; per-user export rate limit.
+- Next step: Phase 8 (invoice billing, ops console, support access, suspended mode).
+
 ## 2026-11-11 — Phase 6: product screens + E2E
 - Changed: screens for suppliers (detail), agreements (list/new/detail with terms editor, live
   summary, versions, compare, dry-run preview, documents), import wizard (upload → map → explicit

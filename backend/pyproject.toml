@@ -81,7 +81,12 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers --strict-config"
-filterwarnings = ["error"]
+filterwarnings = [
+  "error",
+  # Environment notice from WeasyPrint when the optional system library is missing; the
+  # worker image installs libharfbuzz-subset0 (infra). Not a code defect.
+  "ignore:HarfBuzz-Subset will be required:DeprecationWarning",
+]
 markers = ["db: needs a running Postgres", "slow: long running"]
 
 [tool.coverage.run]
