@@ -436,6 +436,16 @@ Unallocated credits appear in an **Unmatched credits** queue.
 - Accrual view: expected-to-date per agreement for the open period at the current tier,
   labelled **estimate**, with "data as of" date (latest imported purchase date).
 
+- **Opportunity ranking (v1.1, ADR 0017):** open periods with a reachable next tier, ranked
+  by additional rebate per extra unit of measure (all-units tiers and fixed bonuses), then
+  by smallest gap where the gain cannot be estimated (incremental tiers). Shows required
+  vs current daily pace. Periods needing review are excluded. All values are estimates.
+- **Weekly digest (v1.1):** on the organization's local Monday, owners, admins and analysts
+  receive the top five opportunities (notification type `weekly_digest`, in-app and email,
+  per-user preference and unsubscribe). At most one per user per ISO week; no digest when
+  there is nothing to report. Only agreement names and estimates, never purchase rows.
+  The dashboard shows the top three.
+
 ### 4.10 Dashboard, reports and exports
 - **Dashboard KPIs:** identified open variance; recovered (confirmed) this year;
   open claims count and amount by aging bucket (0–30, 31–60, 61–90, 90+); results needing

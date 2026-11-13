@@ -12,7 +12,7 @@ from sqlalchemy import select
 
 from app.api.deps import DB, Ctx, Public, Requires
 from app.api.schemas.common import DecimalStr, In, Ok, Out
-from app.api.schemas.views import DashboardOut
+from app.api.schemas.views import DashboardOut, OpportunityOut
 from app.core.errors import AppError
 from app.core.permissions import Permission
 from app.db.models.identity import Notification
@@ -57,6 +57,18 @@ def tier_tracker(ctx: View) -> list[TierOut]:
     assert ctx.tenant is not None
     return [
         TierOut.model_validate(r, from_attributes=True) for r in tiers.tracker(ctx.db, ctx.tenant)
+    ]
+
+
+@router.get("/tiers/opportunities", response_model=list[OpportunityOut])
+def tier_opportunities(
+    ctx: View, limit: Annotated[int, Query(ge=1, le=50)] = 5
+) -> list[OpportunityOut]:
+    """Open periods where more purchases unlock more rebate, best return first (ESTIMATES)."""
+    assert ctx.tenant is not None
+    return [
+        OpportunityOut.model_validate(o, from_attributes=True)
+        for o in tiers.opportunities(ctx.db, ctx.tenant)[:limit]
     ]
 
 

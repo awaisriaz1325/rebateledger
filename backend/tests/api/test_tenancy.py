@@ -33,6 +33,7 @@ TENANT_TABLES = (
     "jobs",
     "notifications",
     "notification_preferences",
+    "digest_sends",
 )
 
 

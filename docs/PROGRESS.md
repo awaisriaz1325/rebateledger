@@ -12,6 +12,14 @@ Template:
 - Next step:
 -->
 
+## 2026-11-13 — Phase 14: weekly buyer digest
+- Changed: `tiers.opportunities` ranking (return per extra dollar, required vs current daily
+  pace); `GET /api/v1/tiers/opportunities`; dashboard "Top tier opportunities" (reuses the one
+  tracker computation); `weekly_digest` job (local Monday, owners/admins/analysts,
+  preferences + unsubscribe) with `digest_sends` (migration 0007, RLS) so retries never
+  resend. Tests: hand-worked ranking, once-per-week, no viewers, opt-out, other days.
+- Next step: Phase 15 (accrual journal export).
+
 ## 2026-11-13 — Phase 13: deal modelling
 - Changed: `POST /api/v1/deal-models/evaluate` (stateless, read-only; same permission as
   editing agreements) running 1–4 proposed term sets through the engine over ≤ 24 months of

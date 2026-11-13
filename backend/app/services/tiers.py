@@ -192,3 +192,80 @@ def _potential(comp: object, idx: int, threshold: Decimal, measure: Measure) -> 
             CENT, ROUND_HALF_UP
         )
     return None  # incremental tiers only change the rate on future volume
+
+
+# --------------------------------------------------------------------------- opportunities
+
+RATIO = Decimal("0.0001")
+
+
+@dataclass(frozen=True)
+class Opportunity:
+    """An open period where more purchases before period end unlock more rebate (ESTIMATE)."""
+
+    agreement_id: uuid.UUID
+    agreement_name: str
+    supplier_name: str
+    period_end: date
+    days_remaining: int
+    measure_kind: str
+    next_tier: int
+    gap: Decimal
+    potential_additional: Decimal | None
+    #: additional rebate per unit of extra measure (e.g. 0.0400 = 4 cents per extra dollar).
+    return_per_unit: Decimal | None
+    required_daily: Decimal
+    current_daily: Decimal
+    projected_reaches_next: bool
+    data_as_of: date | None
+
+
+def opportunities(
+    db: Session,
+    tenant: Tenant,
+    today: date | None = None,
+    rows: list[TierRow] | None = None,
+) -> list[Opportunity]:
+    """Open periods with a next tier still reachable, best return per extra unit first.
+
+    Excluded: periods that need review, have no days left, or have no next tier. Rows whose
+    additional rebate cannot be estimated (incremental tiers) come after, smallest gap first.
+    """
+    out: list[Opportunity] = []
+    for r in rows if rows is not None else tracker(db, tenant, today):
+        if r.needs_review or r.days_remaining <= 0 or r.gap is None or r.next_tier is None:
+            continue
+        if r.gap <= 0:
+            continue
+        ratio = (
+            (r.potential_additional / r.gap).quantize(RATIO, ROUND_HALF_UP)
+            if r.potential_additional is not None and r.potential_additional > 0
+            else None
+        )
+        out.append(
+            Opportunity(
+                agreement_id=r.agreement_id,
+                agreement_name=r.agreement_name,
+                supplier_name=r.supplier_name,
+                period_end=r.period_end,
+                days_remaining=r.days_remaining,
+                measure_kind=r.measure_kind,
+                next_tier=r.next_tier,
+                gap=r.gap,
+                potential_additional=r.potential_additional,
+                return_per_unit=ratio,
+                required_daily=(r.gap / r.days_remaining).quantize(CENT, ROUND_HALF_UP),
+                current_daily=(r.current_measure / r.days_elapsed).quantize(CENT, ROUND_HALF_UP),
+                projected_reaches_next=r.projected_reaches_next,
+                data_as_of=r.data_as_of,
+            )
+        )
+    out.sort(
+        key=lambda o: (
+            o.return_per_unit is None,
+            -(o.return_per_unit or Decimal(0)),
+            o.gap,
+            str(o.agreement_id),
+        )
+    )
+    return out

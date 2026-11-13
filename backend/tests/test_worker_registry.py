@@ -19,6 +19,7 @@ EXPECTED = {
     "import_validate",
     "send_email",
     "tier_alerts",
+    "weekly_digest",
     "verify_audit_chain",
 }
 

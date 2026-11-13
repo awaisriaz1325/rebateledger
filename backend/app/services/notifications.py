@@ -14,6 +14,7 @@ from app.core.clock import today_in, utcnow
 from app.core.config import get_settings
 from app.core.security import sign, unsign
 from app.db.models.identity import (
+    DigestSend,
     Membership,
     MembershipStatus,
     Notification,
@@ -33,6 +34,7 @@ ALERT_TYPES = {
     "tier_proximity": "Close to the next tier",
     "import_finished": "Import finished",
     "export_ready": "Export ready",
+    "weekly_digest": "Weekly tier opportunities",
 }
 UNSUBSCRIBE_TTL = 365 * 24 * 3600
 
@@ -313,3 +315,84 @@ def _tier_alerts(db: Session, job: JobContext) -> dict[str, Any]:
             )
             sent += 1
     return {"sent": sent}
+
+
+# --------------------------------------------------------------------------- weekly digest
+
+DIGEST_ROLES = (Role.OWNER.value, Role.ADMIN.value, Role.ANALYST.value)
+DIGEST_TOP = 5
+
+
+def _measure_text(kind: str, value: Any) -> str:
+    return f"${value:,.2f}" if kind == "spend" else f"{value:,.2f} units"
+
+
+def digest_text(items: list[Any]) -> str:
+    """Plain-text digest body. Agreement names and estimates only; never purchase rows."""
+    lines = ["Where more purchases this period would unlock more rebate (estimates):", ""]
+    for i, o in enumerate(items, 1):
+        gain = (
+            f" for about ${o.potential_additional:,.2f} more rebate"
+            if o.potential_additional is not None
+            else ""
+        )
+        lines.append(
+            f"{i}. {o.supplier_name} — {o.agreement_name}: {_measure_text(o.measure_kind, o.gap)} "
+            f"more by {o.period_end:%b %d, %Y} ({o.days_remaining} days) reaches tier {o.next_tier}{gain}."
+        )
+        lines.append(
+            f"   Needed per day: {_measure_text(o.measure_kind, o.required_daily)}; "
+            f"current pace: {_measure_text(o.measure_kind, o.current_daily)} per day."
+        )
+    lines += [
+        "",
+        "Estimates use the purchases imported so far. Check the tier tracker before acting.",
+    ]
+    return "\n".join(lines)
+
+
+@handler("weekly_digest")
+def _weekly_digest(db: Session, job: JobContext) -> dict[str, Any]:
+    """Monday digest of the top tier opportunities (v1.1 Phase 14).
+
+    Scheduled daily; sends only on the organization's local Monday. At most one digest per
+    user per ISO week (``digest_sends``), so retries and re-runs never send twice.
+    """
+    from app.services.tiers import opportunities
+
+    assert job.tenant_id is not None
+    tenant = db.get(Tenant, job.tenant_id)
+    assert tenant is not None
+    today = today_in(tenant.timezone)
+    if today.weekday() != 0:
+        return {"sent": 0, "skipped": "not_monday"}
+    items = opportunities(db, tenant, today)[:DIGEST_TOP]
+    if not items:
+        return {"sent": 0, "skipped": "no_opportunities"}
+    iso = today.isocalendar()
+    week = f"{iso.year}-W{iso.week:02d}"
+    users = db.execute(
+        select(Membership.user_id).where(
+            Membership.tenant_id == tenant.id,
+            Membership.status == MembershipStatus.ACTIVE.value,
+            Membership.role.in_(DIGEST_ROLES),
+        )
+    ).scalars()
+    body = digest_text(items)
+    title = f"{len(items)} tier {'opportunity' if len(items) == 1 else 'opportunities'} this week"
+    sent = 0
+    for uid in users:
+        done = db.execute(
+            select(DigestSend.id).where(
+                DigestSend.tenant_id == tenant.id,
+                DigestSend.user_id == uid,
+                DigestSend.week == week,
+            )
+        ).first()
+        if done:
+            continue
+        db.add(DigestSend(tenant_id=tenant.id, user_id=uid, week=week))
+        db.flush()
+        notify(db, tenant.id, [uid], "weekly_digest", title, body, "/app/tiers")
+        sent += 1
+    return {"sent": sent, "week": week}

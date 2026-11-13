@@ -2672,6 +2672,13 @@
           "tier_opportunities": {
             "$ref": "#/components/schemas/LinkedCount"
           },
+          "top_opportunities": {
+            "items": {
+              "$ref": "#/components/schemas/OpportunityOut"
+            },
+            "title": "Top Opportunities",
+            "type": "array"
+          },
           "top_suppliers_by_open_variance": {
             "items": {
               "$ref": "#/components/schemas/SupplierAmount"
@@ -2688,6 +2695,7 @@
           "needs_review",
           "top_suppliers_by_open_variance",
           "tier_opportunities",
+          "top_opportunities",
           "data_freshness",
           "has_results"
         ],
@@ -4541,6 +4549,128 @@
           "link"
         ],
         "title": "OpenClaims",
+        "type": "object"
+      },
+      "OpportunityOut": {
+        "properties": {
+          "agreement_id": {
+            "format": "uuid",
+            "title": "Agreement Id",
+            "type": "string"
+          },
+          "agreement_name": {
+            "title": "Agreement Name",
+            "type": "string"
+          },
+          "current_daily": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Current Daily",
+            "type": "string"
+          },
+          "data_as_of": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data As Of"
+          },
+          "days_remaining": {
+            "title": "Days Remaining",
+            "type": "integer"
+          },
+          "gap": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Gap",
+            "type": "string"
+          },
+          "measure_kind": {
+            "title": "Measure Kind",
+            "type": "string"
+          },
+          "next_tier": {
+            "title": "Next Tier",
+            "type": "integer"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "potential_additional": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Potential Additional"
+          },
+          "projected_reaches_next": {
+            "title": "Projected Reaches Next",
+            "type": "boolean"
+          },
+          "required_daily": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Required Daily",
+            "type": "string"
+          },
+          "return_per_unit": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Per Unit"
+          },
+          "supplier_name": {
+            "title": "Supplier Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agreement_id",
+          "agreement_name",
+          "supplier_name",
+          "period_end",
+          "days_remaining",
+          "measure_kind",
+          "next_tier",
+          "gap",
+          "potential_additional",
+          "return_per_unit",
+          "required_daily",
+          "current_daily",
+          "projected_reaches_next",
+          "data_as_of"
+        ],
+        "title": "OpportunityOut",
         "type": "object"
       },
       "OptionIn": {
@@ -18327,6 +18457,56 @@
           }
         },
         "summary": "Tier Tracker",
+        "tags": [
+          "insights"
+        ]
+      }
+    },
+    "/api/v1/tiers/opportunities": {
+      "get": {
+        "description": "Open periods where more purchases unlock more rebate, best return first (ESTIMATES).",
+        "operationId": "tier_opportunities_api_v1_tiers_opportunities_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 5,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OpportunityOut"
+                  },
+                  "title": "Response Tier Opportunities Api V1 Tiers Opportunities Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Tier Opportunities",
         "tags": [
           "insights"
         ]

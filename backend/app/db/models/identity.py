@@ -334,6 +334,17 @@ class Notification(IdMixin, TenantMixin, Base):
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class DigestSend(IdMixin, TenantMixin, Base):
+    """One weekly digest per user per ISO week: makes the digest job safe to retry."""
+
+    __tablename__ = "digest_sends"
+    __table_args__ = (UniqueConstraint("tenant_id", "user_id", "week"),)
+
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey(f"{SCHEMA}.users.id", ondelete="CASCADE"))
+    week: Mapped[str] = mapped_column(String(10))  # ISO week, e.g. "2026-W46"
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class NotificationPreference(IdMixin, TenantMixin, Base):
     __tablename__ = "notification_preferences"
     __table_args__ = (UniqueConstraint("tenant_id", "user_id", "type"),)

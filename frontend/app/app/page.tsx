@@ -8,7 +8,7 @@ import { Button, Card, Notice, PageHeader } from "@/components/ui/core";
 import { Money } from "@/components/ui/finance";
 import { QueryState } from "@/components/ui/states";
 import { api, unwrap } from "@/lib/api";
-import { formatDate, formatMoney } from "@/lib/format";
+import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import type { components } from "@/generated/api";
 
@@ -78,6 +78,7 @@ function Kpis({ d }: { d: Dashboard }) {
           <Link href="/app/tiers" className="mt-4 inline-block text-sm text-brand hover:underline">{d.tier_opportunities.count} tier opportunit{d.tier_opportunities.count === 1 ? "y" : "ies"} close to the next tier →</Link>
         </Card>
       </div>
+      <TopOpportunities items={d.top_opportunities} />
       <Card title="Data freshness" actions={<span className="text-xs text-muted">Warn after {d.data_freshness.threshold_days} days</span>}>
         {staleSuppliers.length ? <div className="mb-3"><Notice tone="warning">{staleSuppliers.length} supplier(s) have no purchases in the last {d.data_freshness.threshold_days} days. Results may be incomplete until you import newer data.</Notice></div> : null}
         <table className="w-full text-sm" aria-label="Latest purchase date per supplier">
@@ -95,6 +96,36 @@ function Kpis({ d }: { d: Dashboard }) {
         <p className="mt-2 text-xs text-muted">As of {formatDate(d.as_of)}</p>
       </Card>
     </div>
+  );
+}
+
+type Opportunity = Dashboard["top_opportunities"][number];
+
+function measure(kind: string, value: string): string {
+  return kind === "spend" ? formatMoney(value) : `${formatQuantity(value)} units`;
+}
+
+/** Best tier opportunities by additional rebate per extra dollar (v1.1 Phase 14). Estimates. */
+function TopOpportunities({ items }: { items: Opportunity[] }) {
+  return (
+    <Card title="Top tier opportunities (estimate)" actions={<Link href="/app/tiers" className="text-sm text-brand hover:underline">Tier tracker →</Link>}>
+      {items.length === 0 ? (
+        <p className="text-sm text-muted">No open period has a next tier within reach right now.</p>
+      ) : (
+        <ol className="divide-y divide-rule">
+          {items.map((o) => (
+            <li key={`${o.agreement_id}-${o.period_end}`} className="flex flex-wrap items-baseline justify-between gap-2 py-2 text-sm">
+              <span>
+                <span className="font-medium">{o.supplier_name}</span> — {o.agreement_name}:{" "}
+                <span className="num">{measure(o.measure_kind, o.gap)}</span> more by {formatDate(o.period_end)} ({o.days_remaining} days) reaches tier {o.next_tier}
+              </span>
+              {o.potential_additional ? <span className="num font-medium text-positive">about {formatMoney(o.potential_additional)} more rebate</span> : <span className="text-muted">higher rate on further purchases</span>}
+            </li>
+          ))}
+        </ol>
+      )}
+      <p className="mt-2 text-xs text-muted">Ranked by extra rebate per extra dollar. Owners, admins and analysts also get these in a Monday email (Settings → Notifications).</p>
+    </Card>
   );
 }
 

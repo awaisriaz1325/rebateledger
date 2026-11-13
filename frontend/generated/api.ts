@@ -2532,6 +2532,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tiers/opportunities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tier Opportunities
+         * @description Open periods where more purchases unlock more rebate, best return first (ESTIMATES).
+         */
+        get: operations["tier_opportunities_api_v1_tiers_opportunities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/unsubscribe": {
         parameters: {
             query?: never;
@@ -3535,6 +3555,8 @@ export interface components {
             open_claims: components["schemas"]["OpenClaims"];
             recovered_this_year: components["schemas"]["LinkedAmount"];
             tier_opportunities: components["schemas"]["LinkedCount"];
+            /** Top Opportunities */
+            top_opportunities: components["schemas"]["OpportunityOut"][];
             /** Top Suppliers By Open Variance */
             top_suppliers_by_open_variance: components["schemas"]["SupplierAmount"][];
         };
@@ -4265,6 +4287,52 @@ export interface components {
             count: number;
             /** Link */
             link: string;
+        };
+        /** OpportunityOut */
+        OpportunityOut: {
+            /**
+             * Agreement Id
+             * Format: uuid
+             */
+            agreement_id: string;
+            /** Agreement Name */
+            agreement_name: string;
+            /**
+             * Current Daily
+             * @example 1234.50
+             */
+            current_daily: string;
+            /** Data As Of */
+            data_as_of: string | null;
+            /** Days Remaining */
+            days_remaining: number;
+            /**
+             * Gap
+             * @example 1234.50
+             */
+            gap: string;
+            /** Measure Kind */
+            measure_kind: string;
+            /** Next Tier */
+            next_tier: number;
+            /**
+             * Period End
+             * Format: date
+             */
+            period_end: string;
+            /** Potential Additional */
+            potential_additional: string | null;
+            /** Projected Reaches Next */
+            projected_reaches_next: boolean;
+            /**
+             * Required Daily
+             * @example 1234.50
+             */
+            required_daily: string;
+            /** Return Per Unit */
+            return_per_unit: string | null;
+            /** Supplier Name */
+            supplier_name: string;
         };
         /** OptionIn */
         OptionIn: {
@@ -11559,6 +11627,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TierOut"][];
+                };
+            };
+        };
+    };
+    tier_opportunities_api_v1_tiers_opportunities_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpportunityOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

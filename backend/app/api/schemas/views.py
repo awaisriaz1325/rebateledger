@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from app.api.schemas.common import Out
+import uuid
+from datetime import date
+
+from app.api.schemas.common import DecimalStr, Out
 
 
 class LinkedAmount(Out):
@@ -46,6 +49,23 @@ class Freshness(Out):
     link: str
 
 
+class OpportunityOut(Out):
+    agreement_id: uuid.UUID
+    agreement_name: str
+    supplier_name: str
+    period_end: date
+    days_remaining: int
+    measure_kind: str
+    next_tier: int
+    gap: DecimalStr
+    potential_additional: DecimalStr | None
+    return_per_unit: DecimalStr | None
+    required_daily: DecimalStr
+    current_daily: DecimalStr
+    projected_reaches_next: bool
+    data_as_of: date | None
+
+
 class DashboardOut(Out):
     as_of: str
     identified_open_variance: LinkedAmount
@@ -54,6 +74,7 @@ class DashboardOut(Out):
     needs_review: LinkedCount
     top_suppliers_by_open_variance: list[SupplierAmount]
     tier_opportunities: LinkedCount
+    top_opportunities: list[OpportunityOut]
     data_freshness: Freshness
     has_results: bool
 

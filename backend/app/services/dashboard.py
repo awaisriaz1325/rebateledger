@@ -16,7 +16,7 @@ from app.db.models.identity import Tenant
 from app.db.models.runs import TERMINAL_CLAIM, Claim, ClaimRecovery
 from app.engine.reconcile import ReconStatus
 from app.services.reconciliation import live_items
-from app.services.tiers import tracker
+from app.services.tiers import opportunities, tracker
 
 ZERO = Decimal("0.00")
 BUCKETS = ((0, 30, "0-30"), (31, 60, "31-60"), (61, 90, "61-90"), (91, 10**6, "90+"))
@@ -65,9 +65,11 @@ def kpis(db: Session, tenant: Tenant) -> dict[str, Any]:
                 aging_count[label] += 1
                 aging_amount[label] += c.claimed_amount
                 break
+    tier_rows = tracker(db, tenant, today)  # computed once (about 0.7 s at 100k lines)
+    top_opportunities = opportunities(db, tenant, today, rows=tier_rows)[:3]
     tiers = [
         t
-        for t in tracker(db, tenant, today)
+        for t in tier_rows
         if t.gap is not None
         and t.next_threshold
         and t.gap <= t.next_threshold * tenant.tier_alert_pct
@@ -135,6 +137,7 @@ def kpis(db: Session, tenant: Tenant) -> dict[str, Any]:
             {"supplier_name": n, "amount": format(a, "f")} for n, a in top
         ],
         "tier_opportunities": {"count": len(tiers), "link": "/app/tiers"},
+        "top_opportunities": top_opportunities,
         "data_freshness": {
             "threshold_days": tenant.data_freshness_days,
             "suppliers": freshness,
