@@ -121,6 +121,10 @@ def enqueue(
 
 @event.listens_for(Session, "after_commit")
 def _dispatch_after_commit(db: Session) -> None:
+    # Releasing a SAVEPOINT also fires after_commit, before the real COMMIT: the job row is
+    # not visible to other sessions yet. Keep the jobs until the outermost commit.
+    if db.in_nested_transaction():
+        return
     pending: list[tuple[uuid.UUID, uuid.UUID | None]] = db.info.pop("after_commit_jobs", [])
     for job_id, tenant_id in pending:
         try:
