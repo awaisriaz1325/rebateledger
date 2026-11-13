@@ -21,6 +21,7 @@ export default function TemplatesSettings() {
     onError: (e) => toast.error(errorMessage(e)),
   });
   return (
+    <div className="flex flex-col gap-6">
     <Card title="Import mapping templates">
       <p className="mb-4 text-sm text-muted">Templates remember column mappings and formats. Save one from the last step of an import. The default template is applied automatically to new uploads of that type.</p>
       <QueryState query={query} isEmpty={(t) => t.length === 0} empty={<EmptyState title="No templates yet">Finish an import and choose “Save as template”.</EmptyState>}>
@@ -54,6 +55,52 @@ export default function TemplatesSettings() {
         )}
       </QueryState>
       <ConfirmDialog open={archiving !== null} onOpenChange={(o) => !o && setArchiving(null)} title={`Delete template “${archiving?.name}”?`} description="Past imports keep their settings; the template is no longer offered." confirmLabel="Delete" pending={patch.isPending} onConfirm={() => archiving && patch.mutate({ id: archiving.id, body: { archived: true } })} />
+    </Card>
+    <ErpPresets />
+    </div>
+  );
+}
+
+/** Read-only ERP report presets (v1.1 Phase 12): copy one to make an editable template. */
+function ErpPresets() {
+  const qc = useQueryClient();
+  const query = useQuery({ queryKey: ["import-presets", "all"], queryFn: async () => unwrap(await api.GET("/api/v1/import-presets")) });
+  const copy = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) =>
+      unwrap(await api.POST("/api/v1/import-templates/from-preset", { body: { preset_id: id, name, is_default: false } })),
+    onSuccess: (t) => { void qc.invalidateQueries({ queryKey: ["import-templates"] }); toast.success(`Saved as template “${t.name}”`); },
+    onError: (e) => toast.error(errorMessage(e)),
+  });
+  return (
+    <Card title="ERP report presets">
+      <p className="mb-4 text-sm text-muted">
+        Starting points for common ERP exports. They are best guesses that have not yet been checked against a real export, and ERPs let you change report columns, so always check the mapping. Copy one to make your own editable template.
+      </p>
+      <QueryState query={query} isEmpty={(p) => p.length === 0} empty={<EmptyState title="No presets">There are no ERP presets.</EmptyState>}>
+        {(presets) => (
+          <table className="w-full text-sm" aria-label="ERP report presets">
+            <thead><tr className="border-b border-rule text-left text-xs text-muted uppercase"><th className="py-2">ERP</th><th>Report</th><th>Type</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr></thead>
+            <tbody>
+              {presets.map((p) => (
+                <tr key={p.id} className="border-b border-rule last:border-0">
+                  <td className="py-2 font-medium">{p.erp}</td>
+                  <td>{p.report}{p.notes ? <span className="block text-xs text-muted">{p.notes}</span> : null}</td>
+                  <td className="capitalize">{p.import_type}</td>
+                  <td>{p.verified ? <span className="text-positive font-medium">Verified</span> : <span className="text-warning">Unverified</span>}</td>
+                  <td className="text-right whitespace-nowrap">
+                    <a className="mr-2 text-sm text-brand underline" href={`/api/v1/import-presets/header.csv?preset_id=${encodeURIComponent(p.id)}`} download>
+                      Header row<span className="sr-only"> for {p.erp} {p.import_type}</span>
+                    </a>
+                    <Button variant="ghost" size="sm" loading={copy.isPending && copy.variables?.id === p.id} onClick={() => copy.mutate({ id: p.id, name: `${p.erp} ${p.import_type}` })}>
+                      Copy to my templates<span className="sr-only"> ({p.erp} {p.import_type})</span>
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </QueryState>
     </Card>
   );
 }

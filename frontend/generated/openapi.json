@@ -592,6 +592,23 @@
         "title": "AnnouncementOut",
         "type": "object"
       },
+      "ApplyPresetIn": {
+        "additionalProperties": false,
+        "properties": {
+          "preset_id": {
+            "maxLength": 60,
+            "minLength": 1,
+            "pattern": "^[a-z0-9-]+$",
+            "title": "Preset Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "preset_id"
+        ],
+        "title": "ApplyPresetIn",
+        "type": "object"
+      },
       "ApprovalOut": {
         "properties": {
           "decided_at": {
@@ -3197,6 +3214,17 @@
       },
       "ImportPreviewOut": {
         "properties": {
+          "applied_preset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied Preset Id"
+          },
           "date_format_candidates": {
             "additionalProperties": {
               "items": {
@@ -3220,6 +3248,16 @@
             },
             "title": "Header",
             "type": "array"
+          },
+          "preset_suggestion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PresetSuggestionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "sample_rows": {
             "items": {
@@ -3249,7 +3287,9 @@
           "suggested_columns",
           "date_format_candidates",
           "fields",
-          "supports_flags"
+          "supports_flags",
+          "preset_suggestion",
+          "applied_preset_id"
         ],
         "title": "ImportPreviewOut",
         "type": "object"
@@ -5499,6 +5539,89 @@
           "email"
         ],
         "title": "PreferenceOut",
+        "type": "object"
+      },
+      "PresetOut": {
+        "properties": {
+          "columns": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Columns",
+            "type": "object"
+          },
+          "config": {
+            "additionalProperties": true,
+            "title": "Config",
+            "type": "object"
+          },
+          "erp": {
+            "title": "Erp",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "import_type": {
+            "title": "Import Type",
+            "type": "string"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "report": {
+            "title": "Report",
+            "type": "string"
+          },
+          "verified": {
+            "title": "Verified",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "erp",
+          "report",
+          "import_type",
+          "verified",
+          "notes",
+          "columns",
+          "config"
+        ],
+        "title": "PresetOut",
+        "type": "object"
+      },
+      "PresetSuggestionOut": {
+        "properties": {
+          "erp": {
+            "title": "Erp",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "report": {
+            "title": "Report",
+            "type": "string"
+          },
+          "verified": {
+            "title": "Verified",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "erp",
+          "report",
+          "verified"
+        ],
+        "title": "PresetSuggestionOut",
         "type": "object"
       },
       "PreviewIn": {
@@ -8218,6 +8341,35 @@
           "organization_id"
         ],
         "title": "SwitchOrgIn",
+        "type": "object"
+      },
+      "TemplateFromPresetIn": {
+        "additionalProperties": false,
+        "properties": {
+          "is_default": {
+            "default": false,
+            "title": "Is Default",
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "preset_id": {
+            "maxLength": 60,
+            "minLength": 1,
+            "pattern": "^[a-z0-9-]+$",
+            "title": "Preset Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "preset_id",
+          "name"
+        ],
+        "title": "TemplateFromPresetIn",
         "type": "object"
       },
       "TemplateIn": {
@@ -12892,6 +13044,104 @@
         ]
       }
     },
+    "/api/v1/import-presets": {
+      "get": {
+        "description": "Read-only ERP report presets (best guesses; ``verified`` says which are confirmed).",
+        "operationId": "list_presets_api_v1_import_presets_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "import_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ImportType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Import Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PresetOut"
+                  },
+                  "title": "Response List Presets Api V1 Import Presets Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Presets",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/import-presets/header.csv": {
+      "get": {
+        "description": "The header row a preset expects (canonical names), to compare with an ERP export.",
+        "operationId": "preset_header_api_v1_import_presets_header_csv_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "preset_id",
+            "required": true,
+            "schema": {
+              "maxLength": 60,
+              "minLength": 1,
+              "pattern": "^[a-z0-9-]+$",
+              "title": "Preset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preset Header",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
     "/api/v1/import-templates": {
       "get": {
         "operationId": "list_templates_api_v1_import_templates_get",
@@ -12979,6 +13229,47 @@
           }
         },
         "summary": "Save Template",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/import-templates/from-preset": {
+      "post": {
+        "operationId": "template_from_preset_api_v1_import_templates_from_preset_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateFromPresetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Template From Preset",
         "tags": [
           "imports"
         ]
@@ -13430,6 +13721,59 @@
           }
         },
         "summary": "Error Report",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/imports/{batch_id}/preset": {
+      "post": {
+        "operationId": "apply_preset_api_v1_imports__batch_id__preset_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyPresetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply Preset",
         "tags": [
           "imports"
         ]

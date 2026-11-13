@@ -110,6 +110,8 @@ is not listed here.
 | `HEADER_NOT_FOUND` | 422 | The chosen header row is beyond the end of the file |
 | `FILE_ALREADY_IMPORTED` | 409 | Identical file uploaded before; resend with `confirm_duplicate=true` |
 | `IMPORT_NOT_CONFIGURED` | 409 | Confirm mapping and formats first |
+| `PRESET_DOES_NOT_FIT` | 422 | An ERP preset's required columns are not in the file; `missing_fields` lists them; nothing was changed |
+| `PRESET_TYPE_MISMATCH` | 422 | The preset is for a different import type than the upload |
 | `IMPORT_NOT_EDITABLE` / `IMPORT_BUSY` / `IMPORT_NOT_COMMITTABLE` / `IMPORT_NOT_COMMITTED` | 409 | Wrong state for this action |
 | `COMMIT_MODE_INVALID` | 422 | Use `all_or_nothing` or `skip_invalid` |
 | `ACTION_INVALID` | 422 | Unknown-supplier resolution must be `create` or `map` |

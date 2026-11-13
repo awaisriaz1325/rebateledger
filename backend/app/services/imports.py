@@ -34,7 +34,7 @@ from app.db.models.business import (
     SupplierContact,
 )
 from app.db.models.identity import Tenant
-from app.imports import detect, fields
+from app.imports import detect, fields, presets
 from app.imports.parsing import date_format_candidates
 from app.imports.reader import iter_rows, split_header, xlsx_sheets
 from app.imports.validate import Context, Issue, RowResult, RowValidator
@@ -281,7 +281,78 @@ def preview(db: Session, ctx: Any, batch: ImportBatch) -> dict[str, Any]:
             for f in fields.FIELDS[itype]
         ],
         "supports_flags": itype in fields.FLAG_TYPES,
+        "preset_suggestion": _preset_out(presets.suggest(itype, header)),
+        "applied_preset_id": batch.config.get("preset_id"),
     }
+
+
+def _preset_out(p: presets.Preset | None) -> dict[str, Any] | None:
+    if p is None:
+        return None
+    return {"id": p.id, "erp": p.erp, "report": p.report, "verified": p.verified}
+
+
+def _get_preset(preset_id: str, import_type: str) -> presets.Preset:
+    p = presets.get(preset_id)
+    if p is None:
+        raise not_found("Preset")
+    if p.import_type.value != import_type:
+        raise AppError(
+            422,
+            "PRESET_TYPE_MISMATCH",
+            "Preset is for another import type",
+            f"{p.erp} — {p.report} is a {p.import_type.value} preset.",
+        )
+    return p
+
+
+def apply_preset(db: Session, ctx: Any, batch: ImportBatch, preset_id: str) -> ImportBatch:
+    """Map columns and formats from an ERP preset. The user still reviews and confirms.
+
+    Refuses (and changes nothing) when a required field cannot be found in the file.
+    """
+    p = _get_preset(preset_id, batch.import_type)
+    with _table(batch) as (header, _body):
+        resolved = presets.resolve(p, header)
+    missing = presets.missing_required(p, resolved)
+    if missing:
+        raise AppError(
+            422,
+            "PRESET_DOES_NOT_FIT",
+            "This file does not match the preset",
+            "Columns not found for: " + ", ".join(missing) + ". Map the columns yourself.",
+            extra={"missing_fields": missing},
+        )
+    set_config(db, ctx, batch, {**p.config, "columns": resolved})
+    # The mapping is applied but not yet reviewed: the user must still confirm it.
+    batch.config = {**batch.config, "preset_id": p.id, "confirmed": False}
+    record(
+        db,
+        tenant_id=ctx.tenant_uuid,
+        actor=ctx.actor,
+        action="import.preset_applied",
+        object_type="import_batch",
+        object_id=batch.id,
+        summary={"preset": p.id, "fields": sorted(resolved)},
+    )
+    return batch
+
+
+def template_from_preset(
+    db: Session, ctx: Any, *, preset_id: str, name: str, is_default: bool
+) -> ImportMapping:
+    p = presets.get(preset_id)
+    if p is None:
+        raise not_found("Preset")
+    return save_template(
+        db,
+        ctx,
+        name=name,
+        import_type=p.import_type,
+        config=presets.template_config(p),
+        supplier_id=None,
+        is_default=is_default,
+    )
 
 
 CONFIG_KEYS = {

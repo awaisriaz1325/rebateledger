@@ -290,6 +290,17 @@ are excluded with reason `ATTRIBUTE_MISSING` and counted in the trace.
 7. **Result:** batch summary (rows read/committed/skipped/duplicates, date range,
    suppliers touched, totals by supplier) and links to affected agreements.
 
+#### 4.5.2a ERP report presets (v1.1, ADR 0017)
+- Read-only presets for common ERP reports (Epicor Prophet 21, Epicor Eclipse, Infor
+  CloudSuite Distribution, NetSuite, Acumatica, QuickBooks Online and Desktop) list
+  accepted header names per field and the report's number and date formats.
+- On upload, a preset is **suggested** only when its distinctive headers are present and
+  every required field resolves; if two presets fit equally well, none is suggested.
+- Applying a preset fills the mapping but leaves it unconfirmed: the user reviews and
+  saves it before validation. A preset that does not fit changes nothing.
+- Presets are labelled **Unverified** until a real customer export confirms them. Users
+  can copy a preset into an editable mapping template and download its expected header row.
+
 #### 4.5.3 Validation rules (minimum)
 - Required fields present; types parse; dates are real calendar dates within a sane
   window (not before 2000-01-01, not more than 31 days in the future [PROPOSED DEFAULT]).

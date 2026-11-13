@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ImportMapping } from "@/components/import-mapping";
+import { ImportPresets } from "@/components/import-presets";
 import { Button, Card, Checkbox, Field, Input, Notice, PageHeader, Select } from "@/components/ui/core";
 import { Money, StatusBadge } from "@/components/ui/finance";
 import { ConfirmDialog } from "@/components/ui/overlay";
@@ -65,7 +66,11 @@ function Configure({ batch }: { batch: Batch }) {
     <div className="flex flex-col gap-6">
       <FileSettings batch={batch} onSave={(c) => save.mutate(c)} />
       {preview.isPending ? <TableSkeleton /> : preview.isError ? <ErrorState error={preview.error} onRetry={() => void preview.refetch()} /> : (
-        <ImportMapping batch={batch} preview={preview.data} saving={save.isPending} onSave={(c) => save.mutate(c)} />
+        <>
+          <ImportPresets batch={batch} preview={preview.data} onApplied={() => void refresh()} />
+          {/* Remount when the saved mapping changes (e.g. a preset was applied) so the form shows it. */}
+          <ImportMapping key={JSON.stringify(batch.config.columns ?? {})} batch={batch} preview={preview.data} saving={save.isPending} onSave={(c) => save.mutate(c)} />
+        </>
       )}
       {batch.config.confirmed ? <ValidatePreview batch={batch} /> : null}
     </div>

@@ -943,6 +943,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/import-presets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Presets
+         * @description Read-only ERP report presets (best guesses; ``verified`` says which are confirmed).
+         */
+        get: operations["list_presets_api_v1_import_presets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/import-presets/header.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preset Header
+         * @description The header row a preset expects (canonical names), to compare with an ERP export.
+         */
+        get: operations["preset_header_api_v1_import_presets_header_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/import-templates": {
         parameters: {
             query?: never;
@@ -955,6 +995,23 @@ export interface paths {
         put?: never;
         /** Save Template */
         post: operations["save_template_api_v1_import_templates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/import-templates/from-preset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Template From Preset */
+        post: operations["template_from_preset_api_v1_import_templates_from_preset_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1075,6 +1132,23 @@ export interface paths {
         get: operations["error_report_api_v1_imports__batch_id__errors_csv_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/{batch_id}/preset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply Preset */
+        post: operations["apply_preset_api_v1_imports__batch_id__preset_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2760,6 +2834,11 @@ export interface components {
              */
             starts_at: string;
         };
+        /** ApplyPresetIn */
+        ApplyPresetIn: {
+            /** Preset Id */
+            preset_id: string;
+        };
         /** ApprovalOut */
         ApprovalOut: {
             /** Decided At */
@@ -3638,6 +3717,8 @@ export interface components {
         };
         /** ImportPreviewOut */
         ImportPreviewOut: {
+            /** Applied Preset Id */
+            applied_preset_id: string | null;
             /** Date Format Candidates */
             date_format_candidates: {
                 [key: string]: string[];
@@ -3646,6 +3727,7 @@ export interface components {
             fields: components["schemas"]["FieldSpecOut"][];
             /** Header */
             header: string[];
+            preset_suggestion: components["schemas"]["PresetSuggestionOut"] | null;
             /** Sample Rows */
             sample_rows: string[][];
             /** Suggested Columns */
@@ -4520,6 +4602,40 @@ export interface components {
             label: string;
             /** Type */
             type: string;
+        };
+        /** PresetOut */
+        PresetOut: {
+            /** Columns */
+            columns: {
+                [key: string]: string[];
+            };
+            /** Config */
+            config: {
+                [key: string]: unknown;
+            };
+            /** Erp */
+            erp: string;
+            /** Id */
+            id: string;
+            /** Import Type */
+            import_type: string;
+            /** Notes */
+            notes: string;
+            /** Report */
+            report: string;
+            /** Verified */
+            verified: boolean;
+        };
+        /** PresetSuggestionOut */
+        PresetSuggestionOut: {
+            /** Erp */
+            erp: string;
+            /** Id */
+            id: string;
+            /** Report */
+            report: string;
+            /** Verified */
+            verified: boolean;
         };
         /** PreviewIn */
         PreviewIn: {
@@ -5483,6 +5599,18 @@ export interface components {
              * Format: uuid
              */
             organization_id: string;
+        };
+        /** TemplateFromPresetIn */
+        TemplateFromPresetIn: {
+            /**
+             * Is Default
+             * @default false
+             */
+            is_default: boolean;
+            /** Name */
+            name: string;
+            /** Preset Id */
+            preset_id: string;
         };
         /** TemplateIn */
         TemplateIn: {
@@ -8027,6 +8155,68 @@ export interface operations {
             };
         };
     };
+    list_presets_api_v1_import_presets_get: {
+        parameters: {
+            query?: {
+                import_type?: components["schemas"]["ImportType"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PresetOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preset_header_api_v1_import_presets_header_csv_get: {
+        parameters: {
+            query: {
+                preset_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_templates_api_v1_import_templates_get: {
         parameters: {
             query?: {
@@ -8068,6 +8258,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["TemplateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    template_from_preset_api_v1_import_templates_from_preset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplateFromPresetIn"];
             };
         };
         responses: {
@@ -8348,6 +8571,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_preset_api_v1_imports__batch_id__preset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplyPresetIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchOut"];
                 };
             };
             /** @description Validation Error */

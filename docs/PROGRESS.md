@@ -12,6 +12,16 @@ Template:
 - Next step:
 -->
 
+## 2026-11-13 — Phase 12: ERP import template packs
+- Changed: 11 read-only ERP report presets (`backend/app/imports/presets.py`: Prophet 21,
+  Eclipse, Infor CSD, NetSuite, Acumatica, QuickBooks Online/Desktop; purchases and credits);
+  upload preview suggests a preset only on a unique fit; apply fills the mapping but leaves it
+  unconfirmed; copy preset to template; header-row download. UI on the mapping step and in
+  Settings → Import templates. Tests: unit, API, authz matrix, component, E2E.
+- Decisions (ADRs): 0017 (v1.1 scope; presets are unverified best guesses).
+- Open questions: real ERP sample exports to verify presets.
+- Next step: Phase 13 (deal modelling).
+
 ## 2026-11-13 — Phase 10 follow-up: decisions, keyboard and screen-reader pass
 - Changed: keyboard spec (40 tests) and screen-reader spec (34 tests). Fixes they found:
   distinct page titles on all app routes (29 title layouts), which also makes route changes

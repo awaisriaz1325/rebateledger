@@ -18,6 +18,7 @@ from app.core.csv_safe import csv_string
 from app.core.errors import not_found
 from app.core.permissions import Permission
 from app.db.models.business import ImportBatch, ImportMapping, ImportType
+from app.imports import presets as preset_defs
 from app.services import idempotency
 from app.services import imports as svc
 
@@ -298,6 +299,79 @@ def error_page(
             }
         )
     return ErrorPageOut.model_validate({"items": items, "total": svc.error_count(ctx.db, batch)})
+
+
+# --------------------------------------------------------------------------- ERP presets
+
+PresetId = Annotated[str, Field(min_length=1, max_length=60, pattern=r"^[a-z0-9-]+$")]
+
+
+class PresetOut(Out):
+    id: str
+    erp: str
+    report: str
+    import_type: str
+    verified: bool
+    notes: str
+    columns: dict[str, list[str]]
+    config: dict[str, Any]
+
+
+class ApplyPresetIn(In):
+    preset_id: PresetId
+
+
+class TemplateFromPresetIn(In):
+    preset_id: PresetId
+    name: Annotated[str, Field(min_length=1, max_length=120)]
+    is_default: bool = False
+
+
+def _preset_out(p: preset_defs.Preset) -> PresetOut:
+    return PresetOut(
+        id=p.id,
+        erp=p.erp,
+        report=p.report,
+        import_type=p.import_type.value,
+        verified=p.verified,
+        notes=p.notes,
+        columns={k: list(v) for k, v in p.columns.items()},
+        config=p.config,
+    )
+
+
+@router.get("/import-presets", response_model=list[PresetOut])
+def list_presets(ctx: View, import_type: ImportType | None = None) -> list[PresetOut]:
+    """Read-only ERP report presets (best guesses; ``verified`` says which are confirmed)."""
+    return [_preset_out(p) for p in preset_defs.for_type(import_type)]
+
+
+@router.get("/import-presets/header.csv")
+def preset_header(ctx: View, preset_id: Annotated[PresetId, Query()]) -> StreamingResponse:
+    """The header row a preset expects (canonical names), to compare with an ERP export."""
+    p = preset_defs.get(preset_id)
+    if p is None:
+        raise not_found("Preset")
+    body = csv_string([v[0] for v in p.columns.values()], iter(()))
+    return StreamingResponse(
+        iter([body]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{p.id}-header.csv"'},
+    )
+
+
+@router.post("/imports/{batch_id}/preset", response_model=BatchOut)
+def apply_preset(batch_id: uuid.UUID, body: ApplyPresetIn, ctx: Manage) -> BatchOut:
+    batch = svc.get_batch(ctx.db, ctx.tenant_uuid, batch_id, lock=True)
+    return BatchOut.model_validate(svc.apply_preset(ctx.db, ctx, batch, body.preset_id))
+
+
+@router.post("/import-templates/from-preset", response_model=TemplateOut, status_code=201)
+def template_from_preset(body: TemplateFromPresetIn, ctx: Manage) -> TemplateOut:
+    m = svc.template_from_preset(
+        ctx.db, ctx, preset_id=body.preset_id, name=body.name, is_default=body.is_default
+    )
+    return TemplateOut.model_validate(m)
 
 
 # --------------------------------------------------------------------------- templates

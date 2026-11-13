@@ -24,6 +24,8 @@ const preview: ImportPreview = {
     { name: "invoice_date", label: "Invoice date", required: false, kind: "date" },
   ],
   supports_flags: true,
+  preset_suggestion: null,
+  applied_preset_id: null,
 };
 
 describe("ImportMapping", () => {

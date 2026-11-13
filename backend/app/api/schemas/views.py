@@ -65,6 +65,13 @@ class FieldSpecOut(Out):
     kind: str
 
 
+class PresetSuggestionOut(Out):
+    id: str
+    erp: str
+    report: str
+    verified: bool
+
+
 class ImportPreviewOut(Out):
     header: list[str]
     sample_rows: list[list[str]]
@@ -72,6 +79,8 @@ class ImportPreviewOut(Out):
     date_format_candidates: dict[str, list[str]]
     fields: list[FieldSpecOut]
     supports_flags: bool
+    preset_suggestion: PresetSuggestionOut | None
+    applied_preset_id: str | None
 
 
 class RowIssueOut(Out):
