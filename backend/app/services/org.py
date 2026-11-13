@@ -87,6 +87,7 @@ SETTINGS_FIELDS = {
         "tier_alert_days",
     },
     "approvals": {"four_eyes_activation", "four_eyes_writeoff"},
+    "accounting": {"gl_receivable_account", "gl_offset_account"},
 }
 
 

@@ -1,6 +1,7 @@
 """All API routers, in one list so the route-policy test sees every route."""
 
 from app.api.routes import (
+    accruals,
     agreements,
     auth,
     claims,
@@ -34,6 +35,7 @@ ROUTERS = [
     reconciliation.router,
     claims.router,
     insights.router,
+    accruals.router,
     exports.router,
     ops.router,
 ]

@@ -37,6 +37,368 @@
         "title": "AcceptInviteIn",
         "type": "object"
       },
+      "AccountingSettingsIn": {
+        "additionalProperties": false,
+        "properties": {
+          "gl_offset_account": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9 .:/_()&-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gl Offset Account"
+          },
+          "gl_receivable_account": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9 .:/_()&-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gl Receivable Account"
+          }
+        },
+        "title": "AccountingSettingsIn",
+        "type": "object"
+      },
+      "AccrualChangeOut": {
+        "properties": {
+          "after": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "agreement": {
+            "title": "Agreement",
+            "type": "string"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "supplier": {
+            "title": "Supplier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agreement",
+          "supplier",
+          "period_start",
+          "before",
+          "after"
+        ],
+        "title": "AccrualChangeOut",
+        "type": "object"
+      },
+      "AccrualExcludedOut": {
+        "properties": {
+          "agreement_name": {
+            "title": "Agreement Name",
+            "type": "string"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "supplier_name": {
+            "title": "Supplier Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agreement_name",
+          "supplier_name",
+          "period_start",
+          "period_end",
+          "reason"
+        ],
+        "title": "AccrualExcludedOut",
+        "type": "object"
+      },
+      "AccrualExportIn": {
+        "additionalProperties": false,
+        "properties": {
+          "closing_date": {
+            "format": "date",
+            "title": "Closing Date",
+            "type": "string"
+          },
+          "format": {
+            "enum": [
+              "generic",
+              "qbo"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "reviewed": {
+            "const": true,
+            "title": "Reviewed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "closing_date",
+          "format",
+          "reviewed"
+        ],
+        "title": "AccrualExportIn",
+        "type": "object"
+      },
+      "AccrualExportOut": {
+        "properties": {
+          "closing_date": {
+            "format": "date",
+            "title": "Closing Date",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "title": "Created By",
+            "type": "string"
+          },
+          "file_hash": {
+            "title": "File Hash",
+            "type": "string"
+          },
+          "format": {
+            "title": "Format",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "line_count": {
+            "title": "Line Count",
+            "type": "integer"
+          },
+          "total": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Total",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "closing_date",
+          "format",
+          "total",
+          "line_count",
+          "file_hash",
+          "created_by",
+          "created_at"
+        ],
+        "title": "AccrualExportOut",
+        "type": "object"
+      },
+      "AccrualJournalOut": {
+        "properties": {
+          "accounts_configured": {
+            "title": "Accounts Configured",
+            "type": "boolean"
+          },
+          "changes_since_last_export": {
+            "items": {
+              "$ref": "#/components/schemas/AccrualChangeOut"
+            },
+            "title": "Changes Since Last Export",
+            "type": "array"
+          },
+          "closing_date": {
+            "format": "date",
+            "title": "Closing Date",
+            "type": "string"
+          },
+          "excluded": {
+            "items": {
+              "$ref": "#/components/schemas/AccrualExcludedOut"
+            },
+            "title": "Excluded",
+            "type": "array"
+          },
+          "last_export": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccrualExportOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/AccrualLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "not_calculated": {
+            "items": {
+              "$ref": "#/components/schemas/AccrualExcludedOut"
+            },
+            "title": "Not Calculated",
+            "type": "array"
+          },
+          "reversal_date": {
+            "format": "date",
+            "title": "Reversal Date",
+            "type": "string"
+          },
+          "total": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Total",
+            "type": "string"
+          }
+        },
+        "required": [
+          "closing_date",
+          "reversal_date",
+          "total",
+          "accounts_configured",
+          "lines",
+          "excluded",
+          "not_calculated",
+          "last_export",
+          "changes_since_last_export"
+        ],
+        "title": "AccrualJournalOut",
+        "type": "object"
+      },
+      "AccrualLineOut": {
+        "properties": {
+          "agreement_id": {
+            "format": "uuid",
+            "title": "Agreement Id",
+            "type": "string"
+          },
+          "agreement_name": {
+            "title": "Agreement Name",
+            "type": "string"
+          },
+          "basis": {
+            "title": "Basis",
+            "type": "string"
+          },
+          "earned": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Earned",
+            "type": "string"
+          },
+          "outstanding": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Outstanding",
+            "type": "string"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_label": {
+            "title": "Period Label",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "received": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Received",
+            "type": "string"
+          },
+          "supplier_name": {
+            "title": "Supplier Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "agreement_id",
+          "agreement_name",
+          "supplier_name",
+          "period_start",
+          "period_end",
+          "period_label",
+          "basis",
+          "earned",
+          "received",
+          "outstanding"
+        ],
+        "title": "AccrualLineOut",
+        "type": "object"
+      },
       "ActivateIn": {
         "additionalProperties": false,
         "properties": {
@@ -4819,6 +5181,14 @@
             "title": "Four Eyes Writeoff",
             "type": "boolean"
           },
+          "gl_offset_account": {
+            "title": "Gl Offset Account",
+            "type": "string"
+          },
+          "gl_receivable_account": {
+            "title": "Gl Receivable Account",
+            "type": "string"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -4899,6 +5269,8 @@
           "tier_alert_days",
           "four_eyes_activation",
           "four_eyes_writeoff",
+          "gl_receivable_account",
+          "gl_offset_account",
           "onboarding",
           "deletion_scheduled_for",
           "row_version"
@@ -10394,6 +10766,139 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/accruals/exports": {
+      "get": {
+        "operationId": "export_history_api_v1_accruals_exports_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 24,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccrualExportOut"
+                  },
+                  "title": "Response Export History Api V1 Accruals Exports Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export History",
+        "tags": [
+          "accruals"
+        ]
+      }
+    },
+    "/api/v1/accruals/journal": {
+      "get": {
+        "description": "What the journal for this month end would contain. Estimates are labelled.",
+        "operationId": "preview_api_v1_accruals_journal_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "closing_date",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "Closing Date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccrualJournalOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "accruals"
+        ]
+      }
+    },
+    "/api/v1/accruals/journal/export": {
+      "post": {
+        "description": "Download the reversing journal as CSV. Recorded (who, when, file hash) and audited.",
+        "operationId": "export_journal_api_v1_accruals_journal_export_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccrualExportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Journal",
+        "tags": [
+          "accruals"
+        ]
+      }
+    },
     "/api/v1/agreement-attachments/{attachment_id}/download": {
       "get": {
         "operationId": "download_attachment_api_v1_agreement_attachments__attachment_id__download_get",
@@ -16914,6 +17419,67 @@
           }
         },
         "summary": "Plan Usage",
+        "tags": [
+          "organization"
+        ]
+      }
+    },
+    "/api/v1/org/settings/accounting": {
+      "patch": {
+        "description": "GL account codes used in the accrual journal export (v1.1 Phase 15).",
+        "operationId": "update_accounting_api_v1_org_settings_accounting_patch",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountingSettingsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Accounting",
         "tags": [
           "organization"
         ]

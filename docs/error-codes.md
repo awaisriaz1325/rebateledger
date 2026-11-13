@@ -103,6 +103,15 @@ is not listed here.
 | `CUSTOM_PERIODS_NOT_SUPPORTED` | 422 | Custom periods cannot be modelled |
 | `OPTIONS_INVALID` | 422 | Compare one to four options |
 
+## Accrual journal (v1.1 Phase 15)
+| Code | Status | Meaning |
+|---|---|---|
+| `CLOSING_DATE_NOT_MONTH_END` | 422 | The closing date must be the last day of a month |
+| `GL_ACCOUNTS_MISSING` | 422 | Set the receivable and offset account codes (Settings → Accounting) first |
+| `FORMAT_INVALID` | 422 | Unknown journal file format |
+| `NOTHING_TO_ACCRUE` | 422 | No outstanding rebate at the closing date |
+| `JOURNAL_UNBALANCED` | 500 | Debits ≠ credits; never expected (built balanced) and nothing is exported |
+
 ## Imports
 | Code | Status | Meaning |
 |---|---|---|

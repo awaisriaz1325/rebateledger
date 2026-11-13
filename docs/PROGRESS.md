@@ -12,6 +12,18 @@ Template:
 - Next step:
 -->
 
+## 2026-11-13 — Phase 15: month-end accrual journal export
+- Changed: `services/accruals.py` (outstanding = earned to D − received ≤ D; closed periods
+  from the latest run, open period recalculated to D; exclusions listed), reversing CSV
+  (generic, QuickBooks Online UNVERIFIED), `accrual_exports` (migration 0008, RLS) with
+  sign-off, audit, hash and change list; Settings → Accounting (GL codes); page
+  `/app/accruals`. Tests: hand-worked API tests incl. credit-after-closing, overpaid swap,
+  not-calculated periods; bug found and fixed (agreement starting after the closing date).
+- Decisions: amount booked = outstanding receivable, the only amount that keeps a reversing
+  scheme correct; requires credits booked to the offset account (stated on screen).
+- Open questions: accountant review of the treatment; per-supplier GL overrides not built.
+- Next step: Phase 16 (buying-group programs).
+
 ## 2026-11-13 — Phase 14: weekly buyer digest
 - Changed: `tiers.opportunities` ranking (return per extra dollar, required vs current daily
   pace); `GET /api/v1/tiers/opportunities`; dashboard "Top tier opportunities" (reuses the one

@@ -12,7 +12,7 @@ const PAGES = [
   ["Dashboard", "/app"], ["Suppliers", "/app/suppliers"], ["New supplier", "/app/suppliers/new"], ["Agreements", "/app/agreements"],
   ["New agreement", "/app/agreements/new"], ["Deal modelling", "/app/agreements/model"], ["Imports", "/app/imports"], ["New import", "/app/imports/new"], ["Runs", "/app/runs"],
   ["Results", "/app/results"], ["Discrepancies", "/app/discrepancies"], ["Credits", "/app/credits"], ["Claims", "/app/claims"],
-  ["Approvals", "/app/approvals"], ["Tier tracker", "/app/tiers"], ["Reports", "/app/reports"], ["Settings", "/app/settings"],
+  ["Approvals", "/app/approvals"], ["Tier tracker", "/app/tiers"], ["Reports", "/app/reports"], ["Month-end accruals", "/app/accruals"], ["Settings", "/app/settings"],
   ["Members", "/app/settings/members"], ["Audit log", "/app/settings/audit"],
 ] as const;
 

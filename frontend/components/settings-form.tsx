@@ -11,7 +11,7 @@ import { isConflict, useVersioned } from "@/lib/etag";
 import type { components } from "@/generated/api";
 
 export type Org = components["schemas"]["OrgOut"];
-type Section = "profile" | "security" | "reconciliation" | "approvals";
+type Section = "profile" | "security" | "reconciliation" | "approvals" | "accounting";
 
 export type FieldDef =
   | { name: keyof Org & string; label: string; kind: "text" | "decimal" | "integer"; hint?: string }
@@ -25,11 +25,12 @@ export function useOrg() {
   return useVersioned<Org>(ORG_KEY, () => api.GET("/api/v1/org"));
 }
 
-const PATHS: Record<Section, "/api/v1/org/settings/profile" | "/api/v1/org/settings/security" | "/api/v1/org/settings/reconciliation" | "/api/v1/org/settings/approvals"> = {
+const PATHS: Record<Section, "/api/v1/org/settings/profile" | "/api/v1/org/settings/security" | "/api/v1/org/settings/reconciliation" | "/api/v1/org/settings/approvals" | "/api/v1/org/settings/accounting"> = {
   profile: "/api/v1/org/settings/profile",
   security: "/api/v1/org/settings/security",
   reconciliation: "/api/v1/org/settings/reconciliation",
   approvals: "/api/v1/org/settings/approvals",
+  accounting: "/api/v1/org/settings/accounting",
 };
 
 /** Editable org settings with ETag/If-Match and server-side validation as the authority. */

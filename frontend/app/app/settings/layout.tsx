@@ -13,6 +13,7 @@ const ITEMS: { href: string; label: string; permission?: string }[] = [
   { href: "/app/settings/security", label: "Security", permission: "manage_settings" },
   { href: "/app/settings/reconciliation", label: "Reconciliation", permission: "manage_settings" },
   { href: "/app/settings/approvals", label: "Approvals", permission: "manage_settings" },
+  { href: "/app/settings/accounting", label: "Accounting", permission: "manage_settings" },
   { href: "/app/settings/members", label: "Members", permission: "manage_users" },
   { href: "/app/settings/templates", label: "Import templates", permission: "manage_imports" },
   { href: "/app/settings/plan", label: "Plan & usage", permission: "view_billing" },

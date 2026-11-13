@@ -446,6 +446,19 @@ Unallocated credits appear in an **Unmatched credits** queue.
   there is nothing to report. Only agreement names and estimates, never purchase rows.
   The dashboard shows the top three.
 
+- **Month-end accrual journal (v1.1, ADR 0017 §2):** for a month-end closing date D, one
+  line per agreement period with rebate still outstanding at D: earned (closed periods: the
+  latest successful run; the open period: earned to date over [start, D], an estimate) minus
+  credits allocated with a credit date ≤ D. Lines debit the receivable account and credit
+  the offset account (sides swap when overpaid) and every line reverses on D + 1. Periods
+  that need review or are stale are left out and listed; closed periods never calculated
+  are listed. Requires the organization's GL account codes. Preview: `export` permission;
+  download: `approve` (owners, admins) with an explicit "reviewed" sign-off; each download
+  is recorded (who, when, total, file SHA-256) and audited; re-export shows changes. Formats:
+  generic CSV and QuickBooks Online journal import (column names UNVERIFIED). The screen
+  states the booking requirement: supplier credits go to the offset account. This is a
+  file, not general-ledger posting (§14 unchanged).
+
 ### 4.10 Dashboard, reports and exports
 - **Dashboard KPIs:** identified open variance; recovered (confirmed) this year;
   open claims count and amount by aging bucket (0–30, 31–60, 61–90, 90+); results needing

@@ -107,6 +107,9 @@ class Tenant(IdMixin, TimestampMixin, AuthorMixin, VersionedMixin, Base):
     # Approvals
     four_eyes_activation: Mapped[bool] = mapped_column(Boolean, default=False)
     four_eyes_writeoff: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Accrual journal export (v1.1 Phase 15): the customer's own GL account codes.
+    gl_receivable_account: Mapped[str] = mapped_column(String(60), default="", server_default="")
+    gl_offset_account: Mapped[str] = mapped_column(String(60), default="", server_default="")
     # Onboarding
     onboarding: Mapped[dict[str, Any]] = mapped_column(default=dict)
     # Deletion lifecycle (SPEC §4.13)

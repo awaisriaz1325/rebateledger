@@ -4,6 +4,63 @@
  */
 
 export interface paths {
+    "/api/v1/accruals/exports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export History */
+        get: operations["export_history_api_v1_accruals_exports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accruals/journal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview
+         * @description What the journal for this month end would contain. Estimates are labelled.
+         */
+        get: operations["preview_api_v1_accruals_journal_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accruals/journal/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export Journal
+         * @description Download the reversing journal as CSV. Recorded (who, when, file hash) and audited.
+         */
+        post: operations["export_journal_api_v1_accruals_journal_export_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/agreement-attachments/{attachment_id}/download": {
         parameters: {
             query?: never;
@@ -2107,6 +2164,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/org/settings/accounting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Accounting
+         * @description GL account codes used in the accrual journal export (v1.1 Phase 15).
+         */
+        patch: operations["update_accounting_api_v1_org_settings_accounting_patch"];
+        trace?: never;
+    };
     "/api/v1/org/settings/approvals": {
         parameters: {
             query?: never;
@@ -2635,6 +2712,170 @@ export interface components {
             password: string;
             /** Token */
             token: string;
+        };
+        /** AccountingSettingsIn */
+        AccountingSettingsIn: {
+            /** Gl Offset Account */
+            gl_offset_account?: string | null;
+            /** Gl Receivable Account */
+            gl_receivable_account?: string | null;
+        };
+        /** AccrualChangeOut */
+        AccrualChangeOut: {
+            /** After */
+            after: string | null;
+            /** Agreement */
+            agreement: string;
+            /** Before */
+            before: string | null;
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            /** Supplier */
+            supplier: string;
+        };
+        /** AccrualExcludedOut */
+        AccrualExcludedOut: {
+            /** Agreement Name */
+            agreement_name: string;
+            /**
+             * Period End
+             * Format: date
+             */
+            period_end: string;
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            /** Reason */
+            reason: string;
+            /** Supplier Name */
+            supplier_name: string;
+        };
+        /** AccrualExportIn */
+        AccrualExportIn: {
+            /**
+             * Closing Date
+             * Format: date
+             */
+            closing_date: string;
+            /**
+             * Format
+             * @enum {string}
+             */
+            format: "generic" | "qbo";
+            /**
+             * Reviewed
+             * @constant
+             */
+            reviewed: true;
+        };
+        /** AccrualExportOut */
+        AccrualExportOut: {
+            /**
+             * Closing Date
+             * Format: date
+             */
+            closing_date: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Created By
+             * Format: uuid
+             */
+            created_by: string;
+            /** File Hash */
+            file_hash: string;
+            /** Format */
+            format: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Line Count */
+            line_count: number;
+            /**
+             * Total
+             * @example 1234.50
+             */
+            total: string;
+        };
+        /** AccrualJournalOut */
+        AccrualJournalOut: {
+            /** Accounts Configured */
+            accounts_configured: boolean;
+            /** Changes Since Last Export */
+            changes_since_last_export: components["schemas"]["AccrualChangeOut"][];
+            /**
+             * Closing Date
+             * Format: date
+             */
+            closing_date: string;
+            /** Excluded */
+            excluded: components["schemas"]["AccrualExcludedOut"][];
+            last_export: components["schemas"]["AccrualExportOut"] | null;
+            /** Lines */
+            lines: components["schemas"]["AccrualLineOut"][];
+            /** Not Calculated */
+            not_calculated: components["schemas"]["AccrualExcludedOut"][];
+            /**
+             * Reversal Date
+             * Format: date
+             */
+            reversal_date: string;
+            /**
+             * Total
+             * @example 1234.50
+             */
+            total: string;
+        };
+        /** AccrualLineOut */
+        AccrualLineOut: {
+            /**
+             * Agreement Id
+             * Format: uuid
+             */
+            agreement_id: string;
+            /** Agreement Name */
+            agreement_name: string;
+            /** Basis */
+            basis: string;
+            /**
+             * Earned
+             * @example 1234.50
+             */
+            earned: string;
+            /**
+             * Outstanding
+             * @example 1234.50
+             */
+            outstanding: string;
+            /**
+             * Period End
+             * Format: date
+             */
+            period_end: string;
+            /** Period Label */
+            period_label: string;
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            /**
+             * Received
+             * @example 1234.50
+             */
+            received: string;
+            /** Supplier Name */
+            supplier_name: string;
         };
         /** ActivateIn */
         ActivateIn: {
@@ -4388,6 +4629,10 @@ export interface components {
             four_eyes_activation: boolean;
             /** Four Eyes Writeoff */
             four_eyes_writeoff: boolean;
+            /** Gl Offset Account */
+            gl_offset_account: string;
+            /** Gl Receivable Account */
+            gl_receivable_account: string;
             /**
              * Id
              * Format: uuid
@@ -6399,6 +6644,101 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    export_history_api_v1_accruals_exports_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccrualExportOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_api_v1_accruals_journal_get: {
+        parameters: {
+            query: {
+                closing_date: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccrualJournalOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_journal_api_v1_accruals_journal_export_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccrualExportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     download_attachment_api_v1_agreement_attachments__attachment_id__download_get: {
         parameters: {
             query?: never;
@@ -10718,6 +11058,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlanUsageOut"];
+                };
+            };
+        };
+    };
+    update_accounting_api_v1_org_settings_accounting_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountingSettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrgOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

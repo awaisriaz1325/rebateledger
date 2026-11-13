@@ -484,3 +484,23 @@ class Subscription(IdMixin, TenantMixin, TimestampMixin, AuthorMixin, VersionedM
     created_at_utc: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class AccrualExport(IdMixin, TenantMixin, Base):
+    """A downloaded month-end accrual journal (v1.1 Phase 15): who, when, what, file hash.
+
+    ``lines`` keeps the exported amounts per agreement period so a later export for the same
+    closing date can show what changed.
+    """
+
+    __tablename__ = "accrual_exports"
+    __table_args__ = (Index("ix_accrual_exports_closing", "tenant_id", "closing_date"),)
+
+    closing_date: Mapped[date] = mapped_column(Date)
+    format: Mapped[str] = mapped_column(String(20))
+    total: Mapped[Decimal] = mapped_column(Numeric(18, 2))
+    line_count: Mapped[int] = mapped_column(Integer)
+    file_hash: Mapped[str] = mapped_column(String(64))
+    lines: Mapped[list[dict[str, Any]]] = mapped_column(default=list)
+    created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey(f"{SCHEMA}.users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

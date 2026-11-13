@@ -48,6 +48,8 @@ class OrgOut(Out):
     tier_alert_days: int
     four_eyes_activation: bool
     four_eyes_writeoff: bool
+    gl_receivable_account: str
+    gl_offset_account: str
     onboarding: dict[str, Any]
     deletion_scheduled_for: date | None
     row_version: int
@@ -84,6 +86,14 @@ class ReconciliationSettingsIn(In):
 class ApprovalSettingsIn(In):
     four_eyes_activation: bool | None = None
     four_eyes_writeoff: bool | None = None
+
+
+GlAccount = Annotated[str, Field(min_length=1, max_length=60, pattern=r"^[A-Za-z0-9 .:/_()&-]+$")]
+
+
+class AccountingSettingsIn(In):
+    gl_receivable_account: GlAccount | None = None
+    gl_offset_account: GlAccount | None = None
 
 
 class OnboardingIn(In):
@@ -163,6 +173,17 @@ def update_approvals(
     match: Annotated[str | None, Depends(if_match)],
 ) -> OrgOut:
     return _update("approvals", body.model_dump(exclude_none=True), response, ctx, match)
+
+
+@router.patch("/settings/accounting", response_model=OrgOut)
+def update_accounting(
+    body: AccountingSettingsIn,
+    response: Response,
+    ctx: ManageSettings,
+    match: Annotated[str | None, Depends(if_match)],
+) -> OrgOut:
+    """GL account codes used in the accrual journal export (v1.1 Phase 15)."""
+    return _update("accounting", body.model_dump(exclude_none=True), response, ctx, match)
 
 
 @router.post("/onboarding", response_model=Ok)
