@@ -56,15 +56,30 @@ class Supplier(IdMixin, TenantMixin, TimestampMixin, AuthorMixin, VersionedMixin
     __tablename__ = "suppliers"
     __table_args__ = (
         _in("status", ["active", "inactive"]),
+        _in("kind", ["supplier", "buying_group"]),
         Index("ix_suppliers_tenant_name", "tenant_id", "name"),
     )
 
     name: Mapped[str] = mapped_column(String(200))
+    #: "buying_group": a payer whose programs count purchases from its member suppliers
+    #: (v1.1 Phase 16). Purchases are never imported against a group.
+    kind: Mapped[str] = mapped_column(String(20), default="supplier", server_default="supplier")
     status: Mapped[str] = mapped_column(String(20), default="active")
     category_tags: Mapped[list[str]] = mapped_column(ARRAY(String(60)), default=list)
     payment_notes: Mapped[str] = mapped_column(Text, default="")
     notes: Mapped[str] = mapped_column(Text, default="")
     merged_into_id: Mapped[uuid.UUID | None] = mapped_column(_fk("suppliers", "SET NULL"))
+
+
+class BuyingGroupMember(IdMixin, TenantMixin, Base):
+    """A supplier whose purchases count toward the group's programs (v1.1 Phase 16)."""
+
+    __tablename__ = "buying_group_members"
+    __table_args__ = (UniqueConstraint("tenant_id", "group_id", "supplier_id"),)
+
+    group_id: Mapped[uuid.UUID] = mapped_column(_fk("suppliers", "CASCADE"))
+    supplier_id: Mapped[uuid.UUID] = mapped_column(_fk("suppliers", "RESTRICT"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class SupplierAlias(IdMixin, TenantMixin, TimestampMixin, Base):

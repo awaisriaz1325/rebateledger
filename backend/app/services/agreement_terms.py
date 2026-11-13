@@ -128,6 +128,7 @@ def to_snapshot(
     fiscal_start: int,
     name: str = "",
     external_reference: str | None = None,
+    member_supplier_ids: frozenset[str] = frozenset(),
 ) -> VersionSnapshot:
     """Engine validation is the single source of truth for structural rules."""
     try:
@@ -136,6 +137,7 @@ def to_snapshot(
             version_id=version_id,
             version_no=version_no,
             supplier_id=supplier_id,
+            member_supplier_ids=member_supplier_ids,
             effective_from=terms.effective_from,
             effective_to=terms.effective_to,
             period_type=terms.period_type,
@@ -357,7 +359,13 @@ def _s(value: Decimal | None) -> str | None:
 
 
 def snapshot_for(db: Session, version: AgreementVersion, agreement: Agreement) -> VersionSnapshot:
-    """Rebuild the engine snapshot from stored rows (fiscal month was frozen at save time)."""
+    """Rebuild the engine snapshot from stored rows (fiscal month was frozen at save time).
+
+    A buying-group agreement carries its current members (v1.1 Phase 16)."""
+    from app.services.suppliers import line_supplier_ids
+
+    ids = line_supplier_ids(db, agreement.tenant_id, agreement.supplier_id)
+    members = frozenset(str(i) for i in ids) if ids != [agreement.supplier_id] else frozenset()
     return to_snapshot(
         terms_from_rows(db, version),
         agreement_id=str(agreement.id),
@@ -367,6 +375,7 @@ def snapshot_for(db: Session, version: AgreementVersion, agreement: Agreement) -
         fiscal_start=version.fiscal_year_start_month,
         name=agreement.name,
         external_reference=agreement.external_reference,
+        member_supplier_ids=members,
     )
 
 

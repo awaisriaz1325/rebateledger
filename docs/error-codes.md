@@ -79,6 +79,9 @@ is not listed here.
 | `CODE_REQUIRED` | 422 | A supplier needs at least one code |
 | `CODE_IN_USE` | 409 | Supplier code already belongs to another supplier |
 | `MERGE_SAME_SUPPLIER` | 409 | Choose two different suppliers |
+| `MERGE_BUYING_GROUP` | 409 | Buying groups cannot be merged; change the group's members instead |
+| `NOT_A_BUYING_GROUP` | 409 | Members can only be set on a buying group |
+| `MEMBER_INVALID` | 422 | A member must be an active (not merged) supplier, not a buying group |
 | `MERGE_OVERLAPPING_AGREEMENTS` | 409 | Both suppliers have overlapping active agreements |
 | `REFERENCE_IN_USE` | 409 | Agreement external reference already used |
 | `TERMS_INVALID` | 422 | Agreement terms fail engine validation (detail says why) |
@@ -135,7 +138,7 @@ is not listed here.
 
 Row-level codes (in the error report, not HTTP): `REQUIRED`, `NOT_A_NUMBER`,
 `TOO_MANY_DECIMALS`, `NEGATIVE_STYLE`, `INVALID_DATE`, `DATE_TOO_OLD`, `DATE_IN_FUTURE`,
-`NO_DATE`, `UNKNOWN_SUPPLIER`, `UNKNOWN_AGREEMENT`, `AGREEMENT_AMBIGUOUS`,
+`NO_DATE`, `UNKNOWN_SUPPLIER`, `SUPPLIER_IS_BUYING_GROUP`, `UNKNOWN_AGREEMENT`, `AGREEMENT_AMBIGUOUS`,
 `CURRENCY_NOT_USD`, `RAGGED_ROW`, `TOO_LONG`, `TOO_LARGE`, `NOT_A_BOOLEAN`,
 `PERIOD_INVALID`; warnings `SKU_SCIENTIFIC`, `AMOUNT_MISMATCH`, `DUPLICATE_ROW`.
 

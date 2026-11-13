@@ -34,10 +34,10 @@ export default function NewAgreementPage() {
       <PageHeader title="New agreement" description="Saved as a draft. Activate it when the terms are right." />
       <Card className="mb-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field id="a-supplier" label="Supplier" required>
+          <Field id="a-supplier" label="Supplier or buying group" required>
             <Select id="a-supplier" value={supplierId} onChange={(e) => setSupplierId(e.target.value)}>
               <option value="">Choose…</option>
-              {(suppliers.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              {(suppliers.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}{s.kind === "buying_group" ? " (buying group)" : ""}</option>)}
             </Select>
           </Field>
           <Field id="a-name" label="Agreement name" required><Input id="a-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} /></Field>

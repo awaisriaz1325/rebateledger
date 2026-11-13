@@ -526,10 +526,13 @@ def purchase_lines(
 
     Selects plain columns rather than ORM entities: at 100k lines entity hydration was
     most of the cost of a tier-tracker or run request (Phase 10 load test)."""
+    ids = suppliers.line_supplier_ids(db, tenant_id, supplier_id)
+    if not ids:
+        return []  # a buying group without members
     rows = db.execute(
         select(*_LINE_COLUMNS).where(
             PurchaseLineRow.tenant_id == tenant_id,
-            PurchaseLineRow.supplier_id == supplier_id,
+            PurchaseLineRow.supplier_id.in_(ids),
             PurchaseLineRow.voided.is_(False),
             (
                 (PurchaseLineRow.invoice_date.between(start, end))
@@ -622,7 +625,19 @@ def baselines(db: Session, tenant_id: uuid.UUID, agreement_id: uuid.UUID) -> lis
 
 
 def data_coverage_start(db: Session, tenant_id: uuid.UUID, supplier_id: uuid.UUID) -> date | None:
-    """Earliest basis date imported for the supplier — the point from which history is assumed complete."""
+    """Earliest basis date imported for the supplier — the point from which history is assumed complete.
+
+    For a buying group: the latest of its members' starts (history is complete only once
+    every member with data is covered). Members without any data are ignored.
+    """
+    ids = suppliers.line_supplier_ids(db, tenant_id, supplier_id)
+    if ids != [supplier_id]:
+        starts = [s for s in (_coverage(db, tenant_id, m) for m in ids) if s is not None]
+        return max(starts) if starts else None
+    return _coverage(db, tenant_id, supplier_id)
+
+
+def _coverage(db: Session, tenant_id: uuid.UUID, supplier_id: uuid.UUID) -> date | None:
     return db.execute(
         select(
             func.min(

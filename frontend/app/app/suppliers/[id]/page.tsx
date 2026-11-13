@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { SupplierForm } from "@/components/supplier-form";
-import { Button, Card, Field, Input, PageHeader, Select } from "@/components/ui/core";
+import { Button, Card, Checkbox, Field, Input, PageHeader, Select } from "@/components/ui/core";
 import { DateText, Money, StatusBadge } from "@/components/ui/finance";
 import { ConfirmDialog, Dialog, Tabs } from "@/components/ui/overlay";
 import { EmptyState, QueryState } from "@/components/ui/states";
@@ -38,11 +38,11 @@ export default function SupplierDetailPage() {
             actions={editable ? (
               <>
                 <Button variant="secondary" onClick={() => setEditing(true)}>Edit</Button>
-                <Button variant="secondary" onClick={() => setMerging(true)}>Merge into…</Button>
+                {s.kind === "supplier" ? <Button variant="secondary" onClick={() => setMerging(true)}>Merge into…</Button> : null}
               </>
             ) : undefined}
           >
-            <div className="mt-2 flex items-center gap-2"><StatusBadge status={s.status} />{s.category_tags.map((t) => <span key={t} className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">{t}</span>)}</div>
+            <div className="mt-2 flex items-center gap-2"><StatusBadge status={s.status} />{s.kind === "buying_group" ? <span className="rounded bg-brand-soft px-1.5 py-0.5 text-xs font-medium text-brand">Buying group</span> : null}{s.category_tags.map((t) => <span key={t} className="rounded bg-surface-2 px-1.5 py-0.5 text-xs">{t}</span>)}</div>
           </PageHeader>
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Card title="Latest purchase imported"><p className="text-lg font-semibold">{s.latest_purchase_date ? <DateText value={s.latest_purchase_date} /> : "No purchases yet"}</p></Card>
@@ -52,6 +52,8 @@ export default function SupplierDetailPage() {
           <Tabs
             label="Supplier sections"
             tabs={[
+              ...(s.kind === "buying_group" ? [{ value: "members", label: "Members", content: <GroupMembers groupId={s.id} memberIds={s.member_ids} editable={editable} /> }] : []),
+              ...(s.kind === "supplier" && s.group_ids.length ? [{ value: "groups", label: "Buying groups", content: <MemberOf groupIds={s.group_ids} /> }] : []),
               { value: "agreements", label: "Agreements", content: <SupplierAgreements supplierId={s.id} /> },
               { value: "results", label: "Latest results", content: <SupplierResults supplierId={s.id} /> },
               { value: "claims", label: "Claims", content: <SupplierClaims supplierId={s.id} /> },
@@ -75,6 +77,44 @@ export default function SupplierDetailPage() {
         </>
       )}
     </QueryState>
+  );
+}
+
+/** Buying-group members (v1.1 Phase 16): purchases from these suppliers count toward the group's programs. */
+function GroupMembers({ groupId, memberIds, editable }: { groupId: string; memberIds: string[]; editable: boolean }) {
+  const qc = useQueryClient();
+  const suppliers = useQuery({ queryKey: ["suppliers", "all"], queryFn: fetchAllSuppliers });
+  const [chosen, setChosen] = useState<string[]>(memberIds);
+  const save = useMutation({
+    mutationFn: async () => unwrap(await api.PUT("/api/v1/suppliers/{supplier_id}/members", { params: { path: { supplier_id: groupId } }, body: { supplier_ids: chosen } })),
+    onSuccess: () => { toast.success("Members saved. Run the calculation again for updated results."); void qc.invalidateQueries({ queryKey: ["supplier", groupId] }); },
+    onError: (e) => toast.error(errorMessage(e)),
+  });
+  const candidates = (suppliers.data ?? []).filter((x) => x.kind === "supplier");
+  const changed = [...chosen].sort().join() !== [...memberIds].sort().join();
+  return (
+    <Card title="Member suppliers">
+      <p className="mb-3 text-sm text-muted">Purchases from these suppliers count toward this group&apos;s programs, in addition to each supplier&apos;s own agreements.</p>
+      {candidates.length === 0 ? <p className="text-sm text-muted">Add suppliers first.</p> : (
+        <fieldset className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3" disabled={!editable}>
+          <legend className="sr-only">Member suppliers</legend>
+          {candidates.map((x) => (
+            <Checkbox key={x.id} id={`member-${x.id}`} label={x.name} checked={chosen.includes(x.id)} onChange={(e) => setChosen(e.target.checked ? [...chosen, x.id] : chosen.filter((c) => c !== x.id))} />
+          ))}
+        </fieldset>
+      )}
+      {editable ? <div className="mt-4"><Button disabled={!changed} loading={save.isPending} onClick={() => save.mutate()}>Save members</Button></div> : null}
+    </Card>
+  );
+}
+
+function MemberOf({ groupIds }: { groupIds: string[] }) {
+  const suppliers = useQuery({ queryKey: ["suppliers", "all"], queryFn: fetchAllSuppliers });
+  const names = new Map((suppliers.data ?? []).map((x) => [x.id, x.name]));
+  return (
+    <Card title="Member of these buying groups">
+      <ul className="list-disc pl-5 text-sm">{groupIds.map((g) => <li key={g}><Link className="text-brand hover:underline" href={`/app/suppliers/${g}`}>{names.get(g) ?? "Buying group"}</Link></li>)}</ul>
+    </Card>
   );
 }
 
@@ -186,7 +226,7 @@ function MergeDialog({ open, onOpenChange, sourceId, sourceName }: { open: boole
         <Field id="merge-target" label="Merge into">
           <Select id="merge-target" value={target} onChange={(e) => setTarget(e.target.value)}>
             <option value="">Choose a supplier…</option>
-            {(suppliers.data ?? []).filter((s) => s.id !== sourceId).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            {(suppliers.data ?? []).filter((s) => s.id !== sourceId && s.kind === "supplier").map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </Select>
         </Field>
       </Dialog>

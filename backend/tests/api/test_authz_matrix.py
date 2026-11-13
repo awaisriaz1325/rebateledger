@@ -137,6 +137,7 @@ def _fill(path: str, ids: dict[str, uuid.UUID]) -> str:
 SAMPLE_BODIES: dict[tuple[str, str], dict[str, Any]] = {
     ("PATCH", "/api/v1/org/members/{membership_id}"): {"role": "viewer"},
     ("POST", "/api/v1/imports/{batch_id}/preset"): {"preset_id": "p21-purchases"},
+    ("PUT", "/api/v1/suppliers/{supplier_id}/members"): {"supplier_ids": []},
 }
 """Valid bodies so permitted calls reach the object lookup (not 422). Later phases add more."""
 

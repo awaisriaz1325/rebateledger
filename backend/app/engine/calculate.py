@@ -169,7 +169,7 @@ def select_lines(
     excluded: dict[ExclusionReason, int] = {}
     by_rule: dict[str, int] = {}
     for line in lines:
-        if line.supplier_id != version.supplier_id:
+        if line.supplier_id not in version.line_supplier_ids:
             continue
         basis = line.basis_date(version.date_basis)
         if basis is None:
@@ -507,7 +507,12 @@ def _calculate(
         TraceStep(
             1,
             "select_lines",
-            f"Lines of supplier {version.supplier_id} whose {version.date_basis.value} falls in "
+            (
+                f"Lines of buying-group members {', '.join(sorted(version.member_supplier_ids))}"
+                if version.member_supplier_ids
+                else f"Lines of supplier {version.supplier_id}"
+            )
+            + f" whose {version.date_basis.value} falls in "
             f"{window.start}..{window.end}.{note}",
             (
                 ("full_period", f"{full.start}..{full.end}"),

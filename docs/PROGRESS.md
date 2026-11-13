@@ -12,6 +12,17 @@ Template:
 - Next step:
 -->
 
+## 2026-11-13 — Phase 16: buying-group programs
+- Changed: engine 1.1.0 (`member_supplier_ids` on the version snapshot, omitted from the hash
+  when empty; planner reads members' lines); golden fixtures 41–43; property tests (one-member
+  group = supplier agreement, order independence, pinned 1.0.0 hashes — all 64 existing results
+  verified identical old vs new). Backend: supplier `kind`, `buying_group_members` (migration
+  0009, RLS), member API, line loading/coverage/staleness for groups, purchase rows under a
+  group code rejected, merge rules. UI: type on supplier create, Members tab, "member of" tab,
+  group labels in agreement and deal-model pickers.
+- Decisions (ADRs): 0017 §3 (counts for both). Group coverage = latest member start.
+- Next step: Phase 17 (ship-and-debit / SPA claims).
+
 ## 2026-11-13 — Phase 15: month-end accrual journal export
 - Changed: `services/accruals.py` (outstanding = earned to D − received ≤ D; closed periods
   from the latest run, open period recalculated to D; exclusions listed), reversing CSV

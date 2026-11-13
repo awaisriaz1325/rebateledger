@@ -2589,6 +2589,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/suppliers/{supplier_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Members
+         * @description Replace a buying group's members. Its programs' results become stale (rerun).
+         */
+        put: operations["set_members_api_v1_suppliers__supplier_id__members_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tiers": {
         parameters: {
             query?: never;
@@ -4383,6 +4403,11 @@ export interface components {
              */
             user_id: string;
         };
+        /** MembersIn */
+        MembersIn: {
+            /** Supplier Ids */
+            supplier_ids: string[];
+        };
         /** MergeIn */
         MergeIn: {
             /**
@@ -5911,15 +5936,21 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Group Ids */
+            group_ids: string[];
             /**
              * Id
              * Format: uuid
              */
             id: string;
+            /** Kind */
+            kind: string;
             /** Latest Credit Date */
             latest_credit_date: string | null;
             /** Latest Purchase Date */
             latest_purchase_date: string | null;
+            /** Member Ids */
+            member_ids: string[];
             /** Name */
             name: string;
             /** Notes */
@@ -5937,6 +5968,12 @@ export interface components {
             category_tags?: string[];
             /** Codes */
             codes: string[];
+            /**
+             * Kind
+             * @default supplier
+             * @enum {string}
+             */
+            kind: "supplier" | "buying_group";
             /** Name */
             name: string;
             /**
@@ -5966,6 +6003,8 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Kind */
+            kind: string;
             /** Name */
             name: string;
             /** Notes */
@@ -11726,6 +11765,7 @@ export interface operations {
             query?: {
                 q?: string | null;
                 status?: ("active" | "inactive") | null;
+                kind?: ("supplier" | "buying_group") | null;
                 cursor?: string | null;
                 limit?: number;
             };
@@ -11973,6 +12013,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContactOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_members_api_v1_suppliers__supplier_id__members_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                supplier_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MembersIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierDetail"];
                 };
             };
             /** @description Validation Error */

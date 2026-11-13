@@ -248,6 +248,13 @@ def _validation_context(db: Session, ctx: Any, batch: ImportBatch, header: list[
             a.external_reference.lower(): a.id for a in agreements if a.external_reference
         },
         agreements_by_supplier=by_supplier,
+        buying_groups=frozenset(
+            db.execute(
+                select(Supplier.id).where(
+                    Supplier.tenant_id == batch.tenant_id, Supplier.kind == "buying_group"
+                )
+            ).scalars()
+        ),
     )
 
 

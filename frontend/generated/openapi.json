@@ -4554,6 +4554,25 @@
         "title": "MemberOut",
         "type": "object"
       },
+      "MembersIn": {
+        "additionalProperties": false,
+        "properties": {
+          "supplier_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Supplier Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "supplier_ids"
+        ],
+        "title": "MembersIn",
+        "type": "object"
+      },
       "MergeIn": {
         "additionalProperties": false,
         "properties": {
@@ -8755,9 +8774,21 @@
             "title": "Created At",
             "type": "string"
           },
+          "group_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Group Ids",
+            "type": "array"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
             "type": "string"
           },
           "latest_credit_date": {
@@ -8784,6 +8815,14 @@
             ],
             "title": "Latest Purchase Date"
           },
+          "member_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Member Ids",
+            "type": "array"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -8808,6 +8847,7 @@
         "required": [
           "id",
           "name",
+          "kind",
           "status",
           "codes",
           "category_tags",
@@ -8817,7 +8857,9 @@
           "created_at",
           "latest_purchase_date",
           "latest_credit_date",
-          "agreement_count"
+          "agreement_count",
+          "member_ids",
+          "group_ids"
         ],
         "title": "SupplierDetail",
         "type": "object"
@@ -8845,6 +8887,15 @@
             "minItems": 1,
             "title": "Codes",
             "type": "array"
+          },
+          "kind": {
+            "default": "supplier",
+            "enum": [
+              "supplier",
+              "buying_group"
+            ],
+            "title": "Kind",
+            "type": "string"
           },
           "name": {
             "maxLength": 200,
@@ -8898,6 +8949,10 @@
             "title": "Id",
             "type": "string"
           },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -8922,6 +8977,7 @@
         "required": [
           "id",
           "name",
+          "kind",
           "status",
           "codes",
           "category_tags",
@@ -18614,6 +18670,26 @@
           },
           {
             "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "supplier",
+                    "buying_group"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
             "name": "cursor",
             "required": false,
             "schema": {
@@ -18997,6 +19073,60 @@
           }
         },
         "summary": "Add Contact",
+        "tags": [
+          "suppliers"
+        ]
+      }
+    },
+    "/api/v1/suppliers/{supplier_id}/members": {
+      "put": {
+        "description": "Replace a buying group's members. Its programs' results become stale (rerun).",
+        "operationId": "set_members_api_v1_suppliers__supplier_id__members_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "supplier_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Supplier Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MembersIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Members",
         "tags": [
           "suppliers"
         ]

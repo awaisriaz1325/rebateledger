@@ -52,6 +52,7 @@ binary float in YAML and is rejected.
 agreements:
   - id: ACME-VOL                     # your id for the agreement (unique)
     supplier: ACME-ELEC              # supplier code exactly as in the purchases file
+    # members: [ACME-ELEC, BETA-ELEC] # optional: buying-group program; 'supplier' is then the group
     name: ACME Electrical 2026 volume rebate
     external_reference: ACME-VOL-2026   # what the supplier writes on credit memos
     versions:

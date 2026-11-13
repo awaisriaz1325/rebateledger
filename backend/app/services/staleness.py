@@ -57,12 +57,18 @@ def mark_stale_for_period(
 def mark_stale_for_supplier_range(
     db: Session, tenant_id: uuid.UUID, supplier_id: uuid.UUID, start: date, end: date, reason: str
 ) -> int:
-    """Conservative: results overlapping the dates, or whose baseline could include them."""
+    """Conservative: results overlapping the dates, or whose baseline could include them.
+
+    Includes results of every buying group the supplier is a member of (v1.1 Phase 16).
+    """
+    from app.services.suppliers import groups_of
+
+    payers = [supplier_id, *groups_of(db, tenant_id, supplier_id)]
     return _mark(
         db,
         tenant_id,
         and_(
-            PeriodResultRow.supplier_id == supplier_id,
+            PeriodResultRow.supplier_id.in_(payers),
             PeriodResultRow.period_end >= start,
             PeriodResultRow.period_start <= end + BASELINE_REACH,
         ),

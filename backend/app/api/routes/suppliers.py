@@ -24,8 +24,12 @@ Code = Annotated[str, Field(min_length=1, max_length=100)]
 Tag = Annotated[str, Field(min_length=1, max_length=60)]
 
 
+Kind = Literal["supplier", "buying_group"]
+
+
 class SupplierIn(In):
     name: Name
+    kind: Kind = "supplier"
     codes: Annotated[list[Code], Field(min_length=1, max_length=50)]
     category_tags: Annotated[list[Tag], Field(default_factory=list, max_length=20)]
     payment_notes: Annotated[str, Field(max_length=2000)] = ""
@@ -44,6 +48,7 @@ class SupplierPatch(In):
 class SupplierOut(Out):
     id: uuid.UUID
     name: str
+    kind: str
     status: str
     codes: list[str]
     category_tags: list[str]
@@ -57,6 +62,14 @@ class SupplierDetail(SupplierOut):
     latest_purchase_date: date | None
     latest_credit_date: date | None
     agreement_count: int
+    member_ids: list[uuid.UUID]
+    """For a buying group: suppliers whose purchases count toward its programs."""
+    group_ids: list[uuid.UUID]
+    """For a supplier: buying groups it belongs to."""
+
+
+class MembersIn(In):
+    supplier_ids: Annotated[list[uuid.UUID], Field(max_length=500)]
 
 
 class ContactIn(In):
@@ -83,6 +96,7 @@ def _out(s: Supplier, codes: list[str]) -> SupplierOut:
     return SupplierOut(
         id=s.id,
         name=s.name,
+        kind=s.kind,
         status=s.status,
         codes=codes,
         category_tags=s.category_tags,
@@ -98,6 +112,7 @@ def list_suppliers(
     ctx: View,
     q: Annotated[str | None, Query(max_length=100)] = None,
     status: Literal["active", "inactive"] | None = None,
+    kind: Kind | None = None,
     cursor: Annotated[str | None, Query(max_length=100)] = None,
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
 ) -> Page[SupplierOut]:
@@ -119,6 +134,8 @@ def list_suppliers(
         )
     if status:
         query = query.where(Supplier.status == status)
+    if kind:
+        query = query.where(Supplier.kind == kind)
     if cursor:
         name, _, sid = cursor.partition("|")
         query = query.where(
@@ -138,6 +155,7 @@ def create_supplier(body: SupplierIn, ctx: Edit) -> SupplierOut:
         ctx.db,
         ctx,
         name=body.name,
+        kind=body.kind,
         codes=body.codes,
         category_tags=body.category_tags,
         payment_notes=body.payment_notes,
@@ -151,7 +169,21 @@ def get_supplier(supplier_id: uuid.UUID, response: Response, ctx: View) -> Suppl
     s = svc.get(ctx.db, ctx.tenant_uuid, supplier_id)
     response.headers["ETag"] = etag(s.row_version)
     base = _out(s, svc.aliases(ctx.db, ctx.tenant_uuid, [s.id])[s.id])
-    return SupplierDetail(**base.model_dump(), **svc.detail_stats(ctx.db, ctx.tenant_uuid, s.id))
+    return SupplierDetail(
+        **base.model_dump(),
+        **svc.detail_stats(ctx.db, ctx.tenant_uuid, s.id),
+        member_ids=svc.member_ids(ctx.db, ctx.tenant_uuid, s.id),
+        group_ids=svc.groups_of(ctx.db, ctx.tenant_uuid, s.id),
+    )
+
+
+@router.put("/{supplier_id}/members", response_model=SupplierDetail)
+def set_members(
+    supplier_id: uuid.UUID, body: MembersIn, response: Response, ctx: Edit
+) -> SupplierDetail:
+    """Replace a buying group's members. Its programs' results become stale (rerun)."""
+    svc.set_members(ctx.db, ctx, supplier_id, body.supplier_ids)
+    return get_supplier(supplier_id, response, ctx)
 
 
 @router.patch("/{supplier_id}", response_model=SupplierOut)

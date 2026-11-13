@@ -248,3 +248,96 @@ def test_options_are_part_of_hash() -> None:
     a = calculate(v, Q1, [])
     b = calculate(v, Q1, [], options=CalcOptions(data_coverage_start=date(2020, 1, 1)))
     assert a.input_hash != b.input_hash
+
+
+# --------------------------------------------------------------------------- buying groups (1.1.0)
+
+
+def _as_group(v: VersionSnapshot, members: frozenset[str]) -> VersionSnapshot:
+    return replace(v, supplier_id="G1", member_supplier_ids=members)
+
+
+@SETTINGS
+@given(component_strategy, lines_strategy())
+def test_one_member_group_equals_the_supplier_agreement(
+    comp: Component, lines: list[PurchaseLine]
+) -> None:
+    """A group whose only member is S1 pays exactly what an S1 agreement pays."""
+    v = version((comp,))
+    a = calculate(v, Q1, lines)
+    g = calculate(_as_group(v, frozenset({"S1"})), Q1, lines)
+    assert (g.expected, g.expected_unrounded, g.measure, g.statuses, g.eligible_count) == (
+        a.expected,
+        a.expected_unrounded,
+        a.measure,
+        a.statuses,
+        a.eligible_count,
+    )
+
+
+@SETTINGS
+@given(component_strategy, lines_strategy(), lines_strategy(), st.randoms(use_true_random=False))
+def test_group_reads_all_members_in_any_order(
+    comp: Component, s1: list[PurchaseLine], s2: list[PurchaseLine], rnd: random.Random
+) -> None:
+    """Group over S1+S2 = the same lines all re-labelled S1; independent of line order."""
+    s2 = [replace(ln, line_id=f"M{ln.line_id}", supplier_id="S2") for ln in s2]
+    outsider = [replace(ln, line_id=f"X{ln.line_id}", supplier_id="S9") for ln in s1]
+    v = version((comp,))
+    group = _as_group(v, frozenset({"S1", "S2"}))
+    mixed = s1 + s2 + outsider
+    rnd.shuffle(mixed)
+    g = calculate(group, Q1, mixed)
+    merged = calculate(v, Q1, s1 + [replace(ln, supplier_id="S1") for ln in s2])
+    assert (g.expected, g.measure, g.eligible_count) == (
+        merged.expected,
+        merged.measure,
+        merged.eligible_count,
+    )
+    assert calculate(group, Q1, list(reversed(mixed))).input_hash == g.input_hash
+
+
+def test_empty_member_set_is_not_part_of_the_hash_but_members_are() -> None:
+    from app.engine.canonical import to_canonical
+
+    v = version((Component("c", ComponentType.FLAT_PERCENT, rate=Decimal("0.02")),))
+    assert "member_supplier_ids" not in to_canonical(v)  # type: ignore[operator]
+    g = _as_group(v, frozenset({"S2", "S1"}))
+    assert to_canonical(g)["member_supplier_ids"] == ["S1", "S2"]  # type: ignore[index]
+
+
+def test_group_cannot_be_its_own_member() -> None:
+    import pytest
+
+    from app.engine.models import EngineInputError
+
+    v = version((Component("c", ComponentType.FLAT_PERCENT, rate=Decimal("0.02")),))
+    with pytest.raises(EngineInputError):
+        replace(v, supplier_id="G1", member_supplier_ids=frozenset({"G1"}))
+    with pytest.raises(EngineInputError):
+        replace(v, supplier_id="G1", member_supplier_ids=frozenset({""}))
+
+
+# Input hashes of existing results, computed with engine 1.0.0 before buying groups were
+# added. A supplier agreement must hash exactly as before (stored results stay comparable).
+PINNED_1_0_0 = {
+    ("01_flat_percent", "A1"): "6e24f1c995a66638bbaa297ce9f5da4146949d3a8d0522f41707250173ff6417",
+    ("13_growth_zero_baseline_policies", "A3"): (
+        "b7613eab178a6434e55ae9a7efdd3a246c9fcd3a4187a3473e2ec1552a71992e"
+    ),
+    ("25_stackable_no_conflict", "A2"): (
+        "a03d94b2fbbdd1451e140b284da8c8db347511a427115aec39e0672c98940155"
+    ),
+}
+
+
+def test_supplier_agreement_hashes_are_unchanged_from_1_0_0() -> None:
+    from tests.engine.golden import load_all, run_fixture
+
+    seen: dict[tuple[str, str], str] = {}
+    for fx in load_all():
+        for r in run_fixture(fx):
+            if r.period.start == date(2026, 1, 1):
+                seen.setdefault((fx.path.stem, r.agreement_id), r.input_hash)
+    for key, want in PINNED_1_0_0.items():
+        assert seen[key] == want, key

@@ -119,6 +119,16 @@ def plan_agreement(
     return jobs
 
 
+def _lines_for(
+    version: VersionSnapshot, by_supplier: Mapping[str, list[PurchaseLine]]
+) -> list[PurchaseLine]:
+    """Lines of the agreement's supplier, or of every member of a buying group."""
+    out: list[PurchaseLine] = []
+    for sid in sorted(version.line_supplier_ids):
+        out.extend(by_supplier.get(sid, []))
+    return out
+
+
 def find_stacking_conflicts(
     jobs: Sequence[PeriodJob], lines: Sequence[PurchaseLine]
 ) -> dict[int, tuple[StackingConflict, ...]]:
@@ -130,7 +140,7 @@ def find_stacking_conflicts(
         by_supplier.setdefault(ln.supplier_id, []).append(ln)
     eligible: list[frozenset[str]] = []
     for job in jobs:
-        sel = select_lines(job.version, job.window, by_supplier.get(job.version.supplier_id, []))
+        sel = select_lines(job.version, job.window, _lines_for(job.version, by_supplier))
         eligible.append(frozenset(ln.line_id for ln in sel.eligible))
     found: dict[int, dict[str, set[str]]] = {}
     for i, a in enumerate(jobs):
@@ -181,7 +191,7 @@ def run_jobs(
             calculate(
                 job.version,
                 job.window,
-                by_supplier.get(job.version.supplier_id, []),
+                _lines_for(job.version, by_supplier),
                 baselines,
                 opts,
             )

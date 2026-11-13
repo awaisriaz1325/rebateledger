@@ -59,6 +59,7 @@ class Context:
     today: date
     agreements_by_ref: dict[str, uuid.UUID] = field(default_factory=dict)
     agreements_by_supplier: dict[uuid.UUID, list[uuid.UUID]] = field(default_factory=dict)
+    buying_groups: frozenset[uuid.UUID] = frozenset()
 
     def number_format(self) -> NumberFormat:
         c = self.config
@@ -190,6 +191,15 @@ class RowValidator:
                 "UNKNOWN_SUPPLIER",
                 "Supplier code is not mapped to a supplier.",
             )
+        elif self.ctx.import_type is ImportType.PURCHASES and sid in self.ctx.buying_groups:
+            self._issue(
+                r,
+                "supplier_code",
+                raw,
+                "SUPPLIER_IS_BUYING_GROUP",
+                "This code belongs to a buying group. Import purchases under the member supplier.",
+            )
+            return None
         return sid
 
     # ------------------------------------------------------------------ rows

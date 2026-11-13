@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button, Field, Input, Notice, Textarea, describedBy } from "@/components/ui/core";
+import { Button, Field, Input, Notice, Select, Textarea, describedBy } from "@/components/ui/core";
 import { applyServerErrors, zodResolver } from "@/lib/forms";
 import { useState } from "react";
 
@@ -14,17 +14,20 @@ const schema = z.object({
   notes: z.string().max(5000),
 });
 export type SupplierValues = z.infer<typeof schema>;
-export type SupplierPayload = { name: string; codes: string[]; category_tags: string[]; payment_notes: string; notes: string };
+export type SupplierKind = "supplier" | "buying_group";
+export type SupplierPayload = { name: string; codes: string[]; category_tags: string[]; payment_notes: string; notes: string; kind?: SupplierKind };
 
 const split = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
 
-export function SupplierForm({ initial, submitLabel, onSubmit }: { initial?: Partial<SupplierValues>; submitLabel: string; onSubmit: (v: SupplierPayload) => Promise<void> }) {
+/** ``chooseKind``: only when creating; the type of an existing record cannot change. */
+export function SupplierForm({ initial, submitLabel, onSubmit, chooseKind = false }: { initial?: Partial<SupplierValues>; submitLabel: string; onSubmit: (v: SupplierPayload) => Promise<void>; chooseKind?: boolean }) {
   const [formError, setFormError] = useState<string | null>(null);
+  const [kind, setKind] = useState<SupplierKind>("supplier");
   const form = useForm<SupplierValues>({ resolver: zodResolver(schema), defaultValues: { name: "", codes: "", category_tags: "", payment_notes: "", notes: "", ...initial } });
   const submit = form.handleSubmit(async (v) => {
     setFormError(null);
     try {
-      await onSubmit({ name: v.name, codes: split(v.codes), category_tags: split(v.category_tags), payment_notes: v.payment_notes, notes: v.notes });
+      await onSubmit({ name: v.name, codes: split(v.codes), category_tags: split(v.category_tags), payment_notes: v.payment_notes, notes: v.notes, ...(chooseKind ? { kind } : {}) });
     } catch (e) {
       setFormError(applyServerErrors(e, form.setError, ["name", "codes", "category_tags", "payment_notes", "notes"]));
     }
@@ -33,6 +36,14 @@ export function SupplierForm({ initial, submitLabel, onSubmit }: { initial?: Par
   return (
     <form onSubmit={submit} noValidate className="flex max-w-2xl flex-col gap-4">
       {formError ? <Notice tone="negative">{formError}</Notice> : null}
+      {chooseKind ? (
+        <Field id="kind" label="Type" hint={kind === "buying_group" ? "A buying group pays rebates on purchases from its member suppliers. Add members after saving; never import purchases under the group's code." : "A company you buy from."}>
+          <Select id="kind" value={kind} onChange={(ev) => setKind(ev.target.value as SupplierKind)}>
+            <option value="supplier">Supplier</option>
+            <option value="buying_group">Buying group</option>
+          </Select>
+        </Field>
+      ) : null}
       <Field id="name" label="Name" required error={e.name?.message}>
         <Input id="name" aria-invalid={!!e.name} aria-describedby={describedBy("name", e.name?.message)} {...form.register("name")} />
       </Field>

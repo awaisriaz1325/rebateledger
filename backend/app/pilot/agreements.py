@@ -184,6 +184,7 @@ def _version(
     supplier_id: str,
     name: str,
     ext_ref: str | None,
+    members: frozenset[str] = frozenset(),
 ) -> VersionSnapshot:
     if not isinstance(raw, dict):
         raise AgreementFormatError(path, "must be a mapping")
@@ -214,6 +215,7 @@ def _version(
             version_id=str(raw.get("version_id") or f"{agreement_id}-v{raw.get('version_no')}"),
             version_no=_int(_get(raw, "version_no", path), f"{path}.version_no"),
             supplier_id=supplier_id,
+            member_supplier_ids=members,
             effective_from=_date(_get(raw, "effective_from", path), f"{path}.effective_from"),
             effective_to=None if eff_to is None else _date(eff_to, f"{path}.effective_to"),
             period_type=ptype,
@@ -285,11 +287,17 @@ def parse_agreements(data: Any) -> list[AgreementSpec]:
         name = str(raw.get("name") or agreement_id)
         ext = raw.get("external_reference")
         ext_ref = None if ext is None else _str(ext, f"{path}.external_reference")
+        members_raw = raw.get("members", []) or []
+        if not isinstance(members_raw, list):
+            raise AgreementFormatError(f"{path}.members", "must be a list of supplier ids")
+        members = frozenset(
+            _str(m, f"{path}.members[{k}]") for k, m in enumerate(members_raw)
+        )  # buying-group program: 'supplier' is the group, these suppliers' lines count
         versions_raw = _get(raw, "versions", path)
         if not isinstance(versions_raw, list) or not versions_raw:
             raise AgreementFormatError(f"{path}.versions", "must be a non-empty list")
         versions = tuple(
-            _version(v, f"{path}.versions[{j}]", agreement_id, supplier, name, ext_ref)
+            _version(v, f"{path}.versions[{j}]", agreement_id, supplier, name, ext_ref, members)
             for j, v in enumerate(versions_raw)
         )
         specs.append(AgreementSpec(agreement_id, supplier, name, ext_ref, versions))

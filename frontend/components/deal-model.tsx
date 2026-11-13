@@ -78,7 +78,7 @@ export function DealModel() {
           <Field id="m-supplier" label="Supplier" required>
             <Select id="m-supplier" value={supplierId} onChange={(e) => { setSupplierId(e.target.value); evaluate.reset(); }}>
               <option value="">Choose…</option>
-              {(suppliers.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              {(suppliers.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}{s.kind === "buying_group" ? " (buying group)" : ""}</option>)}
             </Select>
           </Field>
           <Field id="m-start" label="History from" hint="Whole periods inside the window are used."><Input id="m-start" type="date" value={range.start} onChange={(e) => setRange({ ...range, start: e.target.value })} /></Field>

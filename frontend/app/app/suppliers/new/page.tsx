@@ -20,8 +20,9 @@ export default function NewSupplierPage() {
       <Card>
         <SupplierForm
           submitLabel="Add supplier"
+          chooseKind
           onSubmit={async (body) => {
-            const s = unwrap(await api.POST("/api/v1/suppliers", { body }));
+            const s = unwrap(await api.POST("/api/v1/suppliers", { body: { ...body, kind: body.kind ?? "supplier" } }));
             await qc.invalidateQueries({ queryKey: ["suppliers"] });
             toast.success(`${s.name} added`);
             router.push(`/app/suppliers/${s.id}`);

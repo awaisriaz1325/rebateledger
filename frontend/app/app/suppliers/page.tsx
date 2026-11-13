@@ -28,6 +28,7 @@ export default function SuppliersPage() {
             onRowClick={(r) => router.push(`/app/suppliers/${r.id}`)}
             columns={[
               { id: "name", header: "Name", value: (r) => r.name, cell: (r) => <Link href={`/app/suppliers/${r.id}`} className="font-medium hover:underline">{r.name}</Link> },
+              { id: "kind", header: "Type", value: (r) => (r.kind === "buying_group" ? "Buying group" : "Supplier") },
               { id: "codes", header: "Codes", value: (r) => r.codes.join(", "), cell: (r) => <span className="font-mono text-xs">{r.codes.join(", ")}</span> },
               { id: "tags", header: "Tags", value: (r) => r.category_tags.join(", ") },
               { id: "status", header: "Status", value: (r) => r.status, cell: (r) => <StatusBadge status={r.status} /> },

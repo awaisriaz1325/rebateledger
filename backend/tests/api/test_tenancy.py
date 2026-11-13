@@ -34,6 +34,7 @@ TENANT_TABLES = (
     "notifications",
     "notification_preferences",
     "digest_sends",
+    "buying_group_members",
 )
 
 

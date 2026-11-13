@@ -313,8 +313,23 @@ class VersionSnapshot:
     minimum_payout: Decimal | None = None
     agreement_name: str = field(default="", compare=False)
     external_reference: str | None = None
+    member_supplier_ids: frozenset[str] = field(
+        default_factory=frozenset, metadata={"omit_if_empty": True}
+    )
+    """Buying-group program (v1.1, ADR 0017 §3): purchases from these member suppliers count,
+    and ``supplier_id`` is the group (the payer). Empty for a normal supplier agreement; then
+    it is left out of the input hash so existing results hash exactly as before."""
+
+    @property
+    def line_supplier_ids(self) -> frozenset[str]:
+        """Suppliers whose purchase lines this agreement reads."""
+        return self.member_supplier_ids or frozenset({self.supplier_id})
 
     def __post_init__(self) -> None:
+        if self.supplier_id in self.member_supplier_ids:
+            raise EngineInputError("a buying group cannot be its own member")
+        if any(not m for m in self.member_supplier_ids):
+            raise EngineInputError("member supplier ids must be non-empty")
         if not 1 <= self.fiscal_year_start_month <= 12:
             raise EngineInputError("fiscal_year_start_month must be 1..12")
         if self.effective_to is not None and self.effective_to < self.effective_from:

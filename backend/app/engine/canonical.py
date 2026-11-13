@@ -28,7 +28,7 @@ def to_canonical(value: object) -> object:
         return {
             f.name: to_canonical(getattr(value, f.name))
             for f in dataclasses.fields(value)
-            if f.compare
+            if f.compare and not (f.metadata.get("omit_if_empty") and not getattr(value, f.name))
         }
     if isinstance(value, frozenset | set):
         items = [to_canonical(v) for v in value]

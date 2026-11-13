@@ -1,0 +1,35 @@
+# HAND CALCULATION — a line counts for both the supplier's own agreement and a buying-group
+#   program (different payers; ADR 0017 §3), even when the supplier agreement is exclusive.
+#   A1 (payer S1, exclusive): flat 1% on S1 lines: L1 50,000.00        -> E = 500.00
+#   AG (payer G1, members S1+S2): flat 2% on L1 50,000 + L2 30,000 = 80,000.00 -> E = 1,600.00
+#   No STACKING_CONFLICT: exclusivity applies within the same payer only.
+name: group program stacks with a supplier agreement
+defaults:
+  version_no: 1
+  effective_from: 2026-01-01
+  effective_to: null
+  period: {type: quarterly, fiscal_year_start_month: 1}
+  date_basis: invoice_date
+  measure: spend
+  spend_basis: net_of_returns
+  threshold_comparison: gte
+  negative_result: floor_at_zero
+  rounding_mode: half_up
+  payment_terms_days: 60
+  prorate_thresholds_on_partial_period: false
+  zero_baseline_policy: needs_review
+range: {start: 2026-01-01, end: 2026-03-31}
+agreements:
+  - id: A1
+    supplier: S1
+    versions: [{stacking: exclusive, components: [{id: base, type: flat_percent, rate: "0.01"}]}]
+  - id: AG
+    supplier: G1
+    members: [S1, S2]
+    versions: [{stacking: stackable, components: [{id: base, type: flat_percent, rate: "0.02"}]}]
+purchases:
+  - {id: L1, supplier: S1, qty: "1", amount: "50000.00", invoice_date: 2026-01-20}
+  - {id: L2, supplier: S2, qty: "1", amount: "30000.00", invoice_date: 2026-02-20}
+expected:
+  - {agreement: A1, period: 2026-01-01..2026-03-31, expected: "500.00", statuses: [OK], S: "50000.00", eligible: 1}
+  - {agreement: AG, period: 2026-01-01..2026-03-31, expected: "1600.00", statuses: [OK], S: "80000.00", eligible: 2}

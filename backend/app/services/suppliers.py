@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -13,6 +13,7 @@ from app.core.errors import AppError, conflict, not_found
 from app.db.models.business import (
     Agreement,
     AgreementVersion,
+    BuyingGroupMember,
     CreditLineRow,
     ImportMapping,
     Product,
@@ -111,10 +112,12 @@ def create(
     category_tags: list[str],
     payment_notes: str,
     notes: str,
+    kind: str = "supplier",
 ) -> Supplier:
     s = Supplier(
         tenant_id=ctx.tenant_uuid,
         name=name,
+        kind=kind,
         category_tags=category_tags,
         payment_notes=payment_notes,
         notes=notes,
@@ -130,7 +133,7 @@ def create(
         action="supplier.created",
         object_type="supplier",
         object_id=s.id,
-        summary={"name": name},
+        summary={"name": name, "kind": kind},
     )
     return s
 
@@ -264,6 +267,11 @@ def merge(db: Session, ctx: Any, source_id: uuid.UUID, target_id: uuid.UUID) -> 
         raise conflict("MERGE_SAME_SUPPLIER", "Choose two different suppliers.")
     tid = ctx.tenant_uuid
     source, target = get(db, tid, source_id), get(db, tid, target_id)
+    if "buying_group" in (source.kind, target.kind):
+        raise conflict(
+            "MERGE_BUYING_GROUP",
+            "Buying groups cannot be merged. Change the group's members instead.",
+        )
     from datetime import date as _date
 
     for a_from, a_to, a_name in _active_ranges(db, tid, source.id):
@@ -289,6 +297,23 @@ def merge(db: Session, ctx: Any, source_id: uuid.UUID, target_id: uuid.UUID) -> 
             .values(supplier_id=target.id)
         )
         moved[model.__tablename__] = result.rowcount  # type: ignore[attr-defined]
+    # Group memberships follow the merged supplier (skip groups the target is already in).
+    already = set(
+        db.execute(
+            select(BuyingGroupMember.group_id).where(
+                BuyingGroupMember.tenant_id == tid, BuyingGroupMember.supplier_id == target.id
+            )
+        ).scalars()
+    )
+    for m in db.execute(
+        select(BuyingGroupMember).where(
+            BuyingGroupMember.tenant_id == tid, BuyingGroupMember.supplier_id == source.id
+        )
+    ).scalars():
+        if m.group_id in already:
+            db.delete(m)
+        else:
+            m.supplier_id = target.id
     source.merged_into_id = target.id
     source.status = "inactive"
     record(
@@ -301,3 +326,80 @@ def merge(db: Session, ctx: Any, source_id: uuid.UUID, target_id: uuid.UUID) -> 
         summary={"source": str(source.id), "moved": moved},
     )
     return target
+
+
+# --------------------------------------------------------------------------- buying groups
+
+
+def member_ids(db: Session, tenant_id: uuid.UUID, group_id: uuid.UUID) -> list[uuid.UUID]:
+    return list(
+        db.execute(
+            select(BuyingGroupMember.supplier_id)
+            .where(BuyingGroupMember.tenant_id == tenant_id, BuyingGroupMember.group_id == group_id)
+            .order_by(BuyingGroupMember.supplier_id)
+        ).scalars()
+    )
+
+
+def line_supplier_ids(db: Session, tenant_id: uuid.UUID, supplier_id: uuid.UUID) -> list[uuid.UUID]:
+    """Suppliers whose purchase lines an agreement of ``supplier_id`` reads (members for a group)."""
+    kind = db.execute(
+        select(Supplier.kind).where(Supplier.tenant_id == tenant_id, Supplier.id == supplier_id)
+    ).scalar()
+    return member_ids(db, tenant_id, supplier_id) if kind == "buying_group" else [supplier_id]
+
+
+def set_members(
+    db: Session, ctx: Any, group_id: uuid.UUID, supplier_ids: list[uuid.UUID]
+) -> Supplier:
+    """Replace a buying group's members. Results of its programs become stale."""
+    tid = ctx.tenant_uuid
+    group = get(db, tid, group_id)
+    if group.kind != "buying_group":
+        raise conflict("NOT_A_BUYING_GROUP", "Only a buying group has members.")
+    wanted = list(dict.fromkeys(supplier_ids))
+    for sid in wanted:
+        member = get(db, tid, sid)  # 404 for other tenants
+        if member.kind != "supplier" or member.merged_into_id is not None:
+            raise AppError(
+                422,
+                "MEMBER_INVALID",
+                "Not a valid member",
+                f"{member.name} is a buying group or was merged; members must be active suppliers.",
+            )
+    before = member_ids(db, tid, group.id)
+    db.execute(
+        delete(BuyingGroupMember).where(
+            BuyingGroupMember.tenant_id == tid, BuyingGroupMember.group_id == group.id
+        )
+    )
+    for sid in wanted:
+        db.add(BuyingGroupMember(tenant_id=tid, group_id=group.id, supplier_id=sid))
+    db.flush()
+    from app.services.staleness import mark_stale_for_agreement
+
+    for aid in db.execute(
+        select(Agreement.id).where(Agreement.tenant_id == tid, Agreement.supplier_id == group.id)
+    ).scalars():
+        mark_stale_for_agreement(db, tid, aid, "buying-group members changed")
+    record(
+        db,
+        tenant_id=tid,
+        actor=ctx.actor,
+        action="buying_group.members_set",
+        object_type="supplier",
+        object_id=group.id,
+        summary={"before": [str(x) for x in before], "after": [str(x) for x in wanted]},
+    )
+    return group
+
+
+def groups_of(db: Session, tenant_id: uuid.UUID, supplier_id: uuid.UUID) -> list[uuid.UUID]:
+    return list(
+        db.execute(
+            select(BuyingGroupMember.group_id).where(
+                BuyingGroupMember.tenant_id == tenant_id,
+                BuyingGroupMember.supplier_id == supplier_id,
+            )
+        ).scalars()
+    )

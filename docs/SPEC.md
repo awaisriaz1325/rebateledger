@@ -166,6 +166,17 @@ via role changes mid-flow.
   (latest purchase date imported, latest credit date imported), activity timeline.
 - Merge two suppliers (moves aliases, agreements, lines, credits; audited;
   blocked if both have overlapping active agreements until resolved).
+- **Buying groups (v1.1, ADR 0017 §3):** a supplier record of kind `buying_group` is a
+  payer whose programs count purchases from its member suppliers. Agreements, credits,
+  claims and results of a group work like a supplier's. Members are active suppliers of
+  the same organization; changing members marks the group's results stale and changes
+  their input hash. Purchases are never imported under a group's code (row code
+  `SUPPLIER_IS_BUYING_GROUP`). A purchase can count for both a supplier's own agreement
+  and a group program (different payers); exclusive stacking applies within one payer.
+  Groups cannot be merged; merging a member supplier moves its memberships. For growth
+  baselines, a group's data coverage starts at the latest of its members' starts.
+  Engine 1.1.0 adds the member set to the version snapshot; it is omitted from the input
+  hash when empty, so supplier-agreement results hash exactly as in 1.0.0.
 
 ### 4.4 Rebate agreements
 

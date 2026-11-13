@@ -69,8 +69,11 @@ def _snapshot(
     # the historical window.
     modelled = terms.model_copy(update={"effective_from": start, "effective_to": end})
     assert ctx.tenant is not None
+    ids = suppliers.line_supplier_ids(ctx.db, ctx.tenant_uuid, uuid.UUID(supplier_id))
+    members = frozenset(str(i) for i in ids) if ids != [uuid.UUID(supplier_id)] else frozenset()
     return to_snapshot(
         modelled,
+        member_supplier_ids=members,
         agreement_id="model",
         version_id="model",
         version_no=1,
