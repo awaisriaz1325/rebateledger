@@ -5,6 +5,7 @@ import { Command } from "cmdk";
 import { Dialog as D } from "radix-ui";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useReturnFocus } from "@/components/ui/overlay";
 import { api } from "@/lib/api";
 
 const PAGES = [
@@ -46,12 +47,13 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
     router.push(href);
   }
   const item = "flex cursor-pointer items-center justify-between rounded px-3 py-2 text-sm aria-selected:bg-brand-soft aria-selected:text-brand";
+  const focus = useReturnFocus();
   const group = "px-1 py-1 text-xs text-muted [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:font-semibold";
   return (
     <D.Root open={open} onOpenChange={onOpenChange}>
       <D.Portal>
         <D.Overlay className="fixed inset-0 z-40 bg-black/40" />
-        <D.Content className="fixed top-24 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-xl -translate-x-1/2 overflow-hidden rounded-lg border border-rule bg-surface shadow-card">
+        <D.Content {...focus} className="fixed top-24 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-xl -translate-x-1/2 overflow-hidden rounded-lg border border-rule bg-surface shadow-card">
           <D.Title className="sr-only">Search and jump to</D.Title>
           <D.Description className="sr-only">Type to search pages, suppliers, agreements, claims and imports.</D.Description>
           <Command label="Command palette" shouldFilter={false}>

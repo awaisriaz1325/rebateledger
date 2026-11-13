@@ -79,6 +79,8 @@
 
 html {
   color-scheme: light;
+  /* Keep focused elements clear of the sticky 56px app header when focus scrolls them into view (WCAG 2.4.11). */
+  scroll-padding-top: 4.5rem;
 }
 [data-theme="dark"] {
   color-scheme: dark;

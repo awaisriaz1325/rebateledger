@@ -3,9 +3,34 @@
 /** Dialogs, drawers, menus and tabs on Radix primitives (focus trapping, ESC, ARIA). */
 import { X } from "lucide-react";
 import { Dialog as D, DropdownMenu as M, Tabs as T } from "radix-ui";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Button, Input } from "@/components/ui/core";
 import { cn } from "@/lib/cn";
+
+/**
+ * Return focus to wherever it was when an overlay opened (WCAG 2.4.3).
+ *
+ * Our overlays are opened from code (shortcuts, row actions), not from a Radix `Trigger`, so
+ * Radix has no trigger to refocus and focus would fall to <body>. Radix fires
+ * `onOpenAutoFocus` before it moves focus, so `document.activeElement` is still the opener.
+ */
+export function useReturnFocus(): { onOpenAutoFocus: () => void; onCloseAutoFocus: (e: Event) => void } {
+  const opener = useRef<HTMLElement | null>(null);
+  return {
+    onOpenAutoFocus: () => {
+      const el = document.activeElement;
+      opener.current = el instanceof HTMLElement && el !== document.body ? el : null;
+    },
+    onCloseAutoFocus: (e: Event) => {
+      const el = opener.current;
+      opener.current = null;
+      if (el?.isConnected) {
+        e.preventDefault();
+        el.focus();
+      }
+    },
+  };
+}
 
 export function Dialog({
   open,
@@ -24,11 +49,13 @@ export function Dialog({
   footer?: ReactNode;
   wide?: boolean;
 }) {
+  const focus = useReturnFocus();
   return (
     <D.Root open={open} onOpenChange={onOpenChange}>
       <D.Portal>
         <D.Overlay className="fixed inset-0 z-40 bg-black/40" />
         <D.Content
+          {...focus}
           className={cn(
             "fixed top-1/2 left-1/2 z-50 max-h-[90vh] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-rule bg-surface p-6 shadow-card",
             wide ? "max-w-3xl" : "max-w-lg",
@@ -113,11 +140,12 @@ export function ConfirmDialog({
 }
 
 export function Drawer({ open, onOpenChange, title, description, children }: { open: boolean; onOpenChange: (o: boolean) => void; title: string; description?: ReactNode; children: ReactNode }) {
+  const focus = useReturnFocus();
   return (
     <D.Root open={open} onOpenChange={onOpenChange}>
       <D.Portal>
         <D.Overlay className="fixed inset-0 z-40 bg-black/30" />
-        <D.Content className="fixed top-0 right-0 z-50 flex h-full w-full max-w-2xl flex-col border-l border-rule bg-surface shadow-card">
+        <D.Content {...focus} className="fixed top-0 right-0 z-50 flex h-full w-full max-w-2xl flex-col border-l border-rule bg-surface shadow-card">
           <div className="flex items-start justify-between gap-4 border-b border-rule px-6 py-4">
             <div className="min-w-0">
               <D.Title className="text-lg font-semibold">{title}</D.Title>

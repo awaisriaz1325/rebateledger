@@ -55,8 +55,10 @@ test("operator issues an invoice and the organization's owner sees it", async ({
   await ops.getByRole("button", { name: "Issue invoice" }).click();
   await ops.getByRole("dialog", { name: "Issue this invoice?" }).getByRole("button", { name: "Issue" }).click();
   await expect(ops.getByText("Invoice issued and emailed")).toBeVisible();
-  const number = (await ops.getByRole("dialog").locator(".font-mono").first().innerText()).trim();
-  expect(number).toMatch(/^RL-\d{4}-\d{4}$/);
+  // The toast can arrive before the dialog re-renders with the issued number: wait for it.
+  const numberCell = ops.getByRole("dialog").locator(".font-mono").first();
+  await expect(numberCell).toHaveText(/^RL-\d{4}-\d{4}$/);
+  const number = (await numberCell.innerText()).trim();
 
   await page.goto("/app/settings/plan");
   const row = page.getByRole("table", { name: "Invoices" }).getByRole("row").filter({ hasText: number });
