@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BadgePercent,
   BookOpenCheck,
   BookText,
   Calculator,
@@ -68,6 +69,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
       { href: "/app/discrepancies", label: "Discrepancies", icon: <ListChecks size={16} /> },
       { href: "/app/credits", label: "Credits", icon: <Receipt size={16} /> },
       { href: "/app/claims", label: "Claims", icon: <HandCoins size={16} /> },
+      { href: "/app/spa", label: "SPA claims", icon: <BadgePercent size={16} /> },
       { href: "/app/approvals", label: "Approvals", icon: <BookOpenCheck size={16} /> },
     ],
   },
@@ -361,7 +363,7 @@ function SupportGrantBanner({ session }: { session: SessionInfo }) {
 const LABELS: Record<string, string> = {
   app: "Dashboard", suppliers: "Suppliers", agreements: "Agreements", imports: "Imports", runs: "Runs", results: "Results",
   discrepancies: "Discrepancies", credits: "Credits", claims: "Claims", tiers: "Tier tracker", settings: "Settings", reports: "Reports",
-  approvals: "Approvals", new: "New", model: "Deal modelling", accruals: "Month-end accruals", accounting: "Accounting", profile: "Profile", security: "Security", organization: "Organization", members: "Members",
+  approvals: "Approvals", new: "New", model: "Deal modelling", accruals: "Month-end accruals", spa: "SPA claims", accounting: "Accounting", profile: "Profile", security: "Security", organization: "Organization", members: "Members",
   reconciliation: "Reconciliation", notifications: "Notifications", templates: "Import templates", plan: "Plan & usage", audit: "Audit log", data: "Data",
 };
 

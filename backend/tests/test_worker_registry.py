@@ -20,6 +20,8 @@ EXPECTED = {
     "send_email",
     "tier_alerts",
     "weekly_digest",
+    "spa_match",
+    "spa_deadlines",
     "verify_audit_chain",
 }
 

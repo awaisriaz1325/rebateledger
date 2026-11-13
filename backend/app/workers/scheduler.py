@@ -47,6 +47,7 @@ DAILY: dict[str, int] = {
     "billing_lapse": 6,
     "claim_reminders": 13,
     "tier_alerts": 14,
+    "spa_deadlines": 15,
     # Sends only on the organization's local Monday (the job checks). 12:00 UTC is Monday
     # morning across US time zones (07:00 Eastern standard time, 04:00 Pacific).
     "weekly_digest": 12,

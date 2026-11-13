@@ -115,6 +115,17 @@ is not listed here.
 | `NOTHING_TO_ACCRUE` | 422 | No outstanding rebate at the closing date |
 | `JOURNAL_UNBALANCED` | 500 | Debits ≠ credits; never expected (built balanced) and nothing is exported |
 
+## SPA claims (v1.1 Phase 17)
+| Code | Status | Meaning |
+|---|---|---|
+| `SPA_SUPPLIER_INVALID` | 422 | SPAs belong to a supplier, not a buying group |
+| `SPA_DATES_INVALID` | 422 | The SPA ends before it starts |
+| `SPA_ITEMS_INVALID` | 422 | Duplicate SKU, book cost not above zero, negative SPA cost or non-positive cap |
+| `SPA_NUMBER_TAKEN` | 409 | The supplier already has a SPA with that number |
+| `NOTHING_TO_CLAIM` | 422 | No unclaimed claimable SPA lines for the supplier up to the date |
+| `SPA_CLAIM_TRANSITION_INVALID` | 409 | That status change is not allowed from the current status |
+| `SPA_PAYMENT_INVALID` | 422 | Recording a payment needs an amount (zero or more) and a credit memo reference |
+
 ## Imports
 | Code | Status | Meaning |
 |---|---|---|

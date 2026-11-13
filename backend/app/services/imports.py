@@ -29,6 +29,7 @@ from app.db.models.business import (
     ImportType,
     Product,
     PurchaseLineRow,
+    SaleLineRow,
     Supplier,
     SupplierAlias,
     SupplierContact,
@@ -662,6 +663,20 @@ def _insert(
             .returning(PurchaseLineRow.source_row, sort_by_parameter_order=True)
         )
         return set(db.execute(stmt, values).scalars())
+    if kind is ImportType.SALES:
+        values = [
+            {"tenant_id": tid, "batch_id": batch.id, "source_row": row, **rec}
+            for row, rec in records
+        ]
+        sales_stmt = (
+            insert(SaleLineRow)
+            .on_conflict_do_nothing(
+                index_elements=["tenant_id", "supplier_id", "dedupe_key"],
+                index_where=text("NOT voided"),
+            )
+            .returning(SaleLineRow.source_row, sort_by_parameter_order=True)
+        )
+        return set(db.execute(sales_stmt, values).scalars())
     if kind is ImportType.CREDITS:
         values = [
             {"id": uuid.uuid7(), "tenant_id": tid, "batch_id": batch.id, "source_row": row, **rec}
@@ -758,6 +773,7 @@ def _commit_job(db: Session, job: JobContext) -> dict[str, Any]:
                 ImportType.PURCHASES,
                 ImportType.CREDITS,
                 ImportType.SUPPLIERS,
+                ImportType.SALES,
             ):
                 duplicates += 1
                 if len(duplicate_issues) < MAX_STORED_ISSUES:
@@ -834,6 +850,8 @@ def _commit_job(db: Session, job: JobContext) -> dict[str, Any]:
     from app.services.staleness import mark_stale_for_batch
 
     mark_stale_for_batch(db, batch.tenant_id, batch.id, "new import overlapping the period")
+    if kind is ImportType.SALES:
+        enqueue(db, tenant_id=batch.tenant_id, job_type="spa_match", payload={})
     job.progress(stats.rows_read, stats.rows_read)
     return {
         "batch_id": str(batch.id),
@@ -916,7 +934,7 @@ def void(db: Session, ctx: Any, batch: ImportBatch, reason: str) -> ImportBatch:
     """Soft void: rows are excluded from future runs; past runs keep their references."""
     if batch.status != BatchStatus.COMMITTED.value:
         raise conflict("IMPORT_NOT_COMMITTED", "Only committed imports can be voided.")
-    for model in (PurchaseLineRow, CreditLineRow, BaselineRow):
+    for model in (PurchaseLineRow, CreditLineRow, BaselineRow, SaleLineRow):
         db.execute(
             update(model)
             .where(model.tenant_id == batch.tenant_id, model.batch_id == batch.id)
@@ -924,6 +942,8 @@ def void(db: Session, ctx: Any, batch: ImportBatch, reason: str) -> ImportBatch:
         )
     batch.status = BatchStatus.VOIDED.value
     batch.voided_at, batch.voided_by, batch.void_reason = utcnow(), ctx.user.id, reason
+    if batch.import_type == ImportType.SALES.value:
+        enqueue(db, tenant_id=batch.tenant_id, job_type="spa_match", payload={})
     if batch.import_type == ImportType.CREDITS.value:
         from app.services.reconciliation import reverse_for_voided_credits
 

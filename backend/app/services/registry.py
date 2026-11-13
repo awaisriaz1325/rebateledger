@@ -14,4 +14,5 @@ import app.services.audit
 import app.services.billing
 import app.services.imports
 import app.services.notifications
-import app.services.runs  # noqa: F401
+import app.services.runs
+import app.services.spa  # noqa: F401

@@ -17,6 +17,7 @@ from app.api.routes import (
     plan,
     reconciliation,
     runs,
+    spa,
     suppliers,
 )
 
@@ -34,6 +35,7 @@ ROUTERS = [
     runs.router,
     reconciliation.router,
     claims.router,
+    spa.router,
     insights.router,
     accruals.router,
     exports.router,

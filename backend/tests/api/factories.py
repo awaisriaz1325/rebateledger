@@ -334,3 +334,27 @@ def invoice(w: World, t: uuid.UUID) -> uuid.UUID:
 
 
 EXTRA_FACTORIES["invoice_id"] = invoice
+
+
+def spa(w: World, t: uuid.UUID) -> uuid.UUID:
+    sid = uuid.uuid7()
+    w.sql(
+        "INSERT INTO rl.spas (id, tenant_id, supplier_id, spa_number, valid_from, valid_to, claim_deadline_days, status, notes, row_version, created_at, updated_at) "
+        "VALUES (:i, :t, :s, :n, '2026-01-01', '2026-12-31', 60, 'active', '', 1, now(), now())",
+        i=sid,
+        t=t,
+        s=supplier(w, t),
+        n=f"SPA-{sid.hex[-8:]}",
+    )
+    return sid
+
+
+EXTRA_FACTORIES["spa_id"] = spa
+SAMPLE_BODIES[("PUT", "/api/v1/spas/{spa_id}")] = {
+    "valid_from": "2026-01-01",
+    "valid_to": "2026-12-31",
+    "claim_deadline_days": 60,
+    "status": "active",
+    "items": [{"sku": "A", "book_cost": "10", "spa_cost": "8"}],
+}
+SAMPLE_BODIES[("POST", "/api/v1/spa-claims/{claim_id}/transition")] = {"to": "submitted"}

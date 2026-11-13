@@ -158,6 +158,49 @@ FIELDS: dict[ImportType, tuple[FieldSpec, ...]] = {
         _f("contact_email", "Contact email", False, "text", "email", "contact email"),
         _f("contact_phone", "Contact phone", False, "text", "phone"),
     ),
+    # v1.1 Phase 17: lines the distributor sold, for ship-and-debit / SPA claims.
+    ImportType.SALES: (
+        _f(
+            "supplier_code",
+            "Supplier code",
+            True,
+            "code",
+            "vendor",
+            "vendor no",
+            "supplier",
+            "mfr",
+            "manufacturer",
+        ),
+        _f(
+            "invoice_number",
+            "Invoice number",
+            True,
+            "text",
+            "invoice",
+            "invoice no",
+            "inv no",
+            "invoice #",
+        ),
+        _f("line_number", "Line number", False, "text", "line", "line no", "line #"),
+        _f(
+            "invoice_date",
+            "Invoice date",
+            True,
+            "date",
+            "invoice date",
+            "inv date",
+            "date",
+            "ship date",
+        ),
+        _f(
+            "customer", "Customer", False, "text", "customer", "customer name", "sold to", "bill to"
+        ),
+        _f("job", "Job / project", False, "text", "job", "job name", "project", "job number"),
+        _f("sku", "SKU", True, "text", "item", "item no", "part number", "product", "sku"),
+        _f("quantity", "Quantity", True, "decimal", "qty", "quantity", "qty shipped", "units"),
+        _f("unit_cost", "Unit cost at sale", False, "decimal", "unit cost", "cost", "avg cost"),
+        _f("sell_price", "Unit sell price", False, "decimal", "unit price", "price", "sell price"),
+    ),
 }
 
 FLAG_TYPES = {ImportType.PURCHASES}

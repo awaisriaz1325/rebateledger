@@ -2501,6 +2501,185 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/spa-claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Claims */
+        get: operations["list_claims_api_v1_spa_claims_get"];
+        put?: never;
+        /**
+         * Create Claim
+         * @description A draft claim with every unclaimed OK line up to the date. Accepts Idempotency-Key.
+         */
+        post: operations["create_claim_api_v1_spa_claims_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spa-claims/{claim_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Claim */
+        get: operations["get_claim_api_v1_spa_claims__claim_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spa-claims/{claim_id}/evidence.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Claim Evidence */
+        get: operations["claim_evidence_api_v1_spa_claims__claim_id__evidence_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spa-claims/{claim_id}/lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Claim Lines */
+        get: operations["claim_lines_api_v1_spa_claims__claim_id__lines_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spa-claims/{claim_id}/transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transition Claim */
+        post: operations["transition_claim_api_v1_spa_claims__claim_id__transition_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spa/matches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Spa Matches */
+        get: operations["spa_matches_api_v1_spa_matches_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spa/recalculate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Recalculate
+         * @description Match every unclaimed sale line again (background job).
+         */
+        post: operations["recalculate_api_v1_spa_recalculate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spa/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Spa Summary */
+        get: operations["spa_summary_api_v1_spa_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Spas */
+        get: operations["list_spas_api_v1_spas_get"];
+        put?: never;
+        /** Create Spa */
+        post: operations["create_spa_api_v1_spas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/spas/{spa_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Spa */
+        get: operations["get_spa_api_v1_spas__spa_id__get"];
+        /** Update Spa */
+        put: operations["update_spa_api_v1_spas__spa_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/suppliers": {
         parameters: {
             query?: never;
@@ -4083,7 +4262,7 @@ export interface components {
          * ImportType
          * @enum {string}
          */
-        ImportType: "purchases" | "credits" | "baselines" | "products" | "suppliers";
+        ImportType: "purchases" | "credits" | "baselines" | "products" | "suppliers" | "sales";
         /** InviteIn */
         InviteIn: {
             /** Email */
@@ -5833,6 +6012,302 @@ export interface components {
             last_seen_at: string;
             /** User Agent */
             user_agent: string;
+        };
+        /** SpaClaimIn */
+        SpaClaimIn: {
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /**
+             * Through Date
+             * Format: date
+             */
+            through_date: string;
+        };
+        /** SpaClaimOut */
+        SpaClaimOut: {
+            /** Closed At */
+            closed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Credit Reference */
+            credit_reference: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Line Count */
+            line_count: number;
+            /** Number */
+            number: number;
+            /** Paid Amount */
+            paid_amount: string | null;
+            /** Row Version */
+            row_version: number;
+            /** Status */
+            status: string;
+            /** Submitted At */
+            submitted_at: string | null;
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /**
+             * Total
+             * @example 1234.50
+             */
+            total: string;
+        };
+        /** SpaIn */
+        SpaIn: {
+            /** Claim Deadline Days */
+            claim_deadline_days: number;
+            /** Customer */
+            customer?: string | null;
+            /** Items */
+            items: components["schemas"]["SpaItemIn"][];
+            /** Job */
+            job?: string | null;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+            /** Spa Number */
+            spa_number: string;
+            /**
+             * Status
+             * @default active
+             * @enum {string}
+             */
+            status: "active" | "inactive";
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+            /**
+             * Valid To
+             * Format: date
+             */
+            valid_to: string;
+        };
+        /** SpaItemIn */
+        SpaItemIn: {
+            /**
+             * Book Cost
+             * @example 1234.50
+             */
+            book_cost: string;
+            /** Quantity Cap */
+            quantity_cap?: string | null;
+            /** Sku */
+            sku: string;
+            /**
+             * Spa Cost
+             * @example 1234.50
+             */
+            spa_cost: string;
+        };
+        /** SpaItemOut */
+        SpaItemOut: {
+            /**
+             * Book Cost
+             * @example 1234.50
+             */
+            book_cost: string;
+            /** Quantity Cap */
+            quantity_cap: string | null;
+            /** Sku */
+            sku: string;
+            /**
+             * Spa Cost
+             * @example 1234.50
+             */
+            spa_cost: string;
+        };
+        /** SpaMatchOut */
+        SpaMatchOut: {
+            /** Claim Id */
+            claim_id: string | null;
+            /**
+             * Claimable Amount
+             * @example 1234.50
+             */
+            claimable_amount: string;
+            /**
+             * Claimable Quantity
+             * @example 1234.50
+             */
+            claimable_quantity: string;
+            /** Customer */
+            customer: string | null;
+            /** Deadline */
+            deadline: string | null;
+            /**
+             * Invoice Date
+             * Format: date
+             */
+            invoice_date: string;
+            /** Invoice Number */
+            invoice_number: string;
+            /** Job */
+            job: string | null;
+            /** Line Number */
+            line_number: string | null;
+            /**
+             * Quantity
+             * @example 1234.50
+             */
+            quantity: string;
+            /** Reasons */
+            reasons: components["schemas"]["SpaReasonOut"][];
+            /** Sale Line Id */
+            sale_line_id: number;
+            /** Sku */
+            sku: string;
+            /** Spa Id */
+            spa_id: string | null;
+            /** Spa Number */
+            spa_number: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /** Unit Cost */
+            unit_cost: string | null;
+            /** Unit Difference */
+            unit_difference: string | null;
+        };
+        /** SpaOut */
+        SpaOut: {
+            /** Claim Deadline Days */
+            claim_deadline_days: number;
+            /** Customer */
+            customer: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Items */
+            items: components["schemas"]["SpaItemOut"][];
+            /** Job */
+            job: string | null;
+            /** Notes */
+            notes: string;
+            /** Row Version */
+            row_version: number;
+            /** Spa Number */
+            spa_number: string;
+            /** Status */
+            status: string;
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+            /**
+             * Valid To
+             * Format: date
+             */
+            valid_to: string;
+        };
+        /** SpaReasonOut */
+        SpaReasonOut: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+        };
+        /** SpaSummaryOut */
+        SpaSummaryOut: {
+            /** Expiring Soon Lines */
+            expiring_soon_lines: number;
+            /** Needs Review Lines */
+            needs_review_lines: number;
+            /** Past Deadline Lines */
+            past_deadline_lines: number;
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /** Supplier Name */
+            supplier_name: string;
+            /**
+             * Unclaimed Amount
+             * @example 1234.50
+             */
+            unclaimed_amount: string;
+            /** Unclaimed Lines */
+            unclaimed_lines: number;
+        };
+        /** SpaTransitionIn */
+        SpaTransitionIn: {
+            /**
+             * Credit Reference
+             * @default
+             */
+            credit_reference: string;
+            /** Paid Amount */
+            paid_amount?: string | null;
+            /**
+             * To
+             * @enum {string}
+             */
+            to: "submitted" | "paid" | "rejected";
+        };
+        /** SpaUpdateIn */
+        SpaUpdateIn: {
+            /** Claim Deadline Days */
+            claim_deadline_days: number;
+            /** Customer */
+            customer?: string | null;
+            /** Items */
+            items: components["schemas"]["SpaItemIn"][];
+            /** Job */
+            job?: string | null;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "inactive";
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+            /**
+             * Valid To
+             * Format: date
+             */
+            valid_to: string;
         };
         /**
          * SpendBasis
@@ -11747,6 +12222,408 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Page_PeriodResultOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_claims_api_v1_spa_claims_get: {
+        parameters: {
+            query?: {
+                supplier_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpaClaimOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_claim_api_v1_spa_claims_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpaClaimIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpaClaimOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_claim_api_v1_spa_claims__claim_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                claim_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpaClaimOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claim_evidence_api_v1_spa_claims__claim_id__evidence_csv_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                claim_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claim_lines_api_v1_spa_claims__claim_id__lines_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                claim_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpaMatchOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transition_claim_api_v1_spa_claims__claim_id__transition_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                claim_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpaTransitionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpaClaimOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    spa_matches_api_v1_spa_matches_get: {
+        parameters: {
+            query?: {
+                supplier_id?: string | null;
+                status?: ("ok" | "needs_review" | "not_claimable") | null;
+                unclaimed?: boolean | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpaMatchOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recalculate_api_v1_spa_recalculate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    spa_summary_api_v1_spa_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpaSummaryOut"][];
+                };
+            };
+        };
+    };
+    list_spas_api_v1_spas_get: {
+        parameters: {
+            query?: {
+                supplier_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpaOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_spa_api_v1_spas_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpaIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_spa_api_v1_spas__spa_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spa_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_spa_api_v1_spas__spa_id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+            };
+            path: {
+                spa_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpaUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpaOut"];
                 };
             };
             /** @description Validation Error */

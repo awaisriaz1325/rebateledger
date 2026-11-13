@@ -3740,7 +3740,8 @@
           "credits",
           "baselines",
           "products",
-          "suppliers"
+          "suppliers",
+          "sales"
         ],
         "title": "ImportType",
         "type": "string"
@@ -8455,6 +8456,781 @@
           "current"
         ],
         "title": "SessionOut",
+        "type": "object"
+      },
+      "SpaClaimIn": {
+        "additionalProperties": false,
+        "properties": {
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          },
+          "through_date": {
+            "format": "date",
+            "title": "Through Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "supplier_id",
+          "through_date"
+        ],
+        "title": "SpaClaimIn",
+        "type": "object"
+      },
+      "SpaClaimOut": {
+        "properties": {
+          "closed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "credit_reference": {
+            "title": "Credit Reference",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "line_count": {
+            "title": "Line Count",
+            "type": "integer"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "paid_amount": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid Amount"
+          },
+          "row_version": {
+            "title": "Row Version",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          },
+          "total": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Total",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "supplier_id",
+          "status",
+          "total",
+          "line_count",
+          "paid_amount",
+          "credit_reference",
+          "submitted_at",
+          "closed_at",
+          "created_at",
+          "row_version"
+        ],
+        "title": "SpaClaimOut",
+        "type": "object"
+      },
+      "SpaIn": {
+        "additionalProperties": false,
+        "properties": {
+          "claim_deadline_days": {
+            "maximum": 730.0,
+            "minimum": 1.0,
+            "title": "Claim Deadline Days",
+            "type": "integer"
+          },
+          "customer": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SpaItemIn"
+            },
+            "maxItems": 2000,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          },
+          "job": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job"
+          },
+          "notes": {
+            "default": "",
+            "maxLength": 5000,
+            "title": "Notes",
+            "type": "string"
+          },
+          "spa_number": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Spa Number",
+            "type": "string"
+          },
+          "status": {
+            "default": "active",
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          },
+          "valid_from": {
+            "format": "date",
+            "title": "Valid From",
+            "type": "string"
+          },
+          "valid_to": {
+            "format": "date",
+            "title": "Valid To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "supplier_id",
+          "spa_number",
+          "valid_from",
+          "valid_to",
+          "claim_deadline_days",
+          "items"
+        ],
+        "title": "SpaIn",
+        "type": "object"
+      },
+      "SpaItemIn": {
+        "additionalProperties": false,
+        "properties": {
+          "book_cost": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Book Cost",
+            "type": "string"
+          },
+          "quantity_cap": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Cap"
+          },
+          "sku": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Sku",
+            "type": "string"
+          },
+          "spa_cost": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Spa Cost",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sku",
+          "book_cost",
+          "spa_cost"
+        ],
+        "title": "SpaItemIn",
+        "type": "object"
+      },
+      "SpaItemOut": {
+        "properties": {
+          "book_cost": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Book Cost",
+            "type": "string"
+          },
+          "quantity_cap": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Cap"
+          },
+          "sku": {
+            "title": "Sku",
+            "type": "string"
+          },
+          "spa_cost": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Spa Cost",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sku",
+          "book_cost",
+          "spa_cost",
+          "quantity_cap"
+        ],
+        "title": "SpaItemOut",
+        "type": "object"
+      },
+      "SpaMatchOut": {
+        "properties": {
+          "claim_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claim Id"
+          },
+          "claimable_amount": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Claimable Amount",
+            "type": "string"
+          },
+          "claimable_quantity": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Claimable Quantity",
+            "type": "string"
+          },
+          "customer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "invoice_date": {
+            "format": "date",
+            "title": "Invoice Date",
+            "type": "string"
+          },
+          "invoice_number": {
+            "title": "Invoice Number",
+            "type": "string"
+          },
+          "job": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job"
+          },
+          "line_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Number"
+          },
+          "quantity": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/SpaReasonOut"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "sale_line_id": {
+            "title": "Sale Line Id",
+            "type": "integer"
+          },
+          "sku": {
+            "title": "Sku",
+            "type": "string"
+          },
+          "spa_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spa Id"
+          },
+          "spa_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spa Number"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost"
+          },
+          "unit_difference": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Difference"
+          }
+        },
+        "required": [
+          "sale_line_id",
+          "supplier_id",
+          "invoice_number",
+          "line_number",
+          "invoice_date",
+          "customer",
+          "job",
+          "sku",
+          "quantity",
+          "unit_cost",
+          "spa_id",
+          "spa_number",
+          "status",
+          "reasons",
+          "claimable_quantity",
+          "claimable_amount",
+          "unit_difference",
+          "deadline",
+          "claim_id"
+        ],
+        "title": "SpaMatchOut",
+        "type": "object"
+      },
+      "SpaOut": {
+        "properties": {
+          "claim_deadline_days": {
+            "title": "Claim Deadline Days",
+            "type": "integer"
+          },
+          "customer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SpaItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "job": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "row_version": {
+            "title": "Row Version",
+            "type": "integer"
+          },
+          "spa_number": {
+            "title": "Spa Number",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          },
+          "valid_from": {
+            "format": "date",
+            "title": "Valid From",
+            "type": "string"
+          },
+          "valid_to": {
+            "format": "date",
+            "title": "Valid To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "supplier_id",
+          "spa_number",
+          "customer",
+          "job",
+          "valid_from",
+          "valid_to",
+          "claim_deadline_days",
+          "status",
+          "notes",
+          "row_version",
+          "items"
+        ],
+        "title": "SpaOut",
+        "type": "object"
+      },
+      "SpaReasonOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "SpaReasonOut",
+        "type": "object"
+      },
+      "SpaSummaryOut": {
+        "properties": {
+          "expiring_soon_lines": {
+            "title": "Expiring Soon Lines",
+            "type": "integer"
+          },
+          "needs_review_lines": {
+            "title": "Needs Review Lines",
+            "type": "integer"
+          },
+          "past_deadline_lines": {
+            "title": "Past Deadline Lines",
+            "type": "integer"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          },
+          "supplier_name": {
+            "title": "Supplier Name",
+            "type": "string"
+          },
+          "unclaimed_amount": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Unclaimed Amount",
+            "type": "string"
+          },
+          "unclaimed_lines": {
+            "title": "Unclaimed Lines",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "supplier_id",
+          "supplier_name",
+          "unclaimed_amount",
+          "unclaimed_lines",
+          "needs_review_lines",
+          "expiring_soon_lines",
+          "past_deadline_lines"
+        ],
+        "title": "SpaSummaryOut",
+        "type": "object"
+      },
+      "SpaTransitionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "credit_reference": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Credit Reference",
+            "type": "string"
+          },
+          "paid_amount": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid Amount"
+          },
+          "to": {
+            "enum": [
+              "submitted",
+              "paid",
+              "rejected"
+            ],
+            "title": "To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "to"
+        ],
+        "title": "SpaTransitionIn",
+        "type": "object"
+      },
+      "SpaUpdateIn": {
+        "additionalProperties": false,
+        "properties": {
+          "claim_deadline_days": {
+            "maximum": 730.0,
+            "minimum": 1.0,
+            "title": "Claim Deadline Days",
+            "type": "integer"
+          },
+          "customer": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SpaItemIn"
+            },
+            "maxItems": 2000,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          },
+          "job": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job"
+          },
+          "notes": {
+            "default": "",
+            "maxLength": 5000,
+            "title": "Notes",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "valid_from": {
+            "format": "date",
+            "title": "Valid From",
+            "type": "string"
+          },
+          "valid_to": {
+            "format": "date",
+            "title": "Valid To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "valid_from",
+          "valid_to",
+          "claim_deadline_days",
+          "status",
+          "items"
+        ],
+        "title": "SpaUpdateIn",
         "type": "object"
       },
       "SpendBasis": {
@@ -18624,6 +19400,672 @@
         "summary": "Run Results",
         "tags": [
           "runs"
+        ]
+      }
+    },
+    "/api/v1/spa-claims": {
+      "get": {
+        "operationId": "list_claims_api_v1_spa_claims_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "supplier_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supplier Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SpaClaimOut"
+                  },
+                  "title": "Response List Claims Api V1 Spa Claims Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Claims",
+        "tags": [
+          "spa"
+        ]
+      },
+      "post": {
+        "description": "A draft claim with every unclaimed OK line up to the date. Accepts Idempotency-Key.",
+        "operationId": "create_claim_api_v1_spa_claims_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpaClaimIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaClaimOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Claim",
+        "tags": [
+          "spa"
+        ]
+      }
+    },
+    "/api/v1/spa-claims/{claim_id}": {
+      "get": {
+        "operationId": "get_claim_api_v1_spa_claims__claim_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "claim_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Claim Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaClaimOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Claim",
+        "tags": [
+          "spa"
+        ]
+      }
+    },
+    "/api/v1/spa-claims/{claim_id}/evidence.csv": {
+      "get": {
+        "operationId": "claim_evidence_api_v1_spa_claims__claim_id__evidence_csv_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "claim_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Claim Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Claim Evidence",
+        "tags": [
+          "spa"
+        ]
+      }
+    },
+    "/api/v1/spa-claims/{claim_id}/lines": {
+      "get": {
+        "operationId": "claim_lines_api_v1_spa_claims__claim_id__lines_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "claim_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Claim Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SpaMatchOut"
+                  },
+                  "title": "Response Claim Lines Api V1 Spa Claims  Claim Id  Lines Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Claim Lines",
+        "tags": [
+          "spa"
+        ]
+      }
+    },
+    "/api/v1/spa-claims/{claim_id}/transition": {
+      "post": {
+        "operationId": "transition_claim_api_v1_spa_claims__claim_id__transition_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "claim_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Claim Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpaTransitionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaClaimOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Transition Claim",
+        "tags": [
+          "spa"
+        ]
+      }
+    },
+    "/api/v1/spa/matches": {
+      "get": {
+        "operationId": "spa_matches_api_v1_spa_matches_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "supplier_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supplier Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "ok",
+                    "needs_review",
+                    "not_claimable"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "unclaimed",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Unclaimed"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 500,
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SpaMatchOut"
+                  },
+                  "title": "Response Spa Matches Api V1 Spa Matches Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Spa Matches",
+        "tags": [
+          "spa"
+        ]
+      }
+    },
+    "/api/v1/spa/recalculate": {
+      "post": {
+        "description": "Match every unclaimed sale line again (background job).",
+        "operationId": "recalculate_api_v1_spa_recalculate_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Recalculate",
+        "tags": [
+          "spa"
+        ]
+      }
+    },
+    "/api/v1/spa/summary": {
+      "get": {
+        "operationId": "spa_summary_api_v1_spa_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SpaSummaryOut"
+                  },
+                  "title": "Response Spa Summary Api V1 Spa Summary Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Spa Summary",
+        "tags": [
+          "spa"
+        ]
+      }
+    },
+    "/api/v1/spas": {
+      "get": {
+        "operationId": "list_spas_api_v1_spas_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "supplier_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supplier Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SpaOut"
+                  },
+                  "title": "Response List Spas Api V1 Spas Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Spas",
+        "tags": [
+          "spa"
+        ]
+      },
+      "post": {
+        "operationId": "create_spa_api_v1_spas_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpaIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Spa",
+        "tags": [
+          "spa"
+        ]
+      }
+    },
+    "/api/v1/spas/{spa_id}": {
+      "get": {
+        "operationId": "get_spa_api_v1_spas__spa_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "spa_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Spa Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Spa",
+        "tags": [
+          "spa"
+        ]
+      },
+      "put": {
+        "operationId": "update_spa_api_v1_spas__spa_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "spa_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Spa Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpaUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Spa",
+        "tags": [
+          "spa"
         ]
       }
     },

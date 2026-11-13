@@ -12,6 +12,19 @@ Template:
 - Next step:
 -->
 
+## 2026-11-13 — Phase 17: ship-and-debit / SPA claims
+- Changed: sales-lines import type; SPA records + items; pure matcher `engine/spa.py`
+  (engine 1.2.0; 13 hand-worked/property tests); `spa_match` job (claimed lines frozen,
+  caps carried); SPA claims (draft → submitted → paid / partially paid / rejected),
+  evidence CSV, deadline alerts; migration 0010 (5 tables, RLS, import_type CHECK widened
+  NOT VALID + VALIDATE); page `/app/spa`. Tests: API (hand-worked), authz matrix, tenancy,
+  E2E + a11y/keyboard/screen reader. Load: 1M lines matched in 10.1 s.
+- Bug fixed (pre-existing): jobs enqueued inside a SAVEPOINT (import commit) were dispatched
+  before the real commit and lost until stale-job recovery (~5 min). Regression tests in
+  `tests/api/test_jobs_nested.py`.
+- Decisions (ADRs): 0017 §4 (book cost basis; COST_MISMATCH keeps the amount).
+- Next step: v1.1 report; Phase 11 waits for the hosting answer.
+
 ## 2026-11-13 — Phase 16: buying-group programs
 - Changed: engine 1.1.0 (`member_supplier_ids` on the version snapshot, omitted from the hash
   when empty; planner reads members' lines); golden fixtures 41–43; property tests (one-member

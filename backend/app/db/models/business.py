@@ -295,6 +295,7 @@ class ImportType(StrEnum):
     BASELINES = "baselines"
     PRODUCTS = "products"
     SUPPLIERS = "suppliers"
+    SALES = "sales"  # v1.1 Phase 17: sales lines for ship-and-debit / SPA claims
 
 
 class BatchStatus(StrEnum):
@@ -519,3 +520,117 @@ class AccrualExport(IdMixin, TenantMixin, Base):
     lines: Mapped[list[dict[str, Any]]] = mapped_column(default=list)
     created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey(f"{SCHEMA}.users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+# --------------------------------------------------------------------------- SPA / ship-and-debit (v1.1 Phase 17)
+
+
+class SaleLineRow(TenantMixin, Base):
+    """A line the distributor sold (contains customer names: tenant data, never logged)."""
+
+    __tablename__ = "sales_lines"
+    __table_args__ = (
+        Index("ix_sales_lines_supplier_date", "tenant_id", "supplier_id", "invoice_date"),
+        Index("ix_sales_lines_batch", "batch_id"),
+        Index(
+            "uq_sales_lines_dedupe",
+            "tenant_id",
+            "supplier_id",
+            "dedupe_key",
+            unique=True,
+            postgresql_where=text("NOT voided"),
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    batch_id: Mapped[uuid.UUID] = mapped_column(_fk("import_batches", "RESTRICT"))
+    source_row: Mapped[int] = mapped_column(Integer)
+    supplier_id: Mapped[uuid.UUID] = mapped_column(_fk("suppliers", "RESTRICT"))
+    dedupe_key: Mapped[bytes] = mapped_column(LargeBinary(32))
+    invoice_number: Mapped[str] = mapped_column(String(100))
+    line_number: Mapped[str | None] = mapped_column(String(50))
+    invoice_date: Mapped[date] = mapped_column(Date)
+    customer: Mapped[str | None] = mapped_column(String(200))
+    job: Mapped[str | None] = mapped_column(String(200))
+    sku: Mapped[str] = mapped_column(String(100))
+    quantity: Mapped[Decimal] = mapped_column(Numeric(18, 4))
+    unit_cost: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    sell_price: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    voided: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class Spa(IdMixin, TenantMixin, TimestampMixin, AuthorMixin, VersionedMixin, Base):
+    """A special pricing agreement: the supplier pays back (book cost − SPA cost) per unit sold."""
+
+    __tablename__ = "spas"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "supplier_id", "spa_number"),
+        _in("status", ["active", "inactive"]),
+    )
+
+    supplier_id: Mapped[uuid.UUID] = mapped_column(_fk("suppliers", "RESTRICT"))
+    spa_number: Mapped[str] = mapped_column(String(100))
+    customer: Mapped[str | None] = mapped_column(String(200))
+    job: Mapped[str | None] = mapped_column(String(200))
+    valid_from: Mapped[date] = mapped_column(Date)
+    valid_to: Mapped[date] = mapped_column(Date)
+    claim_deadline_days: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    notes: Mapped[str] = mapped_column(Text, default="")
+
+
+class SpaItem(IdMixin, TenantMixin, Base):
+    __tablename__ = "spa_items"
+    __table_args__ = (UniqueConstraint("spa_id", "sku"),)
+
+    spa_id: Mapped[uuid.UUID] = mapped_column(_fk("spas", "CASCADE"))
+    sku: Mapped[str] = mapped_column(String(100))
+    book_cost: Mapped[Decimal] = mapped_column(Numeric(18, 4))
+    spa_cost: Mapped[Decimal] = mapped_column(Numeric(18, 4))
+    quantity_cap: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+
+
+class SpaClaim(IdMixin, TenantMixin, TimestampMixin, AuthorMixin, VersionedMixin, Base):
+    __tablename__ = "spa_claims"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "number"),
+        _in("status", ["draft", "submitted", "paid", "partially_paid", "rejected"]),
+    )
+
+    number: Mapped[int] = mapped_column(Integer)
+    supplier_id: Mapped[uuid.UUID] = mapped_column(_fk("suppliers", "RESTRICT"))
+    status: Mapped[str] = mapped_column(String(20), default="draft")
+    total: Mapped[Decimal] = mapped_column(Numeric(18, 2))
+    line_count: Mapped[int] = mapped_column(Integer)
+    paid_amount: Mapped[Decimal | None] = mapped_column(Numeric(18, 2))
+    credit_reference: Mapped[str] = mapped_column(String(100), default="")
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    notes: Mapped[str] = mapped_column(Text, default="")
+
+
+class SpaMatchRow(TenantMixin, Base):
+    """Matcher output per sale line (rebuilt by the spa_match job, except lines in a claim)."""
+
+    __tablename__ = "spa_matches"
+    __table_args__ = (
+        Index("ix_spa_matches_status", "tenant_id", "supplier_id", "status"),
+        Index("ix_spa_matches_claim", "claim_id"),
+    )
+
+    sale_line_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey(f"{SCHEMA}.sales_lines.id", ondelete="CASCADE"), primary_key=True
+    )
+    supplier_id: Mapped[uuid.UUID] = mapped_column(_fk("suppliers", "RESTRICT"))
+    spa_id: Mapped[uuid.UUID | None] = mapped_column(_fk("spas", "SET NULL"))
+    status: Mapped[str] = mapped_column(String(20))
+    reasons: Mapped[list[dict[str, Any]]] = mapped_column(default=list)
+    claimable_quantity: Mapped[Decimal] = mapped_column(Numeric(18, 4))
+    claimable_amount: Mapped[Decimal] = mapped_column(Numeric(18, 2))
+    unit_difference: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    deadline: Mapped[date | None] = mapped_column(Date)
+    claim_id: Mapped[uuid.UUID | None] = mapped_column(_fk("spa_claims", "SET NULL"))
+    engine_version: Mapped[str] = mapped_column(String(20))
+    computed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

@@ -107,6 +107,11 @@ Server-side `PlatformAdminOnly`, 404 for others, optional IP allowlist, MFA
 mandatory, tenant business data only under an active time-boxed grant; every
 request under support access is audited in the tenant's log.
 
+### SPA claims (v1.1 Phase 17)
+Sales lines and SPAs add customer and job names. Same controls as purchase data: RLS on
+`sales_lines`, `spas`, `spa_items`, `spa_claims`, `spa_matches`; cross-tenant matrix tests;
+never logged (IDs only); included in the full data export; evidence CSV neutralises formulas.
+
 ## Open risks
 
 All risks below were accepted by the founder on 2026-11-13 (ADR 0016).

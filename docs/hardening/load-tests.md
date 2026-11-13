@@ -89,3 +89,16 @@ unchanged.** Options that were considered:
 
 A cache was rejected: the tracker depends on imports, voids, supplier merges, versions and
 baselines, and a stale tier estimate on a finance dashboard costs more trust than 0.7 s.
+
+## 4. SPA matcher at 1,000,000 sales lines (v1.1 Phase 17)
+
+`backend/scripts/spa_match_load_test.py --rows 1000000` (200 SPAs, 2,000 SKUs, pure matcher):
+
+| Version | Match time | Note |
+|---|---|---|
+| First version (every line checked against every SPA) | 32.2 s | |
+| SPAs indexed by SKU (same results, tests unchanged) | 10.1 s | |
+
+Peak RSS 934 MB is the benchmark process itself (it builds 1M input and 1M result
+objects at once). The `spa_match` job loads sales lines as column tuples per supplier and
+inserts results in chunks of 5,000. Re-measure the job end to end on staging (Phase 11).

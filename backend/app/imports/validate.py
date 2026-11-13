@@ -191,7 +191,10 @@ class RowValidator:
                 "UNKNOWN_SUPPLIER",
                 "Supplier code is not mapped to a supplier.",
             )
-        elif self.ctx.import_type is ImportType.PURCHASES and sid in self.ctx.buying_groups:
+        elif (
+            self.ctx.import_type in (ImportType.PURCHASES, ImportType.SALES)
+            and sid in self.ctx.buying_groups
+        ):
             self._issue(
                 r,
                 "supplier_code",
@@ -320,6 +323,48 @@ class RowValidator:
             "category": category,
             "flags": flags,
             "is_return": is_return,
+            "dedupe_key": hashlib.sha256(key_src.encode()).digest(),
+        }
+
+    def _row_sales(self, r: RowResult, cells: list[str]) -> dict[str, Any]:
+        supplier = self._supplier(r, cells)
+        invoice = self._text(r, cells, "invoice_number", True)
+        line_no = self._text(r, cells, "line_number", False, 50)
+        invoice_date = self._date(r, cells, "invoice_date", True)
+        customer = self._text(r, cells, "customer", False, 200)
+        job = self._text(r, cells, "job", False, 200)
+        sku = self._text(r, cells, "sku", True)
+        qty = self._decimal(r, cells, "quantity", True)
+        cost = self._decimal(r, cells, "unit_cost", False)
+        price = self._decimal(r, cells, "sell_price", False)
+        if sku and looks_like_scientific(sku):
+            self._issue(
+                r,
+                "sku",
+                sku,
+                "SKU_SCIENTIFIC",
+                "Looks like Excel scientific notation; the source file may have been corrupted by Excel.",
+                "warning",
+            )
+        key_src = (
+            f"L|{invoice}|{line_no}"
+            if line_no
+            else "H|"
+            + "|".join(
+                str(x) for x in (invoice, invoice_date, customer, job, sku, qty, cost, price)
+            )
+        )
+        return {
+            "supplier_id": supplier,
+            "invoice_number": invoice,
+            "line_number": line_no,
+            "invoice_date": invoice_date,
+            "customer": customer,
+            "job": job,
+            "sku": sku,
+            "quantity": qty,
+            "unit_cost": cost,
+            "sell_price": price,
             "dedupe_key": hashlib.sha256(key_src.encode()).digest(),
         }
 

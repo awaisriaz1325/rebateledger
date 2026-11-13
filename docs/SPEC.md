@@ -579,6 +579,30 @@ Unallocated credits appear in an **Unmatched credits** queue.
 
 ---
 
+### 4.17 Ship-and-debit / SPA claims (v1.1, ADR 0017 §4)
+- **Sales lines** import type: supplier code, invoice number, line number, invoice date,
+  customer, job, SKU, quantity, unit cost at sale, sell price. Same pipeline (validation,
+  dedupe, void, error report). Purchases or sales under a buying-group code are rejected.
+- **SPA records:** supplier, SPA number (unique per supplier), optional customer and job,
+  validity dates, claim deadline (days after the sale, required — no default), items (SKU,
+  book cost > 0, SPA cost ≥ 0, optional quantity cap). Edits use If-Match.
+- **Matcher** (pure, `app/engine/spa.py`, engine 1.2.0): claim = (book cost − SPA cost) ×
+  quantity, rounded half-up per line. NEEDS_REVIEW, never guessed: `MULTIPLE_SPAS`,
+  `CUSTOMER_MISSING`, `JOB_MISSING`, `SPA_COST_NOT_BELOW_BOOK`, `RETURN` (negative amount
+  shown, cap untouched), `COST_MISMATCH` (amount stays on book cost). Caps are consumed in
+  (invoice date, line) order after quantities already claimed; `CAP_PARTIAL` / `CAP_REACHED`.
+  Customer and job compare case- and space-insensitively.
+- **Matching job** `spa_match` after a sales import, a void, a SPA change, a rejected claim
+  or on request. Lines in an open claim are frozen (never re-matched).
+- **Claims:** draft with every unclaimed OK line of a supplier up to a date (Idempotency-Key);
+  draft → submitted → paid / partially paid (amount + credit memo reference) or rejected
+  (lines released). Evidence CSV (formula-safe). If-Match on transitions.
+- **Alerts:** daily `spa_deadline` notification when unclaimed OK lines reach their claim
+  deadline within 14 days. Summary per supplier: unclaimed amount, review count, expiring,
+  past deadline.
+- **Data protection:** sales lines and SPAs hold customer and job names (tenant data):
+  RLS, included in the full data export, never logged.
+
 ## 5. Data model (minimum)
 
 Common columns on tenant tables: `id` (UUID; v7 if natively supported by the chosen

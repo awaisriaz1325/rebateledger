@@ -15,6 +15,7 @@ const TYPES = [
   { value: "baselines", label: "Baselines", help: "Baseline measures for growth agreements, per agreement and period." },
   { value: "products", label: "Product catalog", help: "SKU to category mapping." },
   { value: "suppliers", label: "Suppliers", help: "Bulk-create suppliers and their codes." },
+  { value: "sales", label: "Sales lines (SPA claims)", help: "What you sold under special pricing: supplier code, invoice, date, customer, job, SKU, quantity, cost." },
 ] as const;
 
 export default function NewImportPage() {

@@ -35,6 +35,7 @@ ALERT_TYPES = {
     "import_finished": "Import finished",
     "export_ready": "Export ready",
     "weekly_digest": "Weekly tier opportunities",
+    "spa_deadline": "SPA claim deadlines",
 }
 UNSUBSCRIBE_TTL = 365 * 24 * 3600
 
