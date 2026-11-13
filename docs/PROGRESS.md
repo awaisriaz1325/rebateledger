@@ -12,6 +12,17 @@ Template:
 - Next step:
 -->
 
+## 2026-11-13 — Phase 10 follow-up: decisions, keyboard and screen-reader pass
+- Changed: keyboard spec (40 tests) and screen-reader spec (34 tests). Fixes they found:
+  distinct page titles on all app routes (29 title layouts), which also makes route changes
+  announced; focus returns to the opener when dialogs, drawers and the palette close;
+  `scroll-padding-top` so focused items are not hidden under the sticky header. Ops E2E
+  race fixed (waits for the issued invoice number). E2E 136/136.
+- Decisions (ADRs): 0016 — 0.7 s accepted, engine unchanged, backup RPO 5 min / RTO 4 h
+  approved, no third-party pentest, HIBP not enabled, remaining risks accepted.
+- Open questions: hosting for Phase 11 (founder says staging and production VMs are live).
+- Next step: Phase 11 after the hosting answer.
+
 ## 2026-11-12 — Phase 9: marketing website
 - Changed: public site (Home, How it works, Features, Security, Pricing from the plan catalog,
   About, Contact, Request a pilot, hidden Blog, legal templates with [LEGAL REVIEW REQUIRED],

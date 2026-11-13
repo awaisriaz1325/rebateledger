@@ -30,11 +30,11 @@ The restore also re-creates RLS policies, invoice-immutability triggers and the
 
 | Item | Plan | Target |
 |---|---|---|
-| Backups | Cloud SQL automated daily backups + point-in-time recovery (WAL), 7-day retention minimum [PROPOSED] | RPO ≤ 5 min (PITR) |
-| Restore drill | Quarterly: clone to a new instance at a timestamp, run this script's row-count and audit-chain checks against the clone | RTO ≤ 4 h [PROPOSED] |
+| Backups | Cloud SQL automated daily backups + point-in-time recovery (WAL), 7-day retention minimum (approved, ADR 0016) | RPO ≤ 5 min (PITR) |
+| Restore drill | Quarterly: clone to a new instance at a timestamp, run this script's row-count and audit-chain checks against the clone | RTO ≤ 4 h (approved, ADR 0016) |
 | Object storage | GCS bucket with object versioning and a retention policy for uploads and exports | — |
 | Encryption | Google-managed keys at rest. CMEK is a founder decision (cost) | — |
 | Ownership | Runbook `docs/runbooks/restore.md` (Phase 11) | — |
 
-The RPO and RTO above are proposals; SPEC §11 does not set them. They are listed under
-Undecided in the Phase 10 report.
+SPEC §11 does not set RPO or RTO. The founder approved the values above on 2026-11-13
+(ADR 0016).

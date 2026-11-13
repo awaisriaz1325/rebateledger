@@ -108,6 +108,9 @@ mandatory, tenant business data only under an active time-boxed grant; every
 request under support access is audited in the tenant's log.
 
 ## Open risks
+
+All risks below were accepted by the founder on 2026-11-13 (ADR 0016).
+
 - Offline breached-password list is small (1.2k entries ≥ 12 chars). Medium.
   Safer: enable HIBP range API (k-anonymity) in the worker or via an ADR
   allowing this single outbound call from the request path.

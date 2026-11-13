@@ -76,8 +76,8 @@ landing pages. They miss 500 ms by about 200 ms.
 
 The rest of the tier-tracker time is inside the pure engine: it sorts lines by a canonical
 SHA-256 for deterministic traces and the input hash. Changing that would change result
-hashes, so the engine was left alone. Options (founder decision; Undecided in the Phase 10
-report):
+hashes, so the engine was left alone. **Decision (ADR 0016, 2026-11-13): option 1, accepted; the engine is
+unchanged.** Options that were considered:
 
 1. **Accept** about 0.7 s for these two aggregate pages (they show skeletons while loading).
 2. **Precompute** tier-tracker rows in a background job after each import commit, version

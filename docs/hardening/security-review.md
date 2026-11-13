@@ -2,8 +2,7 @@
 
 Date: 2026-11-12. Scope: the whole repository at the Phase 10 commit, running on the local
 stack. Reviewer: Claude Code (automated plus manual reading). **This is not a third-party
-penetration test.** Before launch, a founder decision is needed on whether to buy one (see
-"Not covered").
+penetration test**, and none will be bought for launch (ADR 0016).
 
 ## 1. Findings
 
@@ -13,9 +12,9 @@ penetration test.** Before launch, a founder decision is needed on whether to bu
 | F2 | `/credits/unmatched` ran 2 queries per credit (N+1). At 100k credits one request ran for more than 10 minutes, so any analyst could tie up a DB connection and an API worker (denial of service). | High | **Fixed** | `backend/app/services/reconciliation.py::unmatched`: one grouped allocation subquery, one allocations query, `limit` 1–2000 (default 500). Now p95 96 ms at 100k credits. Test: `test_hardening.py::test_unmatched_credits_query_count_does_not_grow_with_credits` |
 | F3 | If Redis was down when a request committed, the after-commit job dispatch raised. The client got a 500 for work that *was* committed, and the job stayed `queued` forever. | Medium | **Fixed** | `backend/app/workers/jobs.py`: dispatch failures are logged (`job_dispatch_failed`, job id only), and `recover_stale` re-dispatches queued jobs older than 5 minutes. Test: `tests/api/test_jobs_platform.py::test_broker_outage_at_commit_keeps_the_request_ok_and_the_job_recoverable` |
 | F4 | Tier tracker and dashboard loaded every purchase line of the supplier from January of the previous year as ORM entities (≈ 4 s at 100k lines). | Medium (performance; a repeated-request load vector) | **Mitigated** | Column-tuple loading and a look-back bounded to what the engine can read (`agreements.lines_needed_from`): 5.6 s → 1.4 s. Still above the 500 ms [PROPOSED TARGET]. See `load-tests.md` §3; precomputation is proposed for Phase 11 |
-| F5 | Offline breached-password list is small. | Medium | Open: founder decision | HIBP k-anonymity needs an ADR that allows one outbound call from a request path (`.claude/rules/backend.md` forbids it today) |
+| F5 | Offline breached-password list is small. | Medium | Accepted (ADR 0016: stays offline) | HIBP k-anonymity needs an ADR that allows one outbound call from a request path (`.claude/rules/backend.md` forbids it today) |
 | F6 | Rate limits fail closed when Redis is unavailable, so logins are refused during a Redis outage. | Low/Medium | Accepted (safer failure mode) | Drill D: Redis back in < 5 s. Phase 11 uses Memorystore with HA |
-| F7 | No per-user rate limit on export creation. Exports are queued and bounded by the plan's limits, but one user could queue many. | Low | Open | Add with Phase 11 quotas |
+| F7 | No per-user rate limit on export creation. Exports are queued and bounded by the plan's limits, but one user could queue many. | Low | Accepted (ADR 0016) | Add with Phase 11 quotas |
 | F9 | API responses carry `server: uvicorn` | Low | Open (Phase 11) | `--no-server-header` in the container command |
 | F8 | `pnpm audit`: 1 moderate (`minimatch` ReDoS, pulled in by the ESLint toolchain, dev-only, not shipped to browsers or the server bundle). | Low | Accepted | Re-check when ESLint ships the patched range |
 
@@ -91,6 +90,6 @@ No finding was rated Unsafe. All High findings are fixed.
 
 ## Not covered
 
-- Third-party penetration test (founder decision; cost).
+- Third-party penetration test: not bought (founder decision, ADR 0016). Do not claim one.
 - TLS configuration, HSTS preload, Cloud Armor rules: verified on staging in Phase 11.
 - Container base-image CVEs: Phase 11.
