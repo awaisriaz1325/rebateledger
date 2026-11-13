@@ -12,6 +12,16 @@ Template:
 - Next step:
 -->
 
+## 2026-11-13 — Phase 13: deal modelling
+- Changed: `POST /api/v1/deal-models/evaluate` (stateless, read-only; same permission as
+  editing agreements) running 1–4 proposed term sets through the engine over ≤ 24 months of
+  real purchases, with ±10/20% sensitivity; page `/app/agreements/model` with side-by-side
+  comparison, CSV export and "create agreement draft"; TermsEditor ids made unique per
+  instance; nav highlights the most specific item. Tests: hand-worked API tests, component,
+  E2E + axe/keyboard/screen-reader.
+- Decisions: stateless instead of a saved-scenarios table (smaller, no new tenant data).
+- Next step: Phase 14 (weekly buyer digest).
+
 ## 2026-11-13 — Phase 12: ERP import template packs
 - Changed: 11 read-only ERP report presets (`backend/app/imports/presets.py`: Prophet 21,
   Eclipse, Infor CSD, NetSuite, Acumatica, QuickBooks Online/Desktop; purchases and credits);

@@ -258,6 +258,19 @@ are excluded with reason `ATTRIBUTE_MISSING` and counted in the trace.
 - Version history with a side-by-side diff of terms.
 - Attach the source agreement document (PDF/DOCX/XLSX/image) for reference.
 
+#### 4.4.6 Deal modelling (v1.1, ADR 0017)
+- Compare one to four proposed term sets for one supplier against a historical window of
+  at most 24 months of its imported purchases. Read-only; nothing is saved.
+- Each option is run by the same pure engine as a real calculation, over every whole
+  period inside the window (the option's own effective dates are ignored for modelling).
+  Custom periods are not supported here.
+- Output per option: per-period expected rebate and tier reached, total, eligible spend,
+  effective rate, and sensitivity at −20%, −10%, +10% and +20% spend. Sensitivity scales
+  only lines whose basis date is inside the window, never prior-period baselines.
+- Periods that need review are shown and left out of totals, with a warning. Everything
+  is labelled **estimate**. An option can be saved as a normal agreement draft.
+- Permission: same as editing agreements.
+
 ### 4.5 Data imports
 
 #### 4.5.1 Import types

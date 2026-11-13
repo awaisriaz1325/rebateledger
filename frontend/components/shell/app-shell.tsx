@@ -2,6 +2,7 @@
 
 import {
   BookOpenCheck,
+  Calculator,
   Building2,
   ChartColumn,
   FileSpreadsheet,
@@ -54,6 +55,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
     items: [
       { href: "/app/suppliers", label: "Suppliers", icon: <Building2 size={16} /> },
       { href: "/app/agreements", label: "Agreements", icon: <FileText size={16} /> },
+      { href: "/app/agreements/model", label: "Deal modelling", icon: <Calculator size={16} />, permission: "edit_agreements" },
       { href: "/app/imports", label: "Imports", icon: <FileSpreadsheet size={16} /> },
     ],
   },
@@ -150,6 +152,11 @@ function Shell({ session, children }: { session: SessionInfo; children: ReactNod
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Highlight only the most specific matching item (e.g. Deal modelling, not also Agreements).
+  const activeHref = NAV.flatMap((g) => g.items)
+    .map((i) => i.href)
+    .filter((h) => (h === "/app" ? pathname === "/app" : pathname === h || pathname.startsWith(`${h}/`)))
+    .sort((a, b) => b.length - a.length)[0];
   return (
     <div className="flex min-h-screen">
       <a href="#main" className="sr-only-focusable fixed top-2 left-2 z-50 rounded bg-brand px-3 py-2 text-on-brand">
@@ -172,7 +179,7 @@ function Shell({ session, children }: { session: SessionInfo; children: ReactNod
               <p className="px-2 pb-1 text-[11px] font-semibold tracking-wide text-muted uppercase">{group.section}</p>
               <ul>
                 {group.items.filter((i) => !i.permission || can(session, i.permission)).map((item) => {
-                  const active = item.href === "/app" ? pathname === "/app" : pathname.startsWith(item.href);
+                  const active = item.href === activeHref;
                   return (
                     <li key={item.href}>
                       <Link
@@ -350,7 +357,7 @@ function SupportGrantBanner({ session }: { session: SessionInfo }) {
 const LABELS: Record<string, string> = {
   app: "Dashboard", suppliers: "Suppliers", agreements: "Agreements", imports: "Imports", runs: "Runs", results: "Results",
   discrepancies: "Discrepancies", credits: "Credits", claims: "Claims", tiers: "Tier tracker", settings: "Settings", reports: "Reports",
-  approvals: "Approvals", new: "New", profile: "Profile", security: "Security", organization: "Organization", members: "Members",
+  approvals: "Approvals", new: "New", model: "Deal modelling", profile: "Profile", security: "Security", organization: "Organization", members: "Members",
   reconciliation: "Reconciliation", notifications: "Notifications", templates: "Import templates", plan: "Plan & usage", audit: "Audit log", data: "Data",
 };
 

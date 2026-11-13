@@ -7,7 +7,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Button, Card, Checkbox, Field, Input, Notice, Select } from "@/components/ui/core";
 import { api, unwrap } from "@/lib/api";
 import type { Terms } from "@/lib/types";
@@ -66,37 +66,39 @@ export function TermsEditor({ value, onChange }: { value: Terms; onChange: (t: T
   });
   const set = <K extends keyof Terms>(k: K, v: Terms[K]) => onChange({ ...value, [k]: v });
   const opt = (s: string) => (s.trim() === "" ? null : s.trim());
+  // Unique per editor so several editors on one page (deal modelling) never share ids.
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_380px]">
       <div className="flex flex-col gap-6">
         <Card title="When and how it is measured">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field id="t-from" label="Effective from" required><Input id="t-from" type="date" value={value.effective_from} onChange={(e) => set("effective_from", e.target.value)} /></Field>
-            <Field id="t-to" label="Effective to" hint="Leave empty if open-ended."><Input id="t-to" type="date" value={value.effective_to ?? ""} onChange={(e) => set("effective_to", e.target.value || null)} /></Field>
-            <Field id="t-period" label="Period">
-              <Select id="t-period" value={value.period_type} onChange={(e) => set("period_type", e.target.value as Terms["period_type"])}>
+            <Field id={`${uid}-from`} label="Effective from" required><Input id={`${uid}-from`} type="date" value={value.effective_from} onChange={(e) => set("effective_from", e.target.value)} /></Field>
+            <Field id={`${uid}-to`} label="Effective to" hint="Leave empty if open-ended."><Input id={`${uid}-to`} type="date" value={value.effective_to ?? ""} onChange={(e) => set("effective_to", e.target.value || null)} /></Field>
+            <Field id={`${uid}-period`} label="Period">
+              <Select id={`${uid}-period`} value={value.period_type} onChange={(e) => set("period_type", e.target.value as Terms["period_type"])}>
                 <option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="semiannual">Half-yearly</option><option value="annual">Annual</option><option value="custom">Custom periods</option>
               </Select>
             </Field>
-            <div className="flex items-end pb-2"><Checkbox id="t-fiscal" label="Align periods to our fiscal year" checked={value.fiscal_aligned} onChange={(e) => set("fiscal_aligned", e.target.checked)} /></div>
-            <Field id="t-basis" label="Date that decides the period">
-              <Select id="t-basis" value={value.date_basis} onChange={(e) => set("date_basis", e.target.value as Terms["date_basis"])}>
+            <div className="flex items-end pb-2"><Checkbox id={`${uid}-fiscal`} label="Align periods to our fiscal year" checked={value.fiscal_aligned} onChange={(e) => set("fiscal_aligned", e.target.checked)} /></div>
+            <Field id={`${uid}-basis`} label="Date that decides the period">
+              <Select id={`${uid}-basis`} value={value.date_basis} onChange={(e) => set("date_basis", e.target.value as Terms["date_basis"])}>
                 <option value="invoice_date">Invoice date</option><option value="ship_date">Ship date</option><option value="receipt_date">Receipt date</option>
               </Select>
             </Field>
-            <Field id="t-measure" label="Tiers are tested against">
-              <Select id="t-measure" value={value.measure} onChange={(e) => set("measure", e.target.value as Terms["measure"])}>
+            <Field id={`${uid}-measure`} label="Tiers are tested against">
+              <Select id={`${uid}-measure`} value={value.measure} onChange={(e) => set("measure", e.target.value as Terms["measure"])}>
                 <option value="spend">Eligible spend</option><option value="quantity">Eligible units</option>
               </Select>
             </Field>
-            <Field id="t-spend-basis" label="Do returns reduce the measure?">
-              <Select id="t-spend-basis" value={value.spend_basis} onChange={(e) => set("spend_basis", e.target.value as Terms["spend_basis"])}>
+            <Field id={`${uid}-spend-basis`} label="Do returns reduce the measure?">
+              <Select id={`${uid}-spend-basis`} value={value.spend_basis} onChange={(e) => set("spend_basis", e.target.value as Terms["spend_basis"])}>
                 <option value="net_of_returns">Yes — net of returns</option><option value="gross">No — gross purchases</option>
               </Select>
             </Field>
-            <Field id="t-cmp" label="A threshold is met when the measure is">
-              <Select id="t-cmp" value={value.threshold_comparison} onChange={(e) => set("threshold_comparison", e.target.value as Terms["threshold_comparison"])}>
+            <Field id={`${uid}-cmp`} label="A threshold is met when the measure is">
+              <Select id={`${uid}-cmp`} value={value.threshold_comparison} onChange={(e) => set("threshold_comparison", e.target.value as Terms["threshold_comparison"])}>
                 <option value="gte">At least the threshold (≥)</option><option value="gt">More than the threshold (&gt;)</option>
               </Select>
             </Field>
@@ -107,7 +109,7 @@ export function TermsEditor({ value, onChange }: { value: Terms; onChange: (t: T
         <Card title="What it pays" actions={<Button size="sm" variant="secondary" onClick={() => set("components", [...value.components, { key: `c${value.components.length + 1}`, type: "flat_percent", rate: "0.01", tiers: [] }])}><Plus size={14} aria-hidden="true" /> Add component</Button>}>
           <div className="flex flex-col gap-4">
             {value.components.map((c, i) => (
-              <ComponentEditor key={i} index={i} value={c} measure={value.measure}
+              <ComponentEditor key={i} prefix={uid} index={i} value={c} measure={value.measure}
                 onChange={(nc) => set("components", value.components.map((x, j) => (j === i ? nc : x)))}
                 onRemove={value.components.length > 1 ? () => set("components", value.components.filter((_, j) => j !== i)) : undefined} />
             ))}
@@ -118,37 +120,37 @@ export function TermsEditor({ value, onChange }: { value: Terms; onChange: (t: T
           {(value.eligibility ?? []).length === 0 ? <p className="text-sm text-muted">All purchases from this supplier count. Add rules to include or exclude SKUs, categories, branches or flagged lines. Exclude rules win over include rules.</p> : null}
           <div className="flex flex-col gap-3">
             {(value.eligibility ?? []).map((r, i) => (
-              <RuleEditor key={i} index={i} value={r} onChange={(nr) => set("eligibility", (value.eligibility ?? []).map((x, j) => (j === i ? nr : x)))} onRemove={() => set("eligibility", (value.eligibility ?? []).filter((_, j) => j !== i))} />
+              <RuleEditor key={i} prefix={uid} index={i} value={r} onChange={(nr) => set("eligibility", (value.eligibility ?? []).map((x, j) => (j === i ? nr : x)))} onRemove={() => set("eligibility", (value.eligibility ?? []).filter((_, j) => j !== i))} />
             ))}
           </div>
         </Card>
 
         <Card title="Limits, rounding and payment">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field id="t-cap" label="Cap per period (USD)" hint="Optional"><Input id="t-cap" inputMode="decimal" value={value.cap_amount ?? ""} onChange={(e) => set("cap_amount", opt(e.target.value))} /></Field>
-            <Field id="t-min" label="Minimum payout (USD)" hint="Below this the period pays nothing. Optional."><Input id="t-min" inputMode="decimal" value={value.minimum_payout ?? ""} onChange={(e) => set("minimum_payout", opt(e.target.value))} /></Field>
-            <Field id="t-neg" label="If the result is negative">
-              <Select id="t-neg" value={value.negative_result} onChange={(e) => set("negative_result", e.target.value as Terms["negative_result"])}>
+            <Field id={`${uid}-cap`} label="Cap per period (USD)" hint="Optional"><Input id={`${uid}-cap`} inputMode="decimal" value={value.cap_amount ?? ""} onChange={(e) => set("cap_amount", opt(e.target.value))} /></Field>
+            <Field id={`${uid}-min`} label="Minimum payout (USD)" hint="Below this the period pays nothing. Optional."><Input id={`${uid}-min`} inputMode="decimal" value={value.minimum_payout ?? ""} onChange={(e) => set("minimum_payout", opt(e.target.value))} /></Field>
+            <Field id={`${uid}-neg`} label="If the result is negative">
+              <Select id={`${uid}-neg`} value={value.negative_result} onChange={(e) => set("negative_result", e.target.value as Terms["negative_result"])}>
                 <option value="floor_at_zero">Pay nothing (floor at zero)</option><option value="allow_clawback">Owe it back (clawback)</option>
               </Select>
             </Field>
-            <Field id="t-round" label="Rounding (2 decimals, once at the end)">
-              <Select id="t-round" value={value.rounding_mode} onChange={(e) => set("rounding_mode", e.target.value as Terms["rounding_mode"])}>
+            <Field id={`${uid}-round`} label="Rounding (2 decimals, once at the end)">
+              <Select id={`${uid}-round`} value={value.rounding_mode} onChange={(e) => set("rounding_mode", e.target.value as Terms["rounding_mode"])}>
                 <option value="half_up">Half up</option><option value="half_even">Half even (banker&rsquo;s)</option>
               </Select>
             </Field>
-            <Field id="t-terms" label="Credit expected within (days after period end)"><Input id="t-terms" inputMode="numeric" value={String(value.payment_terms_days)} onChange={(e) => set("payment_terms_days", Number.parseInt(e.target.value || "0", 10) || 0)} /></Field>
-            <Field id="t-stack" label="May a purchase also count toward this supplier's other agreements?">
-              <Select id="t-stack" value={value.stacking} onChange={(e) => set("stacking", e.target.value as Terms["stacking"])}>
+            <Field id={`${uid}-terms`} label="Credit expected within (days after period end)"><Input id={`${uid}-terms`} inputMode="numeric" value={String(value.payment_terms_days)} onChange={(e) => set("payment_terms_days", Number.parseInt(e.target.value || "0", 10) || 0)} /></Field>
+            <Field id={`${uid}-stack`} label="May a purchase also count toward this supplier's other agreements?">
+              <Select id={`${uid}-stack`} value={value.stacking} onChange={(e) => set("stacking", e.target.value as Terms["stacking"])}>
                 <option value="stackable">Yes (stackable)</option><option value="exclusive">No (exclusive)</option>
               </Select>
             </Field>
-            <Field id="t-zero" label="Growth with a zero baseline">
-              <Select id="t-zero" value={value.zero_baseline_policy} onChange={(e) => set("zero_baseline_policy", e.target.value as Terms["zero_baseline_policy"])}>
+            <Field id={`${uid}-zero`} label="Growth with a zero baseline">
+              <Select id={`${uid}-zero`} value={value.zero_baseline_policy} onChange={(e) => set("zero_baseline_policy", e.target.value as Terms["zero_baseline_policy"])}>
                 <option value="needs_review">Ask me (needs review)</option><option value="qualifies">Counts as growth</option><option value="does_not_qualify">Does not qualify</option>
               </Select>
             </Field>
-            <div className="flex items-end pb-2"><Checkbox id="t-prorate" label="Prorate thresholds in partial periods" checked={value.prorate_thresholds_on_partial_period} onChange={(e) => set("prorate_thresholds_on_partial_period", e.target.checked)} /></div>
+            <div className="flex items-end pb-2"><Checkbox id={`${uid}-prorate`} label="Prorate thresholds in partial periods" checked={value.prorate_thresholds_on_partial_period} onChange={(e) => set("prorate_thresholds_on_partial_period", e.target.checked)} /></div>
           </div>
         </Card>
       </div>
@@ -174,8 +176,8 @@ export function useTermsValid(value: Terms): boolean | undefined {
   return check.data?.valid;
 }
 
-function ComponentEditor({ index, value, measure, onChange, onRemove }: { index: number; value: Component; measure: Terms["measure"]; onChange: (c: Component) => void; onRemove?: () => void }) {
-  const id = `comp-${index}`;
+function ComponentEditor({ prefix, index, value, measure, onChange, onRemove }: { prefix: string; index: number; value: Component; measure: Terms["measure"]; onChange: (c: Component) => void; onRemove?: () => void }) {
+  const id = `${prefix}-comp-${index}`;
   const tiered = value.type === "tiered_all_units" || value.type === "tiered_incremental";
   const growth = value.type === "growth_incremental" || value.type === "growth_threshold";
   const perUnitTiers = value.type === "tiered_incremental" ? measure === "quantity" : (value.tiers ?? []).some((t) => t.amount_per_unit != null);
@@ -245,8 +247,8 @@ function ComponentEditor({ index, value, measure, onChange, onRemove }: { index:
   );
 }
 
-function RuleEditor({ index, value, onChange, onRemove }: { index: number; value: Rule; onChange: (r: Rule) => void; onRemove: () => void }) {
-  const id = `rule-${index}`;
+function RuleEditor({ prefix, index, value, onChange, onRemove }: { prefix: string; index: number; value: Rule; onChange: (r: Rule) => void; onRemove: () => void }) {
+  const id = `${prefix}-rule-${index}`;
   return (
     <div className="grid grid-cols-1 items-end gap-3 rounded-md border border-rule p-3 sm:grid-cols-[1fr_1fr_2fr_auto]">
       <Field id={`${id}-action`} label="Action">

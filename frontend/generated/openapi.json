@@ -2703,6 +2703,76 @@
         "title": "DateBasis",
         "type": "string"
       },
+      "DealModelIn": {
+        "additionalProperties": false,
+        "properties": {
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/OptionIn"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Options",
+            "type": "array"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          },
+          "window_end": {
+            "format": "date",
+            "title": "Window End",
+            "type": "string"
+          },
+          "window_start": {
+            "format": "date",
+            "title": "Window Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "supplier_id",
+          "window_start",
+          "window_end",
+          "options"
+        ],
+        "title": "DealModelIn",
+        "type": "object"
+      },
+      "DealModelOut": {
+        "properties": {
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/OptionOut"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "window_end": {
+            "format": "date",
+            "title": "Window End",
+            "type": "string"
+          },
+          "window_start": {
+            "format": "date",
+            "title": "Window Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "window_start",
+          "window_end",
+          "engine_version",
+          "options"
+        ],
+        "title": "DealModelOut",
+        "type": "object"
+      },
       "DecisionIn": {
         "additionalProperties": false,
         "properties": {
@@ -4201,6 +4271,93 @@
         "title": "MfaVerifyIn",
         "type": "object"
       },
+      "ModelPeriodOut": {
+        "properties": {
+          "end": {
+            "format": "date",
+            "title": "End",
+            "type": "string"
+          },
+          "expected": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "measure": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Measure",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReasonOut"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "spend": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Spend",
+            "type": "string"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          },
+          "statuses": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Statuses",
+            "type": "array"
+          },
+          "tier_reached": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier Reached"
+          }
+        },
+        "required": [
+          "label",
+          "start",
+          "end",
+          "expected",
+          "spend",
+          "measure",
+          "tier_reached",
+          "statuses",
+          "reasons"
+        ],
+        "title": "ModelPeriodOut",
+        "type": "object"
+      },
       "NegativeResult": {
         "enum": [
           "floor_at_zero",
@@ -4384,6 +4541,99 @@
           "link"
         ],
         "title": "OpenClaims",
+        "type": "object"
+      },
+      "OptionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "terms": {
+            "$ref": "#/components/schemas/VersionTermsIn"
+          }
+        },
+        "required": [
+          "label",
+          "terms"
+        ],
+        "title": "OptionIn",
+        "type": "object"
+      },
+      "OptionOut": {
+        "properties": {
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "effective_rate": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective Rate"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "periods": {
+            "items": {
+              "$ref": "#/components/schemas/ModelPeriodOut"
+            },
+            "title": "Periods",
+            "type": "array"
+          },
+          "sensitivity": {
+            "items": {
+              "$ref": "#/components/schemas/SensitivityOut"
+            },
+            "title": "Sensitivity",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "total_expected": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Total Expected",
+            "type": "string"
+          },
+          "total_spend": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Total Spend",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "summary",
+          "total_expected",
+          "total_spend",
+          "effective_rate",
+          "complete",
+          "periods",
+          "sensitivity"
+        ],
+        "title": "OptionOut",
         "type": "object"
       },
       "OrgOut": {
@@ -7535,6 +7785,37 @@
           }
         },
         "title": "SecuritySettingsIn",
+        "type": "object"
+      },
+      "SensitivityOut": {
+        "properties": {
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "factor": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Factor",
+            "type": "string"
+          },
+          "total_expected": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Total Expected",
+            "type": "string"
+          }
+        },
+        "required": [
+          "factor",
+          "total_expected",
+          "complete"
+        ],
+        "title": "SensitivityOut",
         "type": "object"
       },
       "SessionInfo": {
@@ -12629,6 +12910,48 @@
         "summary": "Get Dashboard",
         "tags": [
           "insights"
+        ]
+      }
+    },
+    "/api/v1/deal-models/evaluate": {
+      "post": {
+        "description": "Estimate what each option would have paid on the supplier's real past purchases.\n\nNothing is saved. Results are estimates: the window's real purchases, the proposed rules.",
+        "operationId": "evaluate_api_v1_deal_models_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DealModelIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealModelOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Evaluate",
+        "tags": [
+          "deal-models"
         ]
       }
     },

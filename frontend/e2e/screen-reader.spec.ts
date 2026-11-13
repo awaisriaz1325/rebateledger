@@ -20,6 +20,7 @@ const APP_PAGES = [
   "/app/suppliers",
   "/app/suppliers/new",
   "/app/agreements",
+  "/app/agreements/model",
   "/app/imports",
   "/app/runs",
   "/app/results",

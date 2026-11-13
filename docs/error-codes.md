@@ -95,6 +95,14 @@ is not listed here.
 | `PLAN_LIMIT_REACHED` | 403 | The plan's limit blocks this new action; existing data is unaffected |
 | `CURSOR_INVALID` | 422 | Restart pagination |
 
+## Deal modelling (v1.1 Phase 13)
+| Code | Status | Meaning |
+|---|---|---|
+| `WINDOW_INVALID` | 422 | History window ends before it starts or is longer than 24 months |
+| `WINDOW_TOO_SHORT` | 422 | The window holds no whole period of an option |
+| `CUSTOM_PERIODS_NOT_SUPPORTED` | 422 | Custom periods cannot be modelled |
+| `OPTIONS_INVALID` | 422 | Compare one to four options |
+
 ## Imports
 | Code | Status | Meaning |
 |---|---|---|

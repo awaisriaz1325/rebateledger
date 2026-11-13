@@ -834,6 +834,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/deal-models/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Evaluate
+         * @description Estimate what each option would have paid on the supplier's real past purchases.
+         *
+         *     Nothing is saved. Results are estimates: the window's real purchases, the proposed rules.
+         */
+        post: operations["evaluate_api_v1_deal_models_evaluate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/discrepancies": {
         parameters: {
             query?: never;
@@ -3521,6 +3543,43 @@ export interface components {
          * @enum {string}
          */
         DateBasis: "invoice_date" | "ship_date" | "receipt_date";
+        /** DealModelIn */
+        DealModelIn: {
+            /** Options */
+            options: components["schemas"]["OptionIn"][];
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /**
+             * Window End
+             * Format: date
+             */
+            window_end: string;
+            /**
+             * Window Start
+             * Format: date
+             */
+            window_start: string;
+        };
+        /** DealModelOut */
+        DealModelOut: {
+            /** Engine Version */
+            engine_version: string;
+            /** Options */
+            options: components["schemas"]["OptionOut"][];
+            /**
+             * Window End
+             * Format: date
+             */
+            window_end: string;
+            /**
+             * Window Start
+             * Format: date
+             */
+            window_start: string;
+        };
         /** DecisionIn */
         DecisionIn: {
             /**
@@ -4093,6 +4152,39 @@ export interface components {
             /** Recovery Code */
             recovery_code?: string | null;
         };
+        /** ModelPeriodOut */
+        ModelPeriodOut: {
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /** Expected */
+            expected: string | null;
+            /** Label */
+            label: string;
+            /**
+             * Measure
+             * @example 1234.50
+             */
+            measure: string;
+            /** Reasons */
+            reasons: components["schemas"]["ReasonOut"][];
+            /**
+             * Spend
+             * @example 1234.50
+             */
+            spend: string;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /** Statuses */
+            statuses: string[];
+            /** Tier Reached */
+            tier_reached: number | null;
+        };
         /**
          * NegativeResult
          * @enum {string}
@@ -4173,6 +4265,37 @@ export interface components {
             count: number;
             /** Link */
             link: string;
+        };
+        /** OptionIn */
+        OptionIn: {
+            /** Label */
+            label: string;
+            terms: components["schemas"]["VersionTermsIn"];
+        };
+        /** OptionOut */
+        OptionOut: {
+            /** Complete */
+            complete: boolean;
+            /** Effective Rate */
+            effective_rate: string | null;
+            /** Label */
+            label: string;
+            /** Periods */
+            periods: components["schemas"]["ModelPeriodOut"][];
+            /** Sensitivity */
+            sensitivity: components["schemas"]["SensitivityOut"][];
+            /** Summary */
+            summary: string;
+            /**
+             * Total Expected
+             * @example 1234.50
+             */
+            total_expected: string;
+            /**
+             * Total Spend
+             * @example 1234.50
+             */
+            total_spend: string;
         };
         /** OrgOut */
         OrgOut: {
@@ -5311,6 +5434,21 @@ export interface components {
             require_mfa_all?: boolean | null;
             /** Session Idle Minutes */
             session_idle_minutes?: number | null;
+        };
+        /** SensitivityOut */
+        SensitivityOut: {
+            /** Complete */
+            complete: boolean;
+            /**
+             * Factor
+             * @example 1234.50
+             */
+            factor: string;
+            /**
+             * Total Expected
+             * @example 1234.50
+             */
+            total_expected: string;
         };
         /** SessionInfo */
         SessionInfo: {
@@ -7942,6 +8080,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+        };
+    };
+    evaluate_api_v1_deal_models_evaluate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DealModelIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealModelOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
