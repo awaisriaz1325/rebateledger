@@ -20,5 +20,10 @@ test("set GL accounts, then preview a month end and see the sign-off gate", asyn
   await expect(page.getByText("The closing date must be the last day of a month.")).toBeVisible();
   await page.getByLabel("Closing date (last day of a month)").fill("2025-05-31");
   await expect(page.getByRole("heading", { name: /Outstanding at/ })).toBeVisible();
+  // v1.2 Phase 19: each format explains how to import it.
+  await page.getByLabel("File format").selectOption("netsuite");
+  await expect(page.getByText(/grouped into entries by External ID/)).toBeVisible();
+  await page.getByLabel("File format").selectOption("acumatica");
+  await expect(page.getByText(/leave Auto-Reversing off/)).toBeVisible();
   await expectAccessible(page);
 });

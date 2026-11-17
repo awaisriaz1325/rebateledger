@@ -2965,7 +2965,7 @@ export interface components {
              * Format
              * @enum {string}
              */
-            format: "generic" | "qbo";
+            format: "generic" | "qbo" | "netsuite" | "acumatica";
             /**
              * Reviewed
              * @constant

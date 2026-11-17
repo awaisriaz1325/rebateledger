@@ -76,7 +76,7 @@ class AccrualJournalOut(Out):
 
 class AccrualExportIn(In):
     closing_date: date
-    format: Literal["generic", "qbo"]
+    format: Literal["generic", "qbo", "netsuite", "acumatica"]
     reviewed: Literal[True]
     """The signer confirms they reviewed the preview, estimates and exclusions."""
 

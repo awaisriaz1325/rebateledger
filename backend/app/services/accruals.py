@@ -51,7 +51,7 @@ from app.services.audit import record
 
 CENT = Decimal("0.01")
 ZERO = Decimal("0.00")
-FORMATS = ("generic", "qbo")
+FORMATS = ("generic", "qbo", "netsuite", "acumatica")
 LOOK_BACK_MONTHS = 24
 
 
@@ -309,6 +309,55 @@ def render(journal: Journal, fmt: str, receivable: str, offset: str) -> str:
                 for jno, when, acct, dr, cr, ln in rows
             ),
         )
+    if fmt == "netsuite":
+        # NetSuite Journal Entry CSV import (docs.oracle.com, ns-online-help section_1534489651,
+        # _1534492479, _1534492737; read 2026-11-17): lines of one entry share External ID; Date is
+        # required; Account may be "number name" or number only; one of Debit/Credit per line.
+        # UNVERIFIED: date format follows the importing user's preference (MM/DD/YYYY assumed),
+        # and OneWorld accounts must also map a Subsidiary in the Import Assistant.
+        return csv_string(
+            ["External ID", "Date", "Account", "Debit", "Credit", "Line Memo"],
+            (
+                [
+                    jno,
+                    f"{when:%m/%d/%Y}",
+                    acct,
+                    f"{dr:.2f}" if dr else "",
+                    f"{cr:.2f}" if cr else "",
+                    _description(ln, jno.endswith("-R")),
+                ]
+                for jno, when, acct, dr, cr, ln in rows
+            ),
+        )
+    if fmt == "acumatica":
+        # Acumatica Journal Transactions (GL301000) details columns, per the MYOB Advanced help
+        # page for that form (read 2026-11-17). One side per line; 0.00 rather than blank (blank
+        # cells are a reported cause of unbalanced imports). UNVERIFIED: Acumatica has no documented
+        # file upload on this form; the customer needs an import scenario that starts a new batch
+        # per Description. Our file already contains the reversal, so Auto-Reversing must stay off.
+        return csv_string(
+            [
+                "Description",
+                "Transaction Date",
+                "Account",
+                "Ref. Number",
+                "Debit Amount",
+                "Credit Amount",
+                "Transaction Description",
+            ],
+            (
+                [
+                    jno,
+                    f"{when:%m/%d/%Y}",
+                    acct,
+                    jno,
+                    f"{dr:.2f}",
+                    f"{cr:.2f}",
+                    _description(ln, jno.endswith("-R")),
+                ]
+                for jno, when, acct, dr, cr, ln in rows
+            ),
+        )
     # UNVERIFIED: QuickBooks Online journal-entry import column names, from memory of its
     # import template; confirm against a real QBO import before relying on it.
     return csv_string(
@@ -391,7 +440,9 @@ def export(db: Session, ctx: Any, closing: date, fmt: str) -> tuple[AccrualExpor
             "Add the rebate receivable and offset account codes under Settings → Accounting.",
         )
     if fmt not in FORMATS:
-        raise AppError(422, "FORMAT_INVALID", "Unknown format", "Use generic or qbo.")
+        raise AppError(
+            422, "FORMAT_INVALID", "Unknown format", "Use generic, qbo, netsuite or acumatica."
+        )
     journal = build(db, tenant, closing)
     if not journal.lines:
         raise AppError(

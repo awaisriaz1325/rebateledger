@@ -110,9 +110,18 @@ function LeftOut({ title, rows, hint }: { title: string; rows: Excluded[]; hint?
   );
 }
 
+type Format = "generic" | "qbo" | "netsuite" | "acumatica";
+
+const FORMATS: Record<Format, { label: string; hint: string }> = {
+  generic: { label: "Generic CSV", hint: "One row per debit or credit, with supplier, agreement and period columns." },
+  qbo: { label: "QuickBooks Online journal import (unverified columns)", hint: "Columns from the QuickBooks Online journal import template; check one import before relying on it." },
+  netsuite: { label: "NetSuite journal entry import (unverified)", hint: "Lines are grouped into entries by External ID. Map Subsidiary in the Import Assistant if you use OneWorld. Re-importing the same month is rejected as a duplicate External ID; delete or reverse the earlier entry first." },
+  acumatica: { label: "Acumatica journal transactions (unverified)", hint: "Needs an import scenario in Acumatica that starts a new batch for each Description. The file already includes the reversing entry, so leave Auto-Reversing off." },
+};
+
 function SignOff({ j }: { j: Journal }) {
   const qc = useQueryClient();
-  const [format, setFormat] = useState<"generic" | "qbo">("generic");
+  const [format, setFormat] = useState<Format>("generic");
   const [reviewed, setReviewed] = useState(false);
   const exportJournal = useMutation({
     mutationFn: async () => unwrap(await api.POST("/api/v1/accruals/journal/export", { body: { closing_date: j.closing_date, format, reviewed: true }, parseAs: "text" })) as unknown as string,
@@ -129,14 +138,14 @@ function SignOff({ j }: { j: Journal }) {
     <Card title="Sign off and download">
       <div className="flex flex-wrap items-end gap-4">
         <Field id="acc-format" label="File format">
-          <Select id="acc-format" value={format} onChange={(e) => setFormat(e.target.value as "generic" | "qbo")}>
-            <option value="generic">Generic CSV</option>
-            <option value="qbo">QuickBooks Online journal import (unverified columns)</option>
+          <Select id="acc-format" value={format} onChange={(e) => setFormat(e.target.value as Format)} aria-describedby="acc-format-hint">
+            {(Object.keys(FORMATS) as Format[]).map((f) => <option key={f} value={f}>{FORMATS[f].label}</option>)}
           </Select>
         </Field>
         <Checkbox id="acc-reviewed" label="I reviewed the lines, estimates and anything left out" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} />
         <Button disabled={!reviewed || !j.accounts_configured || j.lines.length === 0} loading={exportJournal.isPending} onClick={() => exportJournal.mutate()}>Download journal</Button>
       </div>
+      <p id="acc-format-hint" className="mt-2 text-sm text-muted">{FORMATS[format].hint}</p>
       <p className="mt-2 text-xs text-muted">Each download is recorded with your name, the time and a fingerprint of the file.</p>
     </Card>
   );
@@ -150,7 +159,7 @@ function History() {
         {(rows) => (
           <table className="w-full text-sm" aria-label="Accrual export history">
             <thead><tr className="border-b border-rule text-left text-xs text-muted uppercase"><th scope="col" className="py-2">Closing date</th><th scope="col">Exported</th><th scope="col">Format</th><th scope="col" className="num">Lines</th><th scope="col" className="num">Total</th><th scope="col">File fingerprint</th></tr></thead>
-            <tbody>{rows.map((r) => <tr key={r.id} className="border-b border-rule last:border-0"><td className="py-2">{formatDate(r.closing_date)}</td><td>{formatDateTime(r.created_at)}</td><td>{r.format === "qbo" ? "QuickBooks Online" : "Generic CSV"}</td><td className="num">{r.line_count}</td><td className="num"><Money value={r.total} /></td><td className="font-mono text-xs">{r.file_hash.slice(0, 12)}…</td></tr>)}</tbody>
+            <tbody>{rows.map((r) => <tr key={r.id} className="border-b border-rule last:border-0"><td className="py-2">{formatDate(r.closing_date)}</td><td>{formatDateTime(r.created_at)}</td><td>{({ generic: "Generic CSV", qbo: "QuickBooks Online", netsuite: "NetSuite", acumatica: "Acumatica" } as Record<string, string>)[r.format] ?? r.format}</td><td className="num">{r.line_count}</td><td className="num"><Money value={r.total} /></td><td className="font-mono text-xs">{r.file_hash.slice(0, 12)}…</td></tr>)}</tbody>
           </table>
         )}
       </QueryState>

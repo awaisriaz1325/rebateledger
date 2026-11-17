@@ -154,6 +154,61 @@ def test_qbo_format_uses_us_dates(booked: Any) -> None:
     assert first.startswith("ACC-202505,05/31/2025,1250 Rebates receivable,500.00,,")
 
 
+def _journals(text: str, key: str, dr: str, cr: str) -> dict[str, tuple[Decimal, Decimal]]:
+    out: dict[str, tuple[Decimal, Decimal]] = {}
+    for row in csv.DictReader(io.StringIO(text)):
+        d, c = out.get(row[key], (Decimal(0), Decimal(0)))
+        out[row[key]] = (d + Decimal(row[dr] or 0), c + Decimal(row[cr] or 0))
+    return out
+
+
+def test_netsuite_format_groups_lines_by_external_id(booked: Any) -> None:
+    """Columns per NetSuite's Journal Entry CSV import docs (v1.2 Phase 19)."""
+    c, _w, _t, owner = booked
+    step_up(c, owner)
+    r = _export(c, fmt="netsuite")
+    assert r.status_code == 200, r.text
+    lines = r.text.splitlines()
+    assert lines[0] == "External ID,Date,Account,Debit,Credit,Line Memo"
+    assert lines[1].startswith("ACC-202505,05/31/2025,1250 Rebates receivable,500.00,,")
+    journals = _journals(r.text, "External ID", "Debit", "Credit")
+    # Two journal entries (accrual + reversal), each balanced, each 1,500.00.
+    assert journals == {
+        "ACC-202505": (Decimal("1500.00"), Decimal("1500.00")),
+        "ACC-202505-R": (Decimal("1500.00"), Decimal("1500.00")),
+    }
+    rev = [row for row in csv.DictReader(io.StringIO(r.text)) if row["External ID"].endswith("-R")]
+    assert {row["Date"] for row in rev} == {"06/01/2025"}
+
+
+def test_acumatica_format_has_one_side_per_line_and_zero_not_blank(booked: Any) -> None:
+    """Columns per Acumatica Journal Transactions (GL301000) details tab (v1.2 Phase 19)."""
+    c, _w, _t, owner = booked
+    step_up(c, owner)
+    r = _export(c, fmt="acumatica")
+    assert r.status_code == 200, r.text
+    lines = r.text.splitlines()
+    assert lines[0] == (
+        "Description,Transaction Date,Account,Ref. Number,Debit Amount,Credit Amount,"
+        "Transaction Description"
+    )
+    assert lines[1].startswith(
+        "ACC-202505,05/31/2025,1250 Rebates receivable,ACC-202505,500.00,0.00,"
+    )
+    rows = list(csv.DictReader(io.StringIO(r.text)))
+    assert all((row["Debit Amount"] == "0.00") != (row["Credit Amount"] == "0.00") for row in rows)
+    assert _journals(r.text, "Description", "Debit Amount", "Credit Amount") == {
+        "ACC-202505": (Decimal("1500.00"), Decimal("1500.00")),
+        "ACC-202505-R": (Decimal("1500.00"), Decimal("1500.00")),
+    }
+
+
+def test_unknown_format_is_rejected(booked: Any) -> None:
+    c, _w, _t, owner = booked
+    step_up(c, owner)
+    assert _export(c, fmt="sage").status_code == 422
+
+
 def test_guards(booked: Any) -> None:
     c, w, t, owner = booked
     step_up(c, owner)

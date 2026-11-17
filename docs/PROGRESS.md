@@ -12,6 +12,14 @@ Template:
 - Next step:
 -->
 
+## 2026-11-17 — v1.2 Phase 19: accrual export formats (NetSuite, Acumatica)
+- Changed: accrual journal export formats `netsuite` (External ID grouping) and `acumatica`
+  (GL301000 detail columns, 0.00 not blank); format hints on the Accruals page.
+- Decisions (ADRs): none. Column choices cite the vendor docs in code comments; both UNVERIFIED
+  until a customer imports one (Acumatica also needs an import scenario on their side).
+- Open questions: D1–D3 (docs/PHASES-v1.2.md).
+- Next step: Phase 20 (look-back recovery audit) needs D1 first; Phase 21 can start without it.
+
 ## 2026-11-17 — v1.2 Phase 18: positioning and focus
 - Changed: marketing page /changing-erp (Epicor dates verified against CIO.com, 7 Jan 2026; footer + sitemap);
   SPA claims labelled Beta; Deal modelling removed from the sidebar and linked from Agreements ("Model a deal").
