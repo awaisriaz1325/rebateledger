@@ -12,6 +12,16 @@ Template:
 - Next step:
 -->
 
+## 2026-11-17 — v1.2 Phase 21: bulk agreement import
+- Changed: /app/agreements/import (template, column guide, preview, create drafts);
+  API /api/v1/agreements/bulk{,/preview,/columns,/template}; service app/services/agreement_bulk.py.
+  Drafts only, all-or-nothing, same VersionTermsIn + engine validation as the editor; re-import of
+  identical terms is "unchanged"; existing reference → new draft version.
+- Decisions (ADRs): none. Deviation from the plan text: a dedicated synchronous endpoint (≤1 MB,
+  ≤2,000 rows) instead of a new type in the purchase-line import pipeline; no agreement-to-CSV export yet.
+- Open questions: D1–D3.
+- Next step: Phase 20 after D1, else Phase 22 (supplier statement compare).
+
 ## 2026-11-17 — v1.2 Phase 19: accrual export formats (NetSuite, Acumatica)
 - Changed: accrual journal export formats `netsuite` (External ID grouping) and `acumatica`
   (GL301000 detail columns, 0.00 not blank); format hints on the Accruals page.

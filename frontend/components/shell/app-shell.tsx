@@ -361,7 +361,7 @@ function SupportGrantBanner({ session }: { session: SessionInfo }) {
 const LABELS: Record<string, string> = {
   app: "Dashboard", suppliers: "Suppliers", agreements: "Agreements", imports: "Imports", runs: "Runs", results: "Results",
   discrepancies: "Discrepancies", credits: "Credits", claims: "Claims", tiers: "Tier tracker", settings: "Settings", reports: "Reports",
-  approvals: "Approvals", new: "New", model: "Deal modelling", accruals: "Month-end accruals", spa: "SPA claims", accounting: "Accounting", profile: "Profile", security: "Security", organization: "Organization", members: "Members",
+  approvals: "Approvals", new: "New", model: "Deal modelling", import: "Import", accruals: "Month-end accruals", spa: "SPA claims", accounting: "Accounting", profile: "Profile", security: "Security", organization: "Organization", members: "Members",
   reconciliation: "Reconciliation", notifications: "Notifications", templates: "Import templates", plan: "Plan & usage", audit: "Audit log", data: "Data",
 };
 

@@ -26,6 +26,7 @@ UPLOADS = [
     (re.compile(r"^/api/v1/imports$"), MAX_UPLOAD_BYTES + OVERHEAD),
     (re.compile(r"^/api/v1/agreements/[^/]+/attachments$"), 20 * 1024 * 1024 + OVERHEAD),
     (re.compile(r"^/api/v1/claims/[^/]+/attachments$"), 20 * 1024 * 1024 + OVERHEAD),
+    (re.compile(r"^/api/v1/agreements/bulk(/preview)?$"), 1024 * 1024 + OVERHEAD),
 ]
 
 

@@ -2,6 +2,7 @@
 
 from app.api.routes import (
     accruals,
+    agreement_bulk,
     agreements,
     auth,
     claims,
@@ -29,6 +30,7 @@ ROUTERS = [
     plan.router,
     jobs.router,
     suppliers.router,
+    agreement_bulk.router,
     agreements.router,
     deal_models.router,
     imports.router,

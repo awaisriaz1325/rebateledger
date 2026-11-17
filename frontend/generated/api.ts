@@ -169,6 +169,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agreements/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Commit
+         * @description Create every agreement in the file as a draft, or nothing if any row has an error.
+         */
+        post: operations["commit_api_v1_agreements_bulk_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agreements/bulk/columns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Columns */
+        get: operations["columns_api_v1_agreements_bulk_columns_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agreements/bulk/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview
+         * @description Validate the file and show what would be created. Nothing is saved.
+         */
+        post: operations["preview_api_v1_agreements_bulk_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agreements/bulk/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Template */
+        get: operations["template_api_v1_agreements_bulk_template_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/agreements/{agreement_id}": {
         parameters: {
             query?: never;
@@ -3457,6 +3531,16 @@ export interface components {
                 [key: string]: string;
             } | null;
         };
+        /** Body_commit_api_v1_agreements_bulk_post */
+        Body_commit_api_v1_agreements_bulk_post: {
+            /** File */
+            file: string;
+        };
+        /** Body_preview_api_v1_agreements_bulk_preview_post */
+        Body_preview_api_v1_agreements_bulk_preview_post: {
+            /** File */
+            file: string;
+        };
         /** Body_upload_attachment_api_v1_agreements__agreement_id__attachments_post */
         Body_upload_attachment_api_v1_agreements__agreement_id__attachments_post: {
             /** File */
@@ -3477,6 +3561,58 @@ export interface components {
             /** File */
             file: string;
             import_type: components["schemas"]["ImportType"];
+        };
+        /** BulkColumnOut */
+        BulkColumnOut: {
+            /** Allowed */
+            allowed: string[];
+            /** Help */
+            help: string;
+            /** Level */
+            level: string;
+            /** Name */
+            name: string;
+            /** Required */
+            required: boolean;
+        };
+        /** BulkErrorOut */
+        BulkErrorOut: {
+            /** Column */
+            column: string | null;
+            /** Message */
+            message: string;
+            /** Row */
+            row: number | null;
+        };
+        /** BulkItemOut */
+        BulkItemOut: {
+            /** Action */
+            action: string;
+            /** Agreement Id */
+            agreement_id: string | null;
+            /** Components */
+            components: number;
+            /** Name */
+            name: string;
+            /** Ref */
+            ref: string;
+            /** Summary */
+            summary: string;
+            /** Supplier Name */
+            supplier_name: string;
+            /** Tiers */
+            tiers: number;
+            /** Warnings */
+            warnings: string[];
+        };
+        /** BulkPlanOut */
+        BulkPlanOut: {
+            /** Errors */
+            errors: components["schemas"]["BulkErrorOut"][];
+            /** Items */
+            items: components["schemas"]["BulkItemOut"][];
+            /** Sha256 */
+            sha256: string;
         };
         /** ClaimAttachmentOut */
         ClaimAttachmentOut: {
@@ -7551,6 +7687,112 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    commit_api_v1_agreements_bulk_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_commit_api_v1_agreements_bulk_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkPlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    columns_api_v1_agreements_bulk_columns_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkColumnOut"][];
+                };
+            };
+        };
+    };
+    preview_api_v1_agreements_bulk_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_preview_api_v1_agreements_bulk_preview_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkPlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    template_api_v1_agreements_bulk_template_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

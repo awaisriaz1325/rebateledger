@@ -27,3 +27,5 @@ export type Member = S["MemberOut"];
 export type ExportRecord = S["ExportOut"];
 export type ReportInfo = S["ReportInfo"];
 export type ReportPreview = S["ReportPreviewOut"];
+export type BulkPlan = S["BulkPlanOut"];
+export type BulkColumn = S["BulkColumnOut"];

@@ -1352,6 +1352,34 @@
         "title": "BillingSettingsIn",
         "type": "object"
       },
+      "Body_commit_api_v1_agreements_bulk_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_commit_api_v1_agreements_bulk_post",
+        "type": "object"
+      },
+      "Body_preview_api_v1_agreements_bulk_preview_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_preview_api_v1_agreements_bulk_preview_post",
+        "type": "object"
+      },
       "Body_upload_attachment_api_v1_agreements__agreement_id__attachments_post": {
         "properties": {
           "file": {
@@ -1401,6 +1429,172 @@
           "import_type"
         ],
         "title": "Body_upload_import_api_v1_imports_post",
+        "type": "object"
+      },
+      "BulkColumnOut": {
+        "properties": {
+          "allowed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Allowed",
+            "type": "array"
+          },
+          "help": {
+            "title": "Help",
+            "type": "string"
+          },
+          "level": {
+            "title": "Level",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "level",
+          "required",
+          "help",
+          "allowed"
+        ],
+        "title": "BulkColumnOut",
+        "type": "object"
+      },
+      "BulkErrorOut": {
+        "properties": {
+          "column": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "row": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Row"
+          }
+        },
+        "required": [
+          "row",
+          "column",
+          "message"
+        ],
+        "title": "BulkErrorOut",
+        "type": "object"
+      },
+      "BulkItemOut": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "agreement_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreement Id"
+          },
+          "components": {
+            "title": "Components",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "supplier_name": {
+            "title": "Supplier Name",
+            "type": "string"
+          },
+          "tiers": {
+            "title": "Tiers",
+            "type": "integer"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ref",
+          "name",
+          "supplier_name",
+          "action",
+          "agreement_id",
+          "components",
+          "tiers",
+          "summary",
+          "warnings"
+        ],
+        "title": "BulkItemOut",
+        "type": "object"
+      },
+      "BulkPlanOut": {
+        "properties": {
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/BulkErrorOut"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BulkItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sha256",
+          "items",
+          "errors"
+        ],
+        "title": "BulkPlanOut",
         "type": "object"
       },
       "ClaimAttachmentOut": {
@@ -12224,6 +12418,148 @@
           }
         },
         "summary": "Create Agreement",
+        "tags": [
+          "agreements"
+        ]
+      }
+    },
+    "/api/v1/agreements/bulk": {
+      "post": {
+        "description": "Create every agreement in the file as a draft, or nothing if any row has an error.",
+        "operationId": "commit_api_v1_agreements_bulk_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_commit_api_v1_agreements_bulk_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkPlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Commit",
+        "tags": [
+          "agreements"
+        ]
+      }
+    },
+    "/api/v1/agreements/bulk/columns": {
+      "get": {
+        "operationId": "columns_api_v1_agreements_bulk_columns_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BulkColumnOut"
+                  },
+                  "title": "Response Columns Api V1 Agreements Bulk Columns Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Columns",
+        "tags": [
+          "agreements"
+        ]
+      }
+    },
+    "/api/v1/agreements/bulk/preview": {
+      "post": {
+        "description": "Validate the file and show what would be created. Nothing is saved.",
+        "operationId": "preview_api_v1_agreements_bulk_preview_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_preview_api_v1_agreements_bulk_preview_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkPlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "agreements"
+        ]
+      }
+    },
+    "/api/v1/agreements/bulk/template": {
+      "get": {
+        "operationId": "template_api_v1_agreements_bulk_template_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Template",
         "tags": [
           "agreements"
         ]

@@ -112,6 +112,8 @@ is not listed here.
 | `CLOSING_DATE_NOT_MONTH_END` | 422 | The closing date must be the last day of a month |
 | `GL_ACCOUNTS_MISSING` | 422 | Set the receivable and offset account codes (Settings → Accounting) first |
 | `FORMAT_INVALID` | 422 | Unknown journal file format |
+| `BULK_INVALID` | 422 | Agreement import file has errors; nothing was created (preview lists them) |
+| `FILE_ENCODING` | 422 | Agreement import file is not UTF-8 CSV |
 | `NOTHING_TO_ACCRUE` | 422 | No outstanding rebate at the closing date |
 | `JOURNAL_UNBALANCED` | 500 | Debits ≠ credits; never expected (built balanced) and nothing is exported |
 

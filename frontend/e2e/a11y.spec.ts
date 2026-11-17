@@ -9,6 +9,7 @@ const PAGES = [
   "/app/suppliers/new",
   "/app/agreements",
   "/app/agreements/model",
+  "/app/agreements/import",
   "/app/imports",
   "/app/runs",
   "/app/results",

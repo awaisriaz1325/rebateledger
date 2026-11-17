@@ -175,6 +175,12 @@ SAMPLE_FILES.update(
         ("POST", "/api/v1/agreements/{agreement_id}/attachments"): {
             "files": {"file": ("terms.pdf", b"%PDF-1.4 test", "application/pdf")}
         },
+        ("POST", "/api/v1/agreements/bulk/preview"): {
+            "files": {"file": ("a.csv", b"agreement_ref\n", "text/csv")}
+        },
+        ("POST", "/api/v1/agreements/bulk"): {
+            "files": {"file": ("a.csv", b"agreement_ref\n", "text/csv")}
+        },
         ("POST", "/api/v1/imports"): {
             "files": {"file": ("p.csv", b"a,b\n1,2\n", "text/csv")},
             "data": {"import_type": "purchases"},
