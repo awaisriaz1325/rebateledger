@@ -1,0 +1,120 @@
+# Production stack on the shared GCP VM (Phase 11, ADR 0018). Prepared, not started.
+# Run from the repo root with infra/prod/deploy.sh (see docs/runbooks/deploy.md).
+# Separate project name, volumes and network from the dev stack (docker-compose.yml).
+name: rebateledger-prod
+
+x-logs: &logs
+  driver: json-file
+  options: {max-size: "20m", max-file: "5"}
+
+x-app: &app
+  image: rebateledger-api:${RELEASE:?set RELEASE (git tag)}
+  restart: unless-stopped
+  env_file: /etc/rebateledger/prod.env
+  environment:
+    RL_ENV: production
+    RL_STORAGE_DIR: /data/storage
+  volumes: [storage:/data/storage]
+  depends_on:
+    postgres: {condition: service_healthy}
+    redis: {condition: service_healthy}
+  networks: [prod]
+  logging: *logs
+
+services:
+  postgres:
+    image: postgres:18.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: postgres
+      RL_OWNER_PASSWORD: ${RL_OWNER_PASSWORD:?}
+      RL_APP_PASSWORD: ${RL_APP_PASSWORD:?}
+    # WAL archiving for point-in-time recovery (RPO <= 5 min, ADR 0016): every finished WAL
+    # segment (at least every 60 s) is copied to /archive, which `offsite` syncs to GCS.
+    command: >
+      postgres -c wal_level=replica -c archive_mode=on -c archive_timeout=60
+      -c "archive_command=test ! -f /archive/wal/%f && cp %p /archive/wal/%f"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - archive:/archive
+      - ../postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d rebateledger"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+    networks: [prod]
+    logging: *logs
+
+  redis:
+    image: redis:8.10.3-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redisdata:/data]
+    healthcheck: {test: ["CMD", "redis-cli", "ping"], interval: 10s, timeout: 3s, retries: 30}
+    networks: [prod]
+    logging: *logs
+
+  api:
+    <<: *app
+    environment:
+      RL_ENV: production
+      RL_STORAGE_DIR: /data/storage
+      FORWARDED_ALLOW_IPS: 172.31.250.0/24  # only the stack network (web) may set X-Forwarded-For
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    <<: *app
+    command: ["dramatiq", "app.workers.broker", "app.services.registry", "--processes", "1", "--threads", "4"]
+
+  scheduler:
+    <<: *app
+    command: ["python", "-m", "app.workers.scheduler"]
+
+  web:
+    image: rebateledger-web:${RELEASE:?}
+    restart: unless-stopped
+    ports: ["127.0.0.1:3200:3000"]  # host Caddy (imageme-caddy, host network) proxies here
+    depends_on: [api]
+    networks: [prod]
+    logging: *logs
+
+  # Nightly base backup into /archive/base; base backup + WAL = point-in-time restore.
+  backup:
+    image: postgres:18.6-alpine
+    restart: unless-stopped
+    environment: {PGPASSWORD: "${POSTGRES_PASSWORD:?}"}
+    volumes: [archive:/archive]
+    entrypoint: ["/bin/sh", "/backup.sh"]
+    configs: [{source: backup_script, target: /backup.sh}]
+    depends_on: {postgres: {condition: service_healthy}}
+    networks: [prod]
+    logging: *logs
+
+  # Copies WAL, base backups and uploaded files to the private GCS bucket every minute.
+  # Auth: the VM's service account via the metadata server; it needs write on this bucket only.
+  offsite:
+    image: ${CLOUD_CLI_IMAGE:?pin an exact google-cloud-cli image tag, verified on the official registry}
+    restart: unless-stopped
+    environment: {BACKUP_BUCKET: "${BACKUP_BUCKET:?}"}
+    volumes: ["archive:/archive:ro", "storage:/data/storage:ro"]
+    entrypoint: ["/bin/sh", "/offsite.sh"]
+    configs: [{source: offsite_script, target: /offsite.sh}]
+    networks: [prod]
+    logging: *logs
+
+configs:
+  backup_script: {file: ./backup.sh}
+  offsite_script: {file: ./offsite.sh}
+
+networks:
+  prod:
+    ipam: {config: [{subnet: 172.31.250.0/24}]}
+
+volumes: {pgdata: {}, redisdata: {}, storage: {}, archive: {}}

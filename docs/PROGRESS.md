@@ -12,6 +12,17 @@ Template:
 - Next step:
 -->
 
+## 2026-11-17 — Phase 11: deployment preparation (shared VM)
+- Changed: `backend/Dockerfile` (Pango/HarfBuzz for PDFs, `--no-server-header`, proxy headers
+  trusted only from the stack network), `frontend/Dockerfile` (`RL_API_ORIGIN` build arg),
+  `infra/prod/` (compose stack, WAL archiving + nightly base backup + GCS mirror, Caddy
+  snippet, `deploy.sh`, prepared gcloud commands), runbooks (deploy, restore), launch
+  checklist. Both images built and smoke-run locally (web /login 200; WeasyPrint 70.0 loads).
+  Nothing deployed; no cloud command run.
+- Decisions (ADRs): 0018 — production on the shared VM, GCS backups, placeholder domains.
+- Open questions: domains; email provider (ADR 0006); dedicated VM vs shared (High risk).
+- Next step: founder runs the prepared cloud commands and the first install per the runbook.
+
 ## 2026-11-13 — Phase 17: ship-and-debit / SPA claims
 - Changed: sales-lines import type; SPA records + items; pure matcher `engine/spa.py`
   (engine 1.2.0; 13 hand-worked/property tests); `spa_match` job (claimed lines frozen,

@@ -1,0 +1,9 @@
+# Add to the shared host Caddy (/home/awais/code/imageme/deploy/Caddyfile), then reload it:
+#   docker exec imageme-caddy caddy reload --config /etc/caddy/Caddyfile
+# Replace the placeholder domains; Caddy obtains TLS certificates automatically once DNS
+# points at the VM. Without trusted_proxies, Caddy discards any client-sent X-Forwarded-For
+# and sets the real client IP, which the API trusts only from the stack network.
+app.example.invalid, www.example.invalid {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3200
+}
