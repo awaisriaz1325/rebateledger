@@ -4,7 +4,7 @@ import { expectAccessible, latestEmail, seed, signIn } from "./fixtures/app";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-const PAGES = ["/", "/how-it-works", "/features", "/security", "/pricing", "/about", "/contact", "/request-a-pilot", "/privacy", "/terms", "/dpa", "/cookies"];
+const PAGES = ["/", "/how-it-works", "/features", "/security", "/pricing", "/about", "/contact", "/request-a-pilot", "/changing-erp", "/privacy", "/terms", "/dpa", "/cookies"];
 
 /** Phrases that would claim proof we do not have (SPEC §4.16 content integrity). */
 const INVENTED_PROOF = [
@@ -48,6 +48,7 @@ test("404, robots, sitemap and the social image", async ({ page, request }) => {
   expect(robots).toContain("Sitemap:");
   const sitemap = await (await request.get("/sitemap.xml")).text();
   expect(sitemap).toContain("/pricing");
+  expect(sitemap).toContain("/changing-erp");
   expect(sitemap).not.toContain("/privacy"); // templates stay out until reviewed
   expect(sitemap).not.toContain("/blog"); // no posts yet
   await page.goto("/");

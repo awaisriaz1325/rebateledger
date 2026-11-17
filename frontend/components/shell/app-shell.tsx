@@ -4,7 +4,6 @@ import {
   BadgePercent,
   BookOpenCheck,
   BookText,
-  Calculator,
   Building2,
   ChartColumn,
   FileSpreadsheet,
@@ -57,7 +56,6 @@ const NAV: { section: string; items: NavItem[] }[] = [
     items: [
       { href: "/app/suppliers", label: "Suppliers", icon: <Building2 size={16} /> },
       { href: "/app/agreements", label: "Agreements", icon: <FileText size={16} /> },
-      { href: "/app/agreements/model", label: "Deal modelling", icon: <Calculator size={16} />, permission: "edit_agreements" },
       { href: "/app/imports", label: "Imports", icon: <FileSpreadsheet size={16} /> },
     ],
   },
@@ -158,7 +156,7 @@ function Shell({ session, children }: { session: SessionInfo; children: ReactNod
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Highlight only the most specific matching item (e.g. Deal modelling, not also Agreements).
+  // Highlight only the most specific matching item (e.g. Month-end accruals, not also a shorter prefix).
   const activeHref = NAV.flatMap((g) => g.items)
     .map((i) => i.href)
     .filter((h) => (h === "/app" ? pathname === "/app" : pathname === h || pathname.startsWith(`${h}/`)))

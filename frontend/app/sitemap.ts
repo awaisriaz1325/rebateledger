@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { blogPosts } from "@/lib/blog";
 import { SITE_URL } from "@/lib/site";
 
-const PAGES = ["", "/how-it-works", "/features", "/security", "/pricing", "/about", "/contact", "/request-a-pilot"];
+const PAGES = ["", "/how-it-works", "/features", "/security", "/pricing", "/about", "/contact", "/request-a-pilot", "/changing-erp"];
 
 /** Public marketing pages only. Legal templates are excluded until reviewed. */
 export default function sitemap(): MetadataRoute.Sitemap {

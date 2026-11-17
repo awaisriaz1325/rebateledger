@@ -12,6 +12,19 @@ Template:
 - Next step:
 -->
 
+## 2026-11-17 — v1.2 Phase 18: positioning and focus
+- Changed: marketing page /changing-erp (Epicor dates verified against CIO.com, 7 Jan 2026; footer + sitemap);
+  SPA claims labelled Beta; Deal modelling removed from the sidebar and linked from Agreements ("Model a deal").
+- Decisions (ADRs): none (plan docs/PHASES-v1.2.md approved by founder).
+- Open questions: D1 recovery-audit pricing, D2 pilot ERP files, D3 buying-group fee rules.
+- Next step: Phase 19 (NetSuite and Acumatica accrual export formats) after approval.
+
+## 2026-11-17 — Research: feature, competitor and market review
+- Changed: docs/research/2026-11-17-feature-review.md (no code).
+- Decisions (ADRs): none; recommendations only.
+- Open questions: look-back audit pricing; pilot ERP samples; customer (payable) rebates; SFTP imports; approvals default.
+- Next step: founder picks from the Top 5.
+
 ## 2026-11-17 — Phase 11: deployment preparation (shared VM)
 - Changed: `backend/Dockerfile` (Pango/HarfBuzz for PDFs, `--no-server-header`, proxy headers
   trusted only from the stack network), `frontend/Dockerfile` (`RL_API_ORIGIN` build arg),

@@ -41,7 +41,7 @@ export function SiteFooter() {
           <p className="font-semibold">{PRODUCT_NAME}</p>
           <p className="mt-2 text-muted">Supplier rebate reconciliation for independent wholesale distributors.</p>
         </div>
-        <FooterCol title="Product" links={[["/how-it-works", "How it works"], ["/features", "Features"], ["/pricing", "Pricing"], ["/security", "Security"]]} />
+        <FooterCol title="Product" links={[["/how-it-works", "How it works"], ["/features", "Features"], ["/pricing", "Pricing"], ["/security", "Security"], ["/changing-erp", "Changing ERP?"]]} />
         <FooterCol title="Company" links={[["/about", "About"], ["/contact", "Contact"], ["/request-a-pilot", "Request a pilot"]]} />
         <FooterCol title="Legal" links={[["/privacy", "Privacy Policy"], ["/terms", "Terms of Service"], ["/dpa", "Data Processing Addendum"], ["/cookies", "Cookie notice"]]} />
       </div>

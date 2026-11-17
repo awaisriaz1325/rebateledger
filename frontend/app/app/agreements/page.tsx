@@ -22,9 +22,10 @@ export default function AgreementsPage() {
     },
   });
   const add = can(session, "edit_agreements") ? <Link href="/app/agreements/new" className="inline-flex h-9 items-center rounded-md bg-brand px-4 text-sm font-medium text-on-brand">New agreement</Link> : null;
+  const model = can(session, "edit_agreements") ? <Link href="/app/agreements/model" className="inline-flex h-9 items-center rounded-md border border-border-strong bg-surface px-4 text-sm font-medium text-ink hover:bg-surface-2">Model a deal</Link> : null;
   return (
     <>
-      <PageHeader title="Agreements" description="Rebate programs as precise, versioned rules. Active versions never change; new terms get a new version." actions={add} />
+      <PageHeader title="Agreements" description="Rebate programs as precise, versioned rules. Active versions never change; new terms get a new version." actions={<>{model}{add}</>} />
       <QueryState query={query} isEmpty={(a) => a.length === 0} empty={<EmptyState title="No agreements yet" action={add}>Add a rebate program from a supplier contract.</EmptyState>}>
         {(rows) => (
           <DataTable

@@ -27,7 +27,12 @@ export default function SpaPage() {
         title="SPA claims"
         description="Special pricing agreements: what suppliers owe you back for sales made at the agreed price, which lines are claimable, and your claims."
         actions={<Link href="/app/imports/new?type=sales" className="text-sm text-brand hover:underline">Import sales lines →</Link>}
-      />
+      >
+        <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
+          <span className="rounded-full border border-border-strong px-2 py-0.5 text-xs font-medium text-ink">Beta</span>
+          SPA claims are new. Check each claim against your SPA documents before sending it, and tell us what does not match.
+        </p>
+      </PageHeader>
       <Tabs
         label="SPA sections"
         tabs={[

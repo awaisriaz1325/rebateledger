@@ -9,6 +9,7 @@ test("SPA sales become a claim that is submitted and paid", async ({ page }) => 
   const stamp = Date.now();
   await page.goto("/app/spa");
   await expect(page.getByRole("heading", { level: 1, name: "SPA claims" })).toBeVisible();
+  await expect(page.getByText("Beta", { exact: true })).toBeVisible();
   await page.getByRole("tab", { name: "SPAs" }).click();
   await page.getByRole("button", { name: "Add SPA" }).click();
   const dialog = page.getByRole("dialog", { name: "Add SPA" });

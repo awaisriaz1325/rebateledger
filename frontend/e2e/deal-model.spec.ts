@@ -3,8 +3,13 @@ import { expect, test } from "@playwright/test";
 import { expectAccessible } from "./fixtures/app";
 
 test("compare two options side by side and create a draft from one", async ({ page }) => {
-  await page.goto("/app/agreements/model");
+  // Reached from Agreements (v1.2 Phase 18), not from the main navigation.
+  await page.goto("/app/agreements");
+  await expect(page.getByLabel("Main navigation").getByRole("link", { name: "Deal modelling" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Model a deal" }).click();
+  await page.waitForURL(/\/app\/agreements\/model$/);
   await expect(page.getByRole("heading", { level: 1, name: "Deal modelling" })).toBeVisible();
+  await expect(page.getByLabel("Main navigation").getByRole("link", { name: "Agreements", exact: true })).toHaveAttribute("aria-current", "page");
   await page.getByLabel(/^Supplier/).selectOption({ label: "Acme Electrical Supply" });
   await page.getByRole("button", { name: "Add option" }).click();
   await expect(page.getByRole("heading", { name: "Option B" })).toBeVisible();
