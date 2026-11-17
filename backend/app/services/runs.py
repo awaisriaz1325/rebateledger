@@ -44,6 +44,7 @@ from app.engine.reconcile import (
 )
 from app.engine.version import ENGINE_VERSION
 from app.services import agreements as agreement_svc
+from app.services import group_payouts as groups
 from app.services.agreement_terms import snapshot_for
 from app.services.audit import Actor, record
 from app.workers.jobs import JobContext, enqueue, handler
@@ -252,12 +253,15 @@ def _run_job(db: Session, job: JobContext) -> dict[str, Any]:
             for a in active_allocations(db, run.tenant_id, [uuid.UUID(k) for k in names])
         ]
         credit_dates = _credit_dates(db, run.tenant_id, {uuid.UUID(a.credit_id) for a in allocs})
+        group_fees = groups.fees(db, run.tenant_id)
         for r in results:
             row = _store_result(db, run, r)
             item = reconcile_item(
                 agreement_id=r.agreement_id,
                 period=r.period,
-                expected=r.expected,
+                expected=groups.net_expected(
+                    r.expected, groups.fee_for(names[r.agreement_id], group_fees)
+                ),
                 engine_needs_review=r.needs_review,
                 allocations=allocs,
                 credit_dates=credit_dates,
@@ -370,11 +374,12 @@ def _auto_match(
     allocated = select(CreditAllocation.credit_id).where(
         CreditAllocation.tenant_id == run.tenant_id, CreditAllocation.reversed_at.is_(None)
     )
+    payers = {supplier_id} | {groups.payer_id(a) for a in agreements.values()}
     credits = list(
         db.execute(
             select(CreditLineRow).where(
                 CreditLineRow.tenant_id == run.tenant_id,
-                CreditLineRow.supplier_id == supplier_id,
+                CreditLineRow.supplier_id.in_(payers),
                 CreditLineRow.voided.is_(False),
                 CreditLineRow.agreement_reference.is_not(None),
                 CreditLineRow.id.not_in(allocated),
@@ -385,7 +390,12 @@ def _auto_match(
         return 0
     targets = [
         MatchTarget(
-            r.agreement_id, r.supplier_id, agreements[r.agreement_id].external_reference, r.period
+            r.agreement_id,
+            str(
+                groups.payer_id(agreements[r.agreement_id])
+            ),  # a group-paid program matches the group's credits
+            agreements[r.agreement_id].external_reference,
+            r.period,
         )
         for r in results
     ]

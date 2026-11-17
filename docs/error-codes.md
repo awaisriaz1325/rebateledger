@@ -116,6 +116,8 @@ is not listed here.
 | `FILE_ENCODING` | 422 | Agreement import file is not UTF-8 CSV |
 | `AGREEMENT_SUPPLIER_MISMATCH` | 422 | A supplier statement line can only be assigned to an agreement of the same supplier |
 | `PERIOD_REQUIRED` | 422 | The recovery audit needs a start and end date |
+| `GROUP_FEE_INVALID` | 422 | Only a buying group has a fee, from 0 up to (not including) 100% |
+| `NOT_A_GROUP_MEMBER` | 422 | A program can be paid through a buying group only if its supplier is a member |
 | `NOTHING_TO_ACCRUE` | 422 | No outstanding rebate at the closing date |
 | `JOURNAL_UNBALANCED` | 500 | Debits ≠ credits; never expected (built balanced) and nothing is exported |
 

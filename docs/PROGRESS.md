@@ -12,6 +12,16 @@ Template:
 - Next step:
 -->
 
+## 2026-11-17 — v1.2 Phase 23: buying-group payout reconciliation
+- Changed: suppliers.group_fee_pct and agreements.paid_via_group_id (migration 0013); a program
+  paid through a group accepts the group's credits (auto-match by reference + period, or manual
+  allocation) and reconciles against expected × (1 − fee), rounded half-up once; report
+  `group_payouts` (earned, fee, expected from group, received, variance); fee field on the group's
+  supplier page; "Paid through buying group" on the agreement page. Engine unchanged.
+- Decisions (ADRs): ADR 0019 D3 (one fee % of rebate per group).
+- Open questions: D2; real group statement to confirm the fee rule.
+- Next step: v1.2 plan complete; Phase 11 go-live steps remain with the founder.
+
 ## 2026-11-17 — v1.2 Phase 20: look-back recovery audit
 - Changed: /app/recovery-audit (coverage check → calculation run → identified shortfalls → one claim
   per supplier); API /api/v1/recovery-audit{,/coverage,/claims}; report `recovery_audit` (CSV/XLSX/PDF,

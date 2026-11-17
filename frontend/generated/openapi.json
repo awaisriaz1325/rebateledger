@@ -593,6 +593,18 @@
             "title": "Notes",
             "type": "string"
           },
+          "paid_via_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid Via Group Id"
+          },
           "row_version": {
             "title": "Row Version",
             "type": "integer"
@@ -697,6 +709,18 @@
             "title": "Notes",
             "type": "string"
           },
+          "paid_via_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid Via Group Id"
+          },
           "row_version": {
             "title": "Row Version",
             "type": "integer"
@@ -781,6 +805,18 @@
               }
             ],
             "title": "Notes"
+          },
+          "paid_via_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid Via Group Id"
           }
         },
         "title": "AgreementPatch",
@@ -3567,6 +3603,7 @@
               "claims_register",
               "recovery_report",
               "recovery_audit",
+              "group_payouts",
               "agreement_register",
               "import_history"
             ],
@@ -10253,6 +10290,21 @@
             "title": "Created At",
             "type": "string"
           },
+          "group_fee_pct": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Fee Pct"
+          },
           "group_ids": {
             "items": {
               "format": "uuid",
@@ -10423,6 +10475,21 @@
             "title": "Created At",
             "type": "string"
           },
+          "group_fee_pct": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Fee Pct"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -10505,6 +10572,21 @@
               }
             ],
             "title": "Codes"
+          },
+          "group_fee_pct": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Fee Pct"
           },
           "name": {
             "anyOf": [
@@ -19929,6 +20011,7 @@
                 "claims_register",
                 "recovery_report",
                 "recovery_audit",
+                "group_payouts",
                 "agreement_register",
                 "import_history"
               ],

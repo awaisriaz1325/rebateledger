@@ -12,6 +12,7 @@ import { ConfirmDialog, Dialog, Tabs } from "@/components/ui/overlay";
 import { QueryState } from "@/components/ui/states";
 import { ApiError, api, errorMessage, unwrap, uploadForm } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
+import { fetchAllSuppliers } from "@/lib/queries";
 import { can, useSession } from "@/lib/session";
 import type { AgreementDetail, Terms, Version } from "@/lib/types";
 import type { components } from "@/generated/api";
@@ -74,6 +75,7 @@ function Agreement({ a }: { a: AgreementDetail }) {
             ))}
           </ul>
           <ClaimDeadline a={a} editable={editable} onSaved={refresh} />
+          <PaidVia a={a} editable={editable} onSaved={refresh} />
         </nav>
         {v ? (
           <Tabs
@@ -92,6 +94,33 @@ function Agreement({ a }: { a: AgreementDetail }) {
       <ConfirmDialog open={archiving} onOpenChange={setArchiving} title={a.status === "archived" ? "Unarchive agreement?" : "Archive agreement?"}
         description={a.status === "archived" ? "It will be included in runs again." : "Archived agreements are left out of new runs. Past results stay."} confirmLabel={a.status === "archived" ? "Unarchive" : "Archive"} tone={a.status === "archived" ? "primary" : "danger"} pending={archive.isPending} onConfirm={() => archive.mutate()} />
     </>
+  );
+}
+
+/** The buying group that passes this program's rebate through (v1.2 Phase 23). */
+function PaidVia({ a, editable, onSaved }: { a: AgreementDetail; editable: boolean; onSaved: () => void }) {
+  const suppliers = useQuery({ queryKey: ["suppliers", "all"], queryFn: fetchAllSuppliers });
+  const groups = (suppliers.data ?? []).filter((s) => s.kind === "buying_group");
+  const [value, setValue] = useState(a.paid_via_group_id ?? "");
+  const save = useMutation({
+    mutationFn: async () => {
+      const head = await api.GET("/api/v1/agreements/{agreement_id}", { params: { path: { agreement_id: a.id } } });
+      return unwrap(await api.PATCH("/api/v1/agreements/{agreement_id}", { params: { path: { agreement_id: a.id } }, body: { paid_via_group_id: value || null }, headers: { "If-Match": head.response.headers.get("ETag") ?? "" } }));
+    },
+    onSuccess: () => { toast.success("Saved. Run the calculation again to refresh reconciliation."); onSaved(); },
+    onError: (e) => toast.error(errorMessage(e)),
+  });
+  if (groups.length === 0 && !a.paid_via_group_id) return null;
+  return (
+    <form className="mt-6 flex flex-col gap-2" onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
+      <Field id="paid-via" label="Paid through buying group" hint="If the rebate reaches you through a buying group, its credits count here and the group's fee is deducted from what you expect.">
+        <Select id="paid-via" value={value} disabled={!editable} onChange={(e) => setValue(e.target.value)}>
+          <option value="">Paid directly by the supplier</option>
+          {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+        </Select>
+      </Field>
+      {editable ? <Button type="submit" variant="secondary" disabled={value === (a.paid_via_group_id ?? "")} loading={save.isPending}>Save</Button> : null}
+    </form>
   );
 }
 

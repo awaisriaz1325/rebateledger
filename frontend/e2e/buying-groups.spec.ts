@@ -20,6 +20,17 @@ test("create a buying group and add a member supplier", async ({ page }) => {
   await expect(page.getByText(/Members saved/)).toBeVisible();
   await expectAccessible(page);
 
+  // v1.2 Phase 23: the group's fee on passed-through rebates.
+  await page.getByLabel("Fee (%)").fill("150");
+  await expect(page.getByText("Enter a percentage from 0 to 99.9999.")).toBeVisible();
+  await page.getByLabel("Fee (%)").fill("7.5");
+  await page.getByRole("button", { name: "Save fee" }).click();
+  await expect(page.getByText(/Group fee saved/)).toBeVisible();
+  await page.reload();
+  await page.getByRole("tab", { name: "Members" }).click();
+  await expect(page.getByLabel("Fee (%)")).toHaveValue("7.5");
+  await expectAccessible(page);
+
   await page.goto("/app/agreements/new");
   await expect(page.locator("#a-supplier").getByRole("option", { name: `${name} (buying group)` })).toBeAttached();
 });

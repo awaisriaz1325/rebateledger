@@ -3335,6 +3335,8 @@ export interface components {
             name: string;
             /** Notes */
             notes: string;
+            /** Paid Via Group Id */
+            paid_via_group_id?: string | null;
             /** Row Version */
             row_version: number;
             /** Status */
@@ -3376,6 +3378,8 @@ export interface components {
             name: string;
             /** Notes */
             notes: string;
+            /** Paid Via Group Id */
+            paid_via_group_id?: string | null;
             /** Row Version */
             row_version: number;
             /** Status */
@@ -3401,6 +3405,8 @@ export interface components {
             name?: string | null;
             /** Notes */
             notes?: string | null;
+            /** Paid Via Group Id */
+            paid_via_group_id?: string | null;
         };
         /** AllocateIn */
         AllocateIn: {
@@ -4371,7 +4377,7 @@ export interface components {
              * Report
              * @enum {string}
              */
-            report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "agreement_register" | "import_history";
+            report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "group_payouts" | "agreement_register" | "import_history";
         };
         /** ExportOut */
         ExportOut: {
@@ -6829,6 +6835,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Group Fee Pct */
+            group_fee_pct?: string | null;
             /** Group Ids */
             group_ids: string[];
             /**
@@ -6891,6 +6899,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Group Fee Pct */
+            group_fee_pct?: string | null;
             /**
              * Id
              * Format: uuid
@@ -6915,6 +6925,8 @@ export interface components {
             category_tags?: string[] | null;
             /** Codes */
             codes?: string[] | null;
+            /** Group Fee Pct */
+            group_fee_pct?: string | null;
             /** Name */
             name?: string | null;
             /** Notes */
@@ -12571,7 +12583,7 @@ export interface operations {
     preview_report_api_v1_reports_preview_get: {
         parameters: {
             query: {
-                report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "agreement_register" | "import_history";
+                report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "group_payouts" | "agreement_register" | "import_history";
                 supplier_id?: string | null;
                 period_from?: string | null;
                 period_to?: string | null;

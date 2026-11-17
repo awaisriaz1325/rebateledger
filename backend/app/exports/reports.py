@@ -431,6 +431,85 @@ def recovery_audit(db: Session, tenant: Tenant, p: ReportParams) -> Table:
     )
 
 
+# --------------------------------------------------------------------------- buying-group payouts
+
+
+def group_payouts(db: Session, tenant: Tenant, p: ReportParams) -> Table:
+    """Per buying group: what members' programs earned, the group's fee, and what was passed
+    through (v1.2 Phase 23). ``supplier_id`` filters by group."""
+    from app.services import group_payouts as groups
+
+    today = today_in(tenant.timezone)
+    agreements = {
+        a.id: a
+        for a in db.execute(
+            select(Agreement).where(
+                Agreement.tenant_id == tenant.id, Agreement.paid_via_group_id.is_not(None)
+            )
+        ).scalars()
+    }
+    group_rows = {
+        s.id: s
+        for s in db.execute(
+            select(Supplier).where(Supplier.tenant_id == tenant.id, Supplier.kind == "buying_group")
+        ).scalars()
+    }
+    rows = []
+    for li in recon.live_items(db, tenant, today=today):
+        a = agreements.get(li.result.agreement_id)
+        if a is None or a.paid_via_group_id is None:
+            continue
+        if p.supplier_id and a.paid_via_group_id != p.supplier_id:
+            continue
+        r, it = li.result, li.item
+        if p.period_from and r.period_end < p.period_from:
+            continue
+        if p.period_to and r.period_start > p.period_to:
+            continue
+        group = group_rows[a.paid_via_group_id]
+        gross = None if r.expected is None else r.expected.quantize(CENT)
+        rows.append(
+            {
+                "group": group.name,
+                "supplier": li.supplier_name,
+                "agreement": li.agreement_name,
+                "period": r.period_label,
+                "period_start": r.period_start,
+                "period_end": r.period_end,
+                "earned": gross,
+                "fee_pct": None if group.group_fee_pct is None else group.group_fee_pct * 100,
+                "fee": groups.fee_amount(gross, group.group_fee_pct),
+                "expected": it.expected,
+                "received": it.received.quantize(CENT),
+                "variance": None if it.variance is None else it.variance.quantize(CENT),
+                "status": it.status.value,
+            }
+        )
+    rows.sort(key=lambda x: (x["group"], x["supplier"], x["agreement"], x["period_start"]))
+    return Table(
+        title="Buying-group payouts",
+        subtitle="Supplier programs paid through a buying group: earned, the group's fee, and what reached you",
+        columns=[
+            Column("group", "Buying group"),
+            Column("supplier", "Supplier"),
+            Column("agreement", "Agreement"),
+            Column("period", "Period"),
+            Column("period_start", "Start", "date"),
+            Column("period_end", "End", "date"),
+            Column("earned", "Earned (before fee)", "money"),
+            Column("fee_pct", "Group fee %", "number"),
+            Column("fee", "Group fee", "money"),
+            Column("expected", "Expected from group", "money"),
+            Column("received", "Received", "money"),
+            Column("variance", "Variance", "money"),
+            Column("status", "Status"),
+        ],
+        rows=rows,
+        filters=_filter_text(db, tenant, p),
+        totals={k: _sum(rows, k) for k in ("earned", "fee", "expected", "received", "variance")},
+    )
+
+
 # --------------------------------------------------------------------------- registers
 
 
@@ -576,6 +655,14 @@ REPORTS: dict[str, ReportDef] = {
             "Recovery audit",
             "Look back up to three years: rebates calculated as owed but not received.",
             recovery_audit,
+            True,
+            ("supplier_id", "period_from", "period_to"),
+        ),
+        ReportDef(
+            "group_payouts",
+            "Buying-group payouts",
+            "Programs paid through a buying group: earned, group fee and what was passed through.",
+            group_payouts,
             True,
             ("supplier_id", "period_from", "period_to"),
         ),

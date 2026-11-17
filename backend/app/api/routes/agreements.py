@@ -23,7 +23,7 @@ from app.core.storage import get_storage, new_key
 from app.db.models.business import Agreement, AgreementAttachment, AgreementVersion, Approval
 from app.engine.calculate import PeriodResult
 from app.services import agreements as svc
-from app.services import subscriptions
+from app.services import group_payouts, subscriptions
 from app.services.agreement_terms import AgreementCreateIn, VersionTermsIn, terms_from_rows
 from app.services.audit import record
 
@@ -73,6 +73,7 @@ class AgreementOut(Out):
     row_version: int
     created_at: datetime
     claim_deadline_days: int | None = None
+    paid_via_group_id: uuid.UUID | None = None
     active_version: int | None = None
     latest_version_status: str | None = None
     summary: str = ""
@@ -88,6 +89,8 @@ class AgreementPatch(In):
     notes: Annotated[str | None, Field(max_length=5000)] = None
     #: Send null to clear. Days after a period ends that the supplier accepts claims.
     claim_deadline_days: Annotated[int | None, Field(ge=1, le=3650)] = None
+    #: The buying group that passes this program's rebate through. Send null to clear.
+    paid_via_group_id: uuid.UUID | None = None
 
 
 class ActivateIn(In):
@@ -221,6 +224,7 @@ def _agreement_out(a: Agreement, versions: list[AgreementVersion]) -> AgreementO
         row_version=a.row_version,
         created_at=a.created_at,
         claim_deadline_days=a.claim_deadline_days,
+        paid_via_group_id=a.paid_via_group_id,
         active_version=active.version_no if active else None,
         latest_version_status=latest.status if latest else None,
         summary=shown.summary if (shown := active or latest) is not None else "",
@@ -332,6 +336,9 @@ def update_agreement(
     values = body.model_dump(exclude_none=True)
     if "claim_deadline_days" in body.model_fields_set:
         values["claim_deadline_days"] = body.claim_deadline_days  # null clears it
+    if "paid_via_group_id" in body.model_fields_set:
+        values.pop("paid_via_group_id", None)
+        group_payouts.set_paid_via(ctx.db, ctx, a, body.paid_via_group_id)
     for key, value in values.items():
         setattr(a, key, value.strip() or None if key == "external_reference" else value)
     a.updated_by = ctx.user.id

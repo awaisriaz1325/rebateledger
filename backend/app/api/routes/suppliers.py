@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query, Response
@@ -12,7 +13,8 @@ from sqlalchemy import func, or_, select
 
 from app.api.deps import Ctx, Requires, if_match
 from app.api.etag import check_if_match, etag
-from app.api.schemas.common import In, Name, Ok, Out, Page
+from app.api.schemas.common import DecimalStr, In, Name, Ok, Out, Page, RateIn
+from app.core.errors import AppError
 from app.core.permissions import Permission
 from app.db.models.business import Supplier, SupplierAlias
 from app.services import suppliers as svc
@@ -43,6 +45,9 @@ class SupplierPatch(In):
     payment_notes: Annotated[str | None, Field(max_length=2000)] = None
     notes: Annotated[str | None, Field(max_length=5000)] = None
     status: Literal["active", "inactive"] | None = None
+    #: Buying groups only: share of each passed-through rebate the group keeps (0.05 = 5%).
+    #: Send null to clear.
+    group_fee_pct: RateIn | None = None
 
 
 class SupplierOut(Out):
@@ -56,6 +61,7 @@ class SupplierOut(Out):
     notes: str
     row_version: int
     created_at: datetime
+    group_fee_pct: DecimalStr | None = None
 
 
 class SupplierDetail(SupplierOut):
@@ -104,6 +110,7 @@ def _out(s: Supplier, codes: list[str]) -> SupplierOut:
         notes=s.notes,
         row_version=s.row_version,
         created_at=s.created_at,
+        group_fee_pct=s.group_fee_pct,
     )
 
 
@@ -196,7 +203,18 @@ def update_supplier(
 ) -> SupplierOut:
     s = svc.get(ctx.db, ctx.tenant_uuid, supplier_id)
     check_if_match(match, s.row_version)
-    svc.update_supplier(ctx.db, ctx, s, body.model_dump(exclude_none=True))
+    values = body.model_dump(exclude_none=True)
+    if "group_fee_pct" in body.model_fields_set:
+        fee = body.group_fee_pct
+        if fee is not None and (s.kind != "buying_group" or not Decimal(0) <= fee < Decimal(1)):
+            raise AppError(
+                422,
+                "GROUP_FEE_INVALID",
+                "Invalid group fee",
+                "Only a buying group has a fee, between 0 and 100% (exclusive), e.g. 0.05 for 5%.",
+            )
+        values["group_fee_pct"] = fee  # null clears it
+    svc.update_supplier(ctx.db, ctx, s, values)
     response.headers["ETag"] = etag(s.row_version)
     return _out(s, svc.aliases(ctx.db, ctx.tenant_uuid, [s.id])[s.id])
 

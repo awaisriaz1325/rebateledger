@@ -58,12 +58,20 @@ class Supplier(IdMixin, TenantMixin, TimestampMixin, AuthorMixin, VersionedMixin
         _in("status", ["active", "inactive"]),
         _in("kind", ["supplier", "buying_group"]),
         Index("ix_suppliers_tenant_name", "tenant_id", "name"),
+        CheckConstraint(
+            "group_fee_pct IS NULL OR (kind = 'buying_group' AND group_fee_pct >= 0 AND group_fee_pct < 1)",
+            name="group_fee_pct_valid",
+        ),
     )
 
     name: Mapped[str] = mapped_column(String(200))
     #: "buying_group": a payer whose programs count purchases from its member suppliers
     #: (v1.1 Phase 16). Purchases are never imported against a group.
     kind: Mapped[str] = mapped_column(String(20), default="supplier", server_default="supplier")
+    #: Buying groups only (v1.2 Phase 23, ADR 0019): share of each passed-through rebate the
+    #: group keeps, as a fraction (0.05 = 5%). NULL = not set; programs paid via the group then
+    #: reconcile against the full rebate.
+    group_fee_pct: Mapped[Decimal | None] = mapped_column(Numeric(9, 6))
     status: Mapped[str] = mapped_column(String(20), default="active")
     category_tags: Mapped[list[str]] = mapped_column(ARRAY(String(60)), default=list)
     payment_notes: Mapped[str] = mapped_column(Text, default="")
@@ -143,6 +151,9 @@ class Agreement(IdMixin, TenantMixin, TimestampMixin, AuthorMixin, VersionedMixi
     #: Days after a period ends within which the supplier accepts claims (v1.2 Phase 20).
     #: Informational: past it a period is flagged "may be time-barred", never dropped.
     claim_deadline_days: Mapped[int | None] = mapped_column(Integer)
+    #: The buying group that passes this supplier program's rebate through (v1.2 Phase 23).
+    #: Its credits may be allocated here; reconciliation expects the rebate minus the group fee.
+    paid_via_group_id: Mapped[uuid.UUID | None] = mapped_column(_fk("suppliers", "RESTRICT"))
 
 
 class AgreementVersion(IdMixin, TenantMixin, TimestampMixin, AuthorMixin, VersionedMixin, Base):

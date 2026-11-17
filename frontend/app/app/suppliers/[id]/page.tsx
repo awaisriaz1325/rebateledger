@@ -11,6 +11,7 @@ import { DateText, Money, StatusBadge } from "@/components/ui/finance";
 import { ConfirmDialog, Dialog, Tabs } from "@/components/ui/overlay";
 import { EmptyState, QueryState } from "@/components/ui/states";
 import { api, errorMessage, unwrap } from "@/lib/api";
+import { fractionToPercent, percentToFraction } from "@/lib/percent";
 import { can, useSession } from "@/lib/session";
 import { fetchAllSuppliers } from "@/lib/queries";
 
@@ -52,7 +53,7 @@ export default function SupplierDetailPage() {
           <Tabs
             label="Supplier sections"
             tabs={[
-              ...(s.kind === "buying_group" ? [{ value: "members", label: "Members", content: <GroupMembers groupId={s.id} memberIds={s.member_ids} editable={editable} /> }] : []),
+              ...(s.kind === "buying_group" ? [{ value: "members", label: "Members", content: <div className="flex flex-col gap-6"><GroupFee groupId={s.id} fee={s.group_fee_pct ?? null} editable={editable} /><GroupMembers groupId={s.id} memberIds={s.member_ids} editable={editable} /></div> }] : []),
               ...(s.kind === "supplier" && s.group_ids.length ? [{ value: "groups", label: "Buying groups", content: <MemberOf groupIds={s.group_ids} /> }] : []),
               { value: "agreements", label: "Agreements", content: <SupplierAgreements supplierId={s.id} /> },
               { value: "results", label: "Latest results", content: <SupplierResults supplierId={s.id} /> },
@@ -77,6 +78,33 @@ export default function SupplierDetailPage() {
         </>
       )}
     </QueryState>
+  );
+}
+
+/** The group's fee on passed-through rebates (v1.2 Phase 23, ADR 0019). */
+function GroupFee({ groupId, fee, editable }: { groupId: string; fee: string | null; editable: boolean }) {
+  const qc = useQueryClient();
+  const [value, setValue] = useState(fee ? fractionToPercent(fee) : "");
+  const fraction = value === "" ? null : percentToFraction(value);
+  const valid = value === "" || fraction !== null;
+  const save = useMutation({
+    mutationFn: async () => {
+      const head = await api.GET("/api/v1/suppliers/{supplier_id}", { params: { path: { supplier_id: groupId } } });
+      return unwrap(await api.PATCH("/api/v1/suppliers/{supplier_id}", { params: { path: { supplier_id: groupId } }, body: { group_fee_pct: fraction }, headers: { "If-Match": head.response.headers.get("ETag") ?? "" } }));
+    },
+    onSuccess: () => { toast.success("Group fee saved. Reconciliation of programs paid through this group now uses it."); void qc.invalidateQueries({ queryKey: ["supplier", groupId] }); },
+    onError: (e) => toast.error(errorMessage(e)),
+  });
+  return (
+    <Card title="Group fee">
+      <p className="mb-3 text-sm text-muted">The share of each passed-through rebate this group keeps. Programs marked “paid through this group” are reconciled against the rebate minus this fee. Leave empty if the group passes rebates through in full.</p>
+      <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); if (valid) save.mutate(); }}>
+        <Field id="group-fee" label="Fee (%)" hint="For example 5 or 7.5." error={valid ? undefined : "Enter a percentage from 0 to 99.9999."}>
+          <Input id="group-fee" inputMode="decimal" value={value} disabled={!editable} onChange={(e) => setValue(e.target.value)} aria-invalid={!valid || undefined} />
+        </Field>
+        {editable ? <Button type="submit" variant="secondary" disabled={!valid} loading={save.isPending}>Save fee</Button> : null}
+      </form>
+    </Card>
   );
 }
 

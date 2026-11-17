@@ -32,6 +32,7 @@ from app.engine.reconcile import (
     reconcile_item,
     suggest,
 )
+from app.services import group_payouts as groups
 from app.services import runs as run_svc
 from app.services.audit import record
 from app.services.staleness import mark_stale_for_period
@@ -97,13 +98,17 @@ def live_items(
     ]
     credit_dates = run_svc._credit_dates(db, tenant.id, {uuid.UUID(a.credit_id) for a in allocs})
     as_of = today or today_in(tenant.timezone)
+    group_fees = groups.fees(db, tenant.id)
     out = []
     for r in results:
         run = runs[r.run_id]
+        gross = None if r.expected is None else r.expected.quantize(Decimal("0.01"))
         item = reconcile_item(
             agreement_id=str(r.agreement_id),
             period=Period(r.period_start, r.period_end),
-            expected=None if r.expected is None else r.expected.quantize(Decimal("0.01")),
+            expected=groups.net_expected(
+                gross, groups.fee_for(agreements[r.agreement_id], group_fees)
+            ),
             engine_needs_review="NEEDS_REVIEW" in r.statuses,
             allocations=allocs,
             credit_dates=credit_dates,
@@ -193,12 +198,12 @@ def allocate(
         ).scalar_one_or_none()
         if agreement is None:
             raise not_found("Agreement")
-        if agreement.supplier_id != credit.supplier_id:
+        if credit.supplier_id not in (agreement.supplier_id, agreement.paid_via_group_id):
             raise AppError(
                 422,
                 "SUPPLIER_MISMATCH",
                 "Different supplier",
-                "A credit can only be allocated to agreements of the same supplier.",
+                "A credit can only be allocated to agreements of the same supplier, or that the crediting buying group pays.",
             )
         if not _target_exists(
             db, ctx.tenant_uuid, agreement.id, part["period_start"], part["period_end"]
