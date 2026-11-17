@@ -9,7 +9,7 @@ states whether its total equals the run's stored eligible spend.
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
@@ -39,6 +39,7 @@ from app.engine.calculate import select_lines
 from app.engine.models import Period
 from app.exports.writers import html_to_pdf, render_html
 from app.services import reconciliation as recon
+from app.services import statements as stmt_svc
 from app.services.agreement_terms import snapshot_for
 from app.services.agreements import to_line
 from app.services.claims import get as get_claim
@@ -72,6 +73,8 @@ class Section:
     trace: list[dict[str, Any]]
     allocations: list[dict[str, Any]]
     lines: LineCheck
+    #: The supplier's own statement for this agreement-period (v1.2 Phase 22).
+    statements: list[stmt_svc.Comparison] = field(default_factory=list)
 
 
 def _lines(
@@ -162,6 +165,7 @@ def build_evidence_pack(
     sections: list[Section] = []
     all_lines: list[list[object]] = []
     credit_rows: list[list[object]] = []
+    statement_rows: list[stmt_svc.Comparison] = []
     for it in items:
         live = next(
             (
@@ -228,6 +232,17 @@ def build_evidence_pack(
             )
         lines = _lines(db, tenant, result, run, agreement)
         all_lines.extend(lines.rows)
+        compared = [
+            c
+            for c in stmt_svc.compare(
+                db,
+                tenant,
+                agreement_id=it.agreement_id,
+                period=(result.full_period_start, result.full_period_end),
+            )
+            if c.line.match_status in ("matched", "confirmed")
+        ]
+        statement_rows.extend(compared)
         if live:
             expected, received, variance, due = (
                 live.item.expected,
@@ -257,6 +272,7 @@ def build_evidence_pack(
                 trace,
                 allocations,
                 lines,
+                compared,
             )
         )
     totals = {
@@ -351,6 +367,8 @@ def build_evidence_pack(
             )
         ).encode(),
     }
+    if statement_rows:
+        files["supplier-statement.csv"] = ("﻿" + stmt_svc.to_csv(statement_rows)).encode()
     return zip_bytes(files), claim.number, len(all_lines)
 
 

@@ -445,6 +445,53 @@ class RowValidator:
             "notes": self._text(r, cells, "notes", False, 500) or "",
         }
 
+    def _row_statements(self, r: RowResult, cells: list[str]) -> dict[str, Any]:
+        """A supplier statement line. An unknown or ambiguous agreement is not an error: the
+        line is kept "unmatched" (or "suggested") for a person to assign."""
+        supplier = self._supplier(r, cells)
+        ref = self._text(r, cells, "agreement_reference", False)
+        agreement: uuid.UUID | None = None
+        status = "unmatched"
+        options = self.ctx.agreements_by_supplier.get(supplier, []) if supplier else []
+        if ref:
+            found = self.ctx.agreements_by_ref.get(ref.lower())
+            if found is not None and found in options:
+                agreement, status = found, "matched"
+            else:
+                self._issue(
+                    r,
+                    "agreement_reference",
+                    ref,
+                    "UNKNOWN_AGREEMENT",
+                    "No agreement of this supplier has this reference; the line is kept unmatched.",
+                    "warning",
+                )
+        elif len(options) == 1:
+            agreement, status = options[0], "suggested"
+        start = self._date(r, cells, "period_start", True)
+        end = self._date(r, cells, "period_end", True)
+        if start and end and end < start:
+            self._issue(
+                r, "period_end", str(end), "PERIOD_INVALID", "Period end is before period start."
+            )
+        rebate = self._decimal(r, cells, "supplier_rebate", True)
+        measure = self._decimal(r, cells, "supplier_measure", False)
+        stmt_ref = self._text(r, cells, "statement_reference", False)
+        key_src = "|".join(str(x) for x in (stmt_ref, ref, start, end, rebate, measure))
+        return {
+            "supplier_id": supplier,
+            "agreement_id": agreement,
+            "match_status": status,
+            "agreement_reference": ref,
+            "statement_reference": stmt_ref,
+            "period_start": start,
+            "period_end": end,
+            "supplier_rebate": rebate,
+            "supplier_measure": measure,
+            "notes": self._text(r, cells, "notes", False, 500) or "",
+            "dedupe_key": hashlib.sha256(key_src.encode()).digest(),
+        }
+
     def _row_products(self, r: RowResult, cells: list[str]) -> dict[str, Any]:
         sku = self._text(r, cells, "sku", True)
         if sku and looks_like_scientific(sku):

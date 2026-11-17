@@ -1090,6 +1090,28 @@
         "title": "ApprovalSettingsIn",
         "type": "object"
       },
+      "AssignIn": {
+        "additionalProperties": false,
+        "properties": {
+          "agreement_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreement Id"
+          }
+        },
+        "required": [
+          "agreement_id"
+        ],
+        "title": "AssignIn",
+        "type": "object"
+      },
       "AttachmentOut": {
         "properties": {
           "content_type": {
@@ -3937,7 +3959,8 @@
           "baselines",
           "products",
           "suppliers",
-          "sales"
+          "sales",
+          "statements"
         ],
         "title": "ImportType",
         "type": "string"
@@ -9444,6 +9467,209 @@
         ],
         "title": "Stacking",
         "type": "string"
+      },
+      "StatementRowOut": {
+        "properties": {
+          "agreement_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreement Id"
+          },
+          "agreement_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreement Name"
+          },
+          "agreement_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreement Reference"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "difference": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difference"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "match_status": {
+            "title": "Match Status",
+            "type": "string"
+          },
+          "our_measure": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Our Measure"
+          },
+          "ours": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ours"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "result_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Result Ids",
+            "type": "array"
+          },
+          "source_row": {
+            "title": "Source Row",
+            "type": "integer"
+          },
+          "statement_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statement Reference"
+          },
+          "status": {
+            "enum": [
+              "agrees",
+              "purchases_differ",
+              "rate_or_tier_differs",
+              "not_calculated",
+              "needs_review",
+              "unconfirmed",
+              "unmatched"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          },
+          "supplier_name": {
+            "title": "Supplier Name",
+            "type": "string"
+          },
+          "their_measure": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Their Measure"
+          },
+          "theirs": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Theirs",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "supplier_id",
+          "supplier_name",
+          "agreement_id",
+          "agreement_name",
+          "match_status",
+          "statement_reference",
+          "agreement_reference",
+          "period_start",
+          "period_end",
+          "their_measure",
+          "our_measure",
+          "theirs",
+          "ours",
+          "difference",
+          "status",
+          "reason",
+          "result_ids",
+          "batch_id",
+          "source_row"
+        ],
+        "title": "StatementRowOut",
+        "type": "object"
       },
       "StepUpIn": {
         "additionalProperties": false,
@@ -20404,6 +20630,207 @@
         "summary": "Update Spa",
         "tags": [
           "spa"
+        ]
+      }
+    },
+    "/api/v1/statements": {
+      "get": {
+        "operationId": "list_statements_api_v1_statements_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "supplier_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supplier Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "agrees",
+                    "purchases_differ",
+                    "rate_or_tier_differs",
+                    "not_calculated",
+                    "needs_review",
+                    "unconfirmed",
+                    "unmatched"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StatementRowOut"
+                  },
+                  "title": "Response List Statements Api V1 Statements Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Statements",
+        "tags": [
+          "statements"
+        ]
+      }
+    },
+    "/api/v1/statements/export": {
+      "get": {
+        "operationId": "export_statements_api_v1_statements_export_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "supplier_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supplier Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "agrees",
+                    "purchases_differ",
+                    "rate_or_tier_differs",
+                    "not_calculated",
+                    "needs_review",
+                    "unconfirmed",
+                    "unmatched"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Statements",
+        "tags": [
+          "statements"
+        ]
+      }
+    },
+    "/api/v1/statements/{line_id}/agreement": {
+      "put": {
+        "description": "Confirm the suggested agreement, choose another of the same supplier, or clear it.",
+        "operationId": "assign_agreement_api_v1_statements__line_id__agreement_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "line_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Line Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatementRowOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Assign Agreement",
+        "tags": [
+          "statements"
         ]
       }
     },

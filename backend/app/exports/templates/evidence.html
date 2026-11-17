@@ -46,6 +46,15 @@
     <tbody>{% for a in s.allocations %}<tr><td>{{ a.reference }}</td><td>{{ a.credit_date }}</td><td>{{ a.method }}</td><td class="num">{{ a.amount | show("money") }}</td></tr>{% endfor %}</tbody>
   </table>
   {% else %}<p>No credit has been received for this period.</p>{% endif %}
+
+  {% if s.statements %}
+  <h3>Supplier's statement for this period</h3>
+  <table>
+    <thead><tr><th>Statement</th><th class="num">Their purchases</th><th class="num">Our purchases</th><th class="num">Their rebate</th><th class="num">Our rebate</th><th class="num">Difference</th></tr></thead>
+    <tbody>{% for c in s.statements %}<tr><td>{{ c.line.statement_reference or "—" }}</td><td class="num">{{ c.line.supplier_measure | show("money") if c.line.supplier_measure is not none else "—" }}</td><td class="num">{{ c.our_measure | show("money") if c.our_measure is not none else "—" }}</td><td class="num">{{ c.theirs | show("money") }}</td><td class="num">{{ c.ours | show("money") if c.ours is not none else "—" }}</td><td class="num">{{ c.difference | show("money") if c.difference is not none else "—" }}</td></tr>
+    <tr><td colspan="6">{{ c.reason }}</td></tr>{% endfor %}</tbody>
+  </table>
+  {% endif %}
   {% endfor %}
 
   <h2>Claim history</h2>

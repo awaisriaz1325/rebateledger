@@ -364,3 +364,22 @@ SAMPLE_BODIES[("PUT", "/api/v1/spas/{spa_id}")] = {
     "items": [{"sku": "A", "book_cost": "10", "spa_cost": "8"}],
 }
 SAMPLE_BODIES[("POST", "/api/v1/spa-claims/{claim_id}/transition")] = {"to": "submitted"}
+
+
+def statement_line(w: World, t: uuid.UUID) -> uuid.UUID:
+    """v1.2 Phase 22: an unmatched supplier statement line in another tenant."""
+    sid, bid, lid = supplier(w, t), batch(w, t), uuid.uuid7()
+    w.sql(
+        "INSERT INTO rl.statement_lines (id, tenant_id, batch_id, source_row, supplier_id, match_status, dedupe_key, period_start, period_end, supplier_rebate, notes, voided, created_at) "
+        "VALUES (:l, :t, :b, 2, :s, 'unmatched', :k, '2025-01-01', '2025-03-31', 100, '', false, now())",
+        l=lid,
+        t=t,
+        b=bid,
+        s=sid,
+        k=uuid.uuid4().bytes + uuid.uuid4().bytes,
+    )
+    return lid
+
+
+EXTRA_FACTORIES["line_id"] = statement_line
+SAMPLE_BODIES[("PUT", "/api/v1/statements/{line_id}/agreement")] = {"agreement_id": None}

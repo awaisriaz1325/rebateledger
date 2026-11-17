@@ -19,6 +19,7 @@ from app.api.routes import (
     reconciliation,
     runs,
     spa,
+    statements,
     suppliers,
 )
 
@@ -38,6 +39,7 @@ ROUTERS = [
     reconciliation.router,
     claims.router,
     spa.router,
+    statements.router,
     insights.router,
     accruals.router,
     exports.router,

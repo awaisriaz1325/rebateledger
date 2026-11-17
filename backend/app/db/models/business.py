@@ -296,6 +296,7 @@ class ImportType(StrEnum):
     PRODUCTS = "products"
     SUPPLIERS = "suppliers"
     SALES = "sales"  # v1.1 Phase 17: sales lines for ship-and-debit / SPA claims
+    STATEMENTS = "statements"  # v1.2 Phase 22: the supplier's own statement of rebate earned
 
 
 class BatchStatus(StrEnum):
@@ -634,3 +635,44 @@ class SpaMatchRow(TenantMixin, Base):
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class StatementLineRow(IdMixin, TenantMixin, Base):
+    """One line of a supplier's rebate statement: what the supplier says was earned (v1.2 Phase 22).
+
+    ``agreement_id`` is set when the line names a known agreement reference ("matched"), suggested
+    when the supplier has exactly one agreement ("suggested", needs a person to confirm), or left
+    empty ("unmatched"). Only matched and confirmed lines are compared.
+    """
+
+    __tablename__ = "statement_lines"
+    __table_args__ = (
+        _in("match_status", ["matched", "suggested", "confirmed", "unmatched"]),
+        Index("ix_statement_lines_agreement", "tenant_id", "agreement_id", "period_start"),
+        Index("ix_statement_lines_batch", "batch_id"),
+        Index(
+            "uq_statement_lines_dedupe",
+            "tenant_id",
+            "supplier_id",
+            "dedupe_key",
+            unique=True,
+            postgresql_where=text("NOT voided"),
+        ),
+    )
+
+    batch_id: Mapped[uuid.UUID] = mapped_column(_fk("import_batches", "RESTRICT"))
+    source_row: Mapped[int] = mapped_column(Integer)
+    supplier_id: Mapped[uuid.UUID] = mapped_column(_fk("suppliers", "RESTRICT"))
+    agreement_id: Mapped[uuid.UUID | None] = mapped_column(_fk("agreements", "RESTRICT"))
+    match_status: Mapped[str] = mapped_column(String(20))
+    dedupe_key: Mapped[bytes] = mapped_column(LargeBinary(32))
+    statement_reference: Mapped[str | None] = mapped_column(String(100))
+    agreement_reference: Mapped[str | None] = mapped_column(String(100))
+    period_start: Mapped[date] = mapped_column(Date)
+    period_end: Mapped[date] = mapped_column(Date)
+    supplier_measure: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    supplier_rebate: Mapped[Decimal] = mapped_column(Numeric(18, 4))
+    notes: Mapped[str] = mapped_column(String(500), default="")
+    voided: Mapped[bool] = mapped_column(Boolean, default=False)
+    matched_by: Mapped[uuid.UUID | None]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

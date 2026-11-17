@@ -30,6 +30,7 @@ from app.db.models.business import (
     Product,
     PurchaseLineRow,
     SaleLineRow,
+    StatementLineRow,
     Supplier,
     SupplierAlias,
     SupplierContact,
@@ -677,6 +678,20 @@ def _insert(
             .returning(SaleLineRow.source_row, sort_by_parameter_order=True)
         )
         return set(db.execute(sales_stmt, values).scalars())
+    if kind is ImportType.STATEMENTS:
+        values = [
+            {"id": uuid.uuid7(), "tenant_id": tid, "batch_id": batch.id, "source_row": row, **rec}
+            for row, rec in records
+        ]
+        stmt_stmt = (
+            insert(StatementLineRow)
+            .on_conflict_do_nothing(
+                index_elements=["tenant_id", "supplier_id", "dedupe_key"],
+                index_where=text("NOT voided"),
+            )
+            .returning(StatementLineRow.source_row, sort_by_parameter_order=True)
+        )
+        return {r for r in db.execute(stmt_stmt, values).scalars() if r is not None}
     if kind is ImportType.CREDITS:
         values = [
             {"id": uuid.uuid7(), "tenant_id": tid, "batch_id": batch.id, "source_row": row, **rec}
@@ -774,6 +789,7 @@ def _commit_job(db: Session, job: JobContext) -> dict[str, Any]:
                 ImportType.CREDITS,
                 ImportType.SUPPLIERS,
                 ImportType.SALES,
+                ImportType.STATEMENTS,
             ):
                 duplicates += 1
                 if len(duplicate_issues) < MAX_STORED_ISSUES:
@@ -934,7 +950,7 @@ def void(db: Session, ctx: Any, batch: ImportBatch, reason: str) -> ImportBatch:
     """Soft void: rows are excluded from future runs; past runs keep their references."""
     if batch.status != BatchStatus.COMMITTED.value:
         raise conflict("IMPORT_NOT_COMMITTED", "Only committed imports can be voided.")
-    for model in (PurchaseLineRow, CreditLineRow, BaselineRow, SaleLineRow):
+    for model in (PurchaseLineRow, CreditLineRow, BaselineRow, SaleLineRow, StatementLineRow):
         db.execute(
             update(model)
             .where(model.tenant_id == batch.tenant_id, model.batch_id == batch.id)

@@ -16,6 +16,7 @@ const TYPES = [
   { value: "products", label: "Product catalog", help: "SKU to category mapping." },
   { value: "suppliers", label: "Suppliers", help: "Bulk-create suppliers and their codes." },
   { value: "sales", label: "Sales lines (SPA claims)", help: "What you sold under special pricing: supplier code, invoice, date, customer, job, SKU, quantity, cost." },
+  { value: "statements", label: "Supplier statement", help: "What a supplier says you earned: supplier code, program, period from/to, rebate, and their purchase total if shown." },
 ] as const;
 
 export default function NewImportPage() {

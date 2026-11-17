@@ -12,6 +12,17 @@ Template:
 - Next step:
 -->
 
+## 2026-11-17 — v1.2 Phase 22: supplier statement compare
+- Changed: import type `statements` (migration 0011: statement_lines + RLS, import_type CHECK widened);
+  /app/statements compares their rebate with ours per agreement and full period (agrees /
+  purchases differ / rate or tier differs / not calculated / needs review / unconfirmed / unmatched);
+  assign or confirm the agreement; formula-safe CSV of differences; evidence packs now include the
+  supplier's statement (supplier-statement.csv + PDF section).
+- Decisions (ADRs): none. Claims still follow the existing rule (short-paid or missing periods only);
+  a statement difference before payment is due is shown and exported, not claimed.
+- Open questions: D1–D3; whether statement differences should be claimable before the due date.
+- Next step: Phase 23 needs D3; Phase 20 needs D1.
+
 ## 2026-11-17 — v1.2 Phase 21: bulk agreement import
 - Changed: /app/agreements/import (template, column guide, preview, create drafts);
   API /api/v1/agreements/bulk{,/preview,/columns,/template}; service app/services/agreement_bulk.py.

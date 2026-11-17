@@ -36,6 +36,7 @@ TENANT_TABLES = (
     "digest_sends",
     "buying_group_members",
     "sales_lines",
+    "statement_lines",
     "spas",
     "spa_items",
     "spa_claims",

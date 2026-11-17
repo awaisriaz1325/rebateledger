@@ -2754,6 +2754,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/statements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Statements */
+        get: operations["list_statements_api_v1_statements_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/statements/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Statements */
+        get: operations["export_statements_api_v1_statements_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/statements/{line_id}/agreement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Assign Agreement
+         * @description Confirm the suggested agreement, choose another of the same supplier, or clear it.
+         */
+        put: operations["assign_agreement_api_v1_statements__line_id__agreement_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/suppliers": {
         parameters: {
             query?: never;
@@ -3446,6 +3500,11 @@ export interface components {
             four_eyes_activation?: boolean | null;
             /** Four Eyes Writeoff */
             four_eyes_writeoff?: boolean | null;
+        };
+        /** AssignIn */
+        AssignIn: {
+            /** Agreement Id */
+            agreement_id: string | null;
         };
         /** AttachmentOut */
         AttachmentOut: {
@@ -4398,7 +4457,7 @@ export interface components {
          * ImportType
          * @enum {string}
          */
-        ImportType: "purchases" | "credits" | "baselines" | "products" | "suppliers" | "sales";
+        ImportType: "purchases" | "credits" | "baselines" | "products" | "suppliers" | "sales" | "statements";
         /** InviteIn */
         InviteIn: {
             /** Email */
@@ -6455,6 +6514,70 @@ export interface components {
          * @enum {string}
          */
         Stacking: "exclusive" | "stackable";
+        /** StatementRowOut */
+        StatementRowOut: {
+            /** Agreement Id */
+            agreement_id: string | null;
+            /** Agreement Name */
+            agreement_name: string | null;
+            /** Agreement Reference */
+            agreement_reference: string | null;
+            /**
+             * Batch Id
+             * Format: uuid
+             */
+            batch_id: string;
+            /** Difference */
+            difference: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Match Status */
+            match_status: string;
+            /** Our Measure */
+            our_measure: string | null;
+            /** Ours */
+            ours: string | null;
+            /**
+             * Period End
+             * Format: date
+             */
+            period_end: string;
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            /** Reason */
+            reason: string;
+            /** Result Ids */
+            result_ids: string[];
+            /** Source Row */
+            source_row: number;
+            /** Statement Reference */
+            statement_reference: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "agrees" | "purchases_differ" | "rate_or_tier_differs" | "not_calculated" | "needs_review" | "unconfirmed" | "unmatched";
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /** Supplier Name */
+            supplier_name: string;
+            /** Their Measure */
+            their_measure: string | null;
+            /**
+             * Theirs
+             * @example 1234.50
+             */
+            theirs: string;
+        };
         /** StepUpIn */
         StepUpIn: {
             /** Code */
@@ -12866,6 +12989,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SpaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_statements_api_v1_statements_get: {
+        parameters: {
+            query?: {
+                supplier_id?: string | null;
+                status?: ("agrees" | "purchases_differ" | "rate_or_tier_differs" | "not_calculated" | "needs_review" | "unconfirmed" | "unmatched") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatementRowOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_statements_api_v1_statements_export_get: {
+        parameters: {
+            query?: {
+                supplier_id?: string | null;
+                status?: ("agrees" | "purchases_differ" | "rate_or_tier_differs" | "not_calculated" | "needs_review" | "unconfirmed" | "unmatched") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assign_agreement_api_v1_statements__line_id__agreement_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                line_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatementRowOut"];
                 };
             };
             /** @description Validation Error */
