@@ -19,6 +19,7 @@ import {
   Settings,
   Target,
   FileCheck2,
+  SearchCheck,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
@@ -77,6 +78,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
     section: "Analyse",
     items: [
       { href: "/app/reports", label: "Reports", icon: <ChartColumn size={16} /> },
+      { href: "/app/recovery-audit", label: "Recovery audit", icon: <SearchCheck size={16} /> },
       { href: "/app/accruals", label: "Month-end accruals", icon: <BookText size={16} />, permission: "export" },
     ],
   },
@@ -363,7 +365,7 @@ function SupportGrantBanner({ session }: { session: SessionInfo }) {
 const LABELS: Record<string, string> = {
   app: "Dashboard", suppliers: "Suppliers", agreements: "Agreements", imports: "Imports", runs: "Runs", results: "Results",
   discrepancies: "Discrepancies", credits: "Credits", claims: "Claims", tiers: "Tier tracker", settings: "Settings", reports: "Reports",
-  approvals: "Approvals", new: "New", model: "Deal modelling", import: "Import", accruals: "Month-end accruals", spa: "SPA claims", statements: "Supplier statements", accounting: "Accounting", profile: "Profile", security: "Security", organization: "Organization", members: "Members",
+  approvals: "Approvals", new: "New", model: "Deal modelling", import: "Import", accruals: "Month-end accruals", spa: "SPA claims", statements: "Supplier statements", "recovery-audit": "Recovery audit", accounting: "Accounting", profile: "Profile", security: "Security", organization: "Organization", members: "Members",
   reconciliation: "Reconciliation", notifications: "Notifications", templates: "Import templates", plan: "Plan & usage", audit: "Audit log", data: "Data",
 };
 

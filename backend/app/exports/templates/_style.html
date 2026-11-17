@@ -1,7 +1,8 @@
 <style>
   @page { size: Letter landscape; margin: 14mm 12mm 16mm;
     @bottom-left { content: "{{ organization }} · {{ product }}"; font: 7.5pt sans-serif; color: #5b6660; }
-    @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 7.5pt sans-serif; color: #5b6660; } }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 7.5pt sans-serif; color: #5b6660; }
+    {% if page_note %}@top-center { content: "{{ page_note }}"; font: bold 8pt sans-serif; color: #17201b; }{% endif %} }
   * { box-sizing: border-box; }
   body { font-family: "IBM Plex Sans", "DejaVu Sans", Arial, sans-serif; font-size: 8.5pt; color: #17201b; }
   h1 { font-size: 15pt; margin: 0 0 2mm; }

@@ -542,6 +542,17 @@
             ],
             "title": "Active Version"
           },
+          "claim_deadline_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claim Deadline Days"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -635,6 +646,17 @@
             ],
             "title": "Active Version"
           },
+          "claim_deadline_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claim Deadline Days"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -710,6 +732,19 @@
       "AgreementPatch": {
         "additionalProperties": false,
         "properties": {
+          "claim_deadline_days": {
+            "anyOf": [
+              {
+                "maximum": 3650.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claim Deadline Days"
+          },
           "external_reference": {
             "anyOf": [
               {
@@ -3531,6 +3566,7 @@
               "supplier_statement",
               "claims_register",
               "recovery_report",
+              "recovery_audit",
               "agreement_register",
               "import_history"
             ],
@@ -7335,6 +7371,181 @@
         "title": "ReconciliationSettingsIn",
         "type": "object"
       },
+      "RecoveryAuditClaimsIn": {
+        "additionalProperties": false,
+        "properties": {
+          "result_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Result Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "result_ids"
+        ],
+        "title": "RecoveryAuditClaimsIn",
+        "type": "object"
+      },
+      "RecoveryAuditClaimsOut": {
+        "properties": {
+          "claim_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Claim Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "claim_ids"
+        ],
+        "title": "RecoveryAuditClaimsOut",
+        "type": "object"
+      },
+      "RecoveryAuditOut": {
+        "properties": {
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/RecoveryAuditRowOut"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "total_shortfall": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Total Shortfall",
+            "type": "string"
+          }
+        },
+        "required": [
+          "note",
+          "total_shortfall",
+          "rows"
+        ],
+        "title": "RecoveryAuditOut",
+        "type": "object"
+      },
+      "RecoveryAuditRowOut": {
+        "properties": {
+          "age": {
+            "title": "Age",
+            "type": "string"
+          },
+          "agreement": {
+            "title": "Agreement",
+            "type": "string"
+          },
+          "claim": {
+            "title": "Claim",
+            "type": "string"
+          },
+          "deadline": {
+            "title": "Deadline",
+            "type": "string"
+          },
+          "due_date": {
+            "format": "date",
+            "title": "Due Date",
+            "type": "string"
+          },
+          "expected": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected"
+          },
+          "period": {
+            "title": "Period",
+            "type": "string"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "received": {
+            "examples": [
+              "1234.50"
+            ],
+            "pattern": "^-?\\d+(\\.\\d+)?$",
+            "title": "Received",
+            "type": "string"
+          },
+          "result_id": {
+            "format": "uuid",
+            "title": "Result Id",
+            "type": "string"
+          },
+          "shortfall": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shortfall"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "supplier": {
+            "title": "Supplier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result_id",
+          "supplier",
+          "agreement",
+          "period",
+          "period_start",
+          "period_end",
+          "expected",
+          "received",
+          "shortfall",
+          "status",
+          "due_date",
+          "age",
+          "deadline",
+          "claim"
+        ],
+        "title": "RecoveryAuditRowOut",
+        "type": "object"
+      },
       "RecoveryCodesOut": {
         "properties": {
           "recovery_codes": {
@@ -7349,6 +7560,76 @@
           "recovery_codes"
         ],
         "title": "RecoveryCodesOut",
+        "type": "object"
+      },
+      "RecoveryCoverageOut": {
+        "properties": {
+          "agreements": {
+            "title": "Agreements",
+            "type": "integer"
+          },
+          "data_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data From"
+          },
+          "gaps": {
+            "items": {
+              "$ref": "#/components/schemas/RecoveryGapOut"
+            },
+            "title": "Gaps",
+            "type": "array"
+          },
+          "history_starts_late": {
+            "title": "History Starts Late",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "supplier_id",
+          "name",
+          "agreements",
+          "gaps",
+          "data_from",
+          "history_starts_late"
+        ],
+        "title": "RecoveryCoverageOut",
+        "type": "object"
+      },
+      "RecoveryGapOut": {
+        "properties": {
+          "end": {
+            "format": "date",
+            "title": "End",
+            "type": "string"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "RecoveryGapOut",
         "type": "object"
       },
       "RecoveryIn": {
@@ -19403,6 +19684,211 @@
         ]
       }
     },
+    "/api/v1/recovery-audit": {
+      "get": {
+        "operationId": "audit_api_v1_recovery_audit_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "period_from",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "Period From",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "period_to",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "Period To",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "supplier_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supplier Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryAuditOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Audit",
+        "tags": [
+          "recovery-audit"
+        ]
+      }
+    },
+    "/api/v1/recovery-audit/claims": {
+      "post": {
+        "description": "One claim per supplier for the selected shortfalls; nothing is created if any fails.",
+        "operationId": "create_claims_api_v1_recovery_audit_claims_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryAuditClaimsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryAuditClaimsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Claims",
+        "tags": [
+          "recovery-audit"
+        ]
+      }
+    },
+    "/api/v1/recovery-audit/coverage": {
+      "get": {
+        "operationId": "coverage_api_v1_recovery_audit_coverage_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "period_from",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "Period From",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "period_to",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "Period To",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "supplier_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supplier Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RecoveryCoverageOut"
+                  },
+                  "title": "Response Coverage Api V1 Recovery Audit Coverage Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Coverage",
+        "tags": [
+          "recovery-audit"
+        ]
+      }
+    },
     "/api/v1/reports": {
       "get": {
         "operationId": "list_reports_api_v1_reports_get",
@@ -19442,6 +19928,7 @@
                 "supplier_statement",
                 "claims_register",
                 "recovery_report",
+                "recovery_audit",
                 "agreement_register",
                 "import_history"
               ],

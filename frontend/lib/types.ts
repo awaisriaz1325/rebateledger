@@ -30,3 +30,5 @@ export type ReportPreview = S["ReportPreviewOut"];
 export type BulkPlan = S["BulkPlanOut"];
 export type BulkColumn = S["BulkColumnOut"];
 export type StatementRow = S["StatementRowOut"];
+export type AuditCoverage = S["RecoveryCoverageOut"];
+export type AuditResult = S["RecoveryAuditOut"];

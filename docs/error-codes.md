@@ -115,6 +115,7 @@ is not listed here.
 | `BULK_INVALID` | 422 | Agreement import file has errors; nothing was created (preview lists them) |
 | `FILE_ENCODING` | 422 | Agreement import file is not UTF-8 CSV |
 | `AGREEMENT_SUPPLIER_MISMATCH` | 422 | A supplier statement line can only be assigned to an agreement of the same supplier |
+| `PERIOD_REQUIRED` | 422 | The recovery audit needs a start and end date |
 | `NOTHING_TO_ACCRUE` | 422 | No outstanding rebate at the closing date |
 | `JOURNAL_UNBALANCED` | 500 | Debits ≠ credits; never expected (built balanced) and nothing is exported |
 

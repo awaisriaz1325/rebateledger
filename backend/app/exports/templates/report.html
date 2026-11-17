@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>{{ t.title }}</title>
-{% set product = "RebateLedger" %}{% include "_style.html" %}</head>
+{% set product = "RebateLedger" %}{% set page_note = t.page_note %}{% include "_style.html" %}</head>
 <body>
   <h1>{{ t.title }}</h1>
   <p class="meta muted">{{ organization }}{% if t.subtitle %} · {{ t.subtitle }}{% endif %} · generated {{ generated_at.strftime("%Y-%m-%d %H:%M UTC") }}

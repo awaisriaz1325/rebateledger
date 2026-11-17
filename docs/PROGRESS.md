@@ -12,6 +12,15 @@ Template:
 - Next step:
 -->
 
+## 2026-11-17 — v1.2 Phase 20: look-back recovery audit
+- Changed: /app/recovery-audit (coverage check → calculation run → identified shortfalls → one claim
+  per supplier); API /api/v1/recovery-audit{,/coverage,/claims}; report `recovery_audit` (CSV/XLSX/PDF,
+  "identified, not recovered" printed on every PDF page); agreement field `claim_deadline_days`
+  (migration 0012) flags "may be time-barred" without dropping anything.
+- Decisions (ADRs): ADR 0019 — D1 free in pilots (no pricing change); D3 group fee = % of rebate per group.
+- Open questions: D2 (pilot ERP files); statement differences claimable before due date?
+- Next step: Phase 23 (buying-group payout reconciliation) per ADR 0019.
+
 ## 2026-11-17 — v1.2 Phase 22: supplier statement compare
 - Changed: import type `statements` (migration 0011: statement_lines + RLS, import_type CHECK widened);
   /app/statements compares their rebate with ours per agreement and full period (agrees /

@@ -72,6 +72,7 @@ class AgreementOut(Out):
     notes: str
     row_version: int
     created_at: datetime
+    claim_deadline_days: int | None = None
     active_version: int | None = None
     latest_version_status: str | None = None
     summary: str = ""
@@ -85,6 +86,8 @@ class AgreementPatch(In):
     name: Name | None = None
     external_reference: Annotated[str | None, Field(max_length=100)] = None
     notes: Annotated[str | None, Field(max_length=5000)] = None
+    #: Send null to clear. Days after a period ends that the supplier accepts claims.
+    claim_deadline_days: Annotated[int | None, Field(ge=1, le=3650)] = None
 
 
 class ActivateIn(In):
@@ -217,6 +220,7 @@ def _agreement_out(a: Agreement, versions: list[AgreementVersion]) -> AgreementO
         notes=a.notes,
         row_version=a.row_version,
         created_at=a.created_at,
+        claim_deadline_days=a.claim_deadline_days,
         active_version=active.version_no if active else None,
         latest_version_status=latest.status if latest else None,
         summary=shown.summary if (shown := active or latest) is not None else "",
@@ -325,7 +329,10 @@ def update_agreement(
 ) -> AgreementOut:
     a = svc.get_agreement(ctx.db, ctx.tenant_uuid, agreement_id)
     check_if_match(match, a.row_version)
-    for key, value in body.model_dump(exclude_none=True).items():
+    values = body.model_dump(exclude_none=True)
+    if "claim_deadline_days" in body.model_fields_set:
+        values["claim_deadline_days"] = body.claim_deadline_days  # null clears it
+    for key, value in values.items():
         setattr(a, key, value.strip() or None if key == "external_reference" else value)
     a.updated_by = ctx.user.id
     ctx.db.flush()
@@ -336,7 +343,7 @@ def update_agreement(
         action="agreement.updated",
         object_type="agreement",
         object_id=a.id,
-        summary={"fields": sorted(body.model_dump(exclude_none=True))},
+        summary={"fields": sorted(values)},
     )
     response.headers["ETag"] = etag(a.row_version)
     return _agreement_out(a, svc.versions(ctx.db, ctx.tenant_uuid, a.id))

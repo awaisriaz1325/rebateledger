@@ -18,11 +18,13 @@ from app.core.clock import today_in
 from app.core.errors import AppError, not_found
 from app.db.models.business import Agreement, AgreementVersion, ImportBatch, Supplier
 from app.db.models.identity import Membership, Tenant, User
-from app.db.models.runs import TERMINAL_CLAIM, Claim
+from app.db.models.runs import TERMINAL_CLAIM, Claim, ClaimItem
+from app.engine.reconcile import ReconStatus
 from app.exports.writers import Column, Table
 from app.services import reconciliation as recon
 
 ZERO = Decimal(0)
+CENT = Decimal("0.01")
 
 
 @dataclass(frozen=True)
@@ -320,6 +322,115 @@ def recovery_report(db: Session, tenant: Tenant, p: ReportParams) -> Table:
     )
 
 
+# --------------------------------------------------------------------------- recovery audit
+
+AUDIT_NOTE = (
+    "Identified, not recovered: amounts below are what our calculation says the supplier still "
+    "owes. Nothing is recovered until the supplier pays."
+)
+AUDIT_MAX_DAYS = 3 * 366  # the same three-year limit as a calculation run
+
+
+def _age_bucket(days: int) -> str:
+    if days <= 90:
+        return "0–90 days"
+    if days <= 180:
+        return "91–180 days"
+    if days <= 365:
+        return "181–365 days"
+    return "over 1 year"
+
+
+def recovery_audit(db: Session, tenant: Tenant, p: ReportParams) -> Table:
+    """Look-back audit (v1.2 Phase 20): shortfalls and items needing review over a past range.
+
+    Only short-paid and missing periods add to the identified total; NEEDS_REVIEW periods are
+    listed with no amount. A period past the agreement's claim deadline is flagged, not dropped.
+    """
+    if p.period_from is None or p.period_to is None:
+        raise AppError(
+            422, "PERIOD_REQUIRED", "Choose a date range", "The audit needs a start and end date."
+        )
+    if (p.period_to - p.period_from).days > AUDIT_MAX_DAYS:
+        raise AppError(
+            422, "RANGE_TOO_LONG", "Range too long", "An audit may cover at most three years."
+        )
+    today = today_in(tenant.timezone)
+    deadlines = dict(
+        db.execute(
+            select(Agreement.id, Agreement.claim_deadline_days).where(
+                Agreement.tenant_id == tenant.id
+            )
+        ).all()
+    )
+    open_claims = {
+        (aid, start): number
+        for aid, start, number in db.execute(
+            select(ClaimItem.agreement_id, ClaimItem.period_start, Claim.number)
+            .join(Claim, Claim.id == ClaimItem.claim_id)
+            .where(
+                Claim.tenant_id == tenant.id,
+                Claim.status.not_in([s.value for s in TERMINAL_CLAIM]),
+            )
+        ).all()
+    }
+    rows = []
+    for li in recon.live_items(db, tenant, supplier_id=p.supplier_id, today=today):
+        r, it = li.result, li.item
+        if r.period_end < p.period_from or r.period_start > p.period_to:
+            continue
+        review = it.status is ReconStatus.NEEDS_REVIEW
+        if it.status not in (ReconStatus.SHORT_PAID, ReconStatus.MISSING) and not review:
+            continue
+        days = max((today - it.due_date).days, 0)
+        limit = deadlines.get(r.agreement_id)
+        barred = limit is not None and (today - r.full_period_end).days > limit
+        claim_no = open_claims.get((r.agreement_id, r.period_start))
+        rows.append(
+            {
+                "result_id": str(r.id),
+                "supplier": li.supplier_name,
+                "agreement": li.agreement_name,
+                "period": r.period_label,
+                "period_start": r.period_start,
+                "period_end": r.period_end,
+                "expected": None if it.expected is None else it.expected.quantize(CENT),
+                "received": it.received.quantize(CENT),
+                "shortfall": None
+                if review or it.variance is None
+                else (-it.variance).quantize(CENT),
+                "status": it.status.value,
+                "due_date": it.due_date,
+                "age": _age_bucket(days),
+                "deadline": "May be time-barred: check the contract" if barred else "",
+                "claim": f"CL-{claim_no:04d}" if claim_no else "",
+            }
+        )
+    return Table(
+        title="Recovery audit",
+        subtitle="Supplier rebates calculated as owed but not received, over the chosen range",
+        columns=[
+            Column("supplier", "Supplier"),
+            Column("agreement", "Agreement"),
+            Column("period", "Period"),
+            Column("period_start", "Start", "date"),
+            Column("period_end", "End", "date"),
+            Column("expected", "Expected", "money"),
+            Column("received", "Received", "money"),
+            Column("shortfall", "Identified shortfall", "money"),
+            Column("status", "Status"),
+            Column("due_date", "Due", "date"),
+            Column("age", "Overdue by"),
+            Column("deadline", "Claim deadline"),
+            Column("claim", "Open claim"),
+        ],
+        rows=rows,
+        filters=_filter_text(db, tenant, p),
+        totals={"shortfall": _sum(rows, "shortfall")},
+        page_note=AUDIT_NOTE,
+    )
+
+
 # --------------------------------------------------------------------------- registers
 
 
@@ -457,6 +568,14 @@ REPORTS: dict[str, ReportDef] = {
             "Recovery report",
             "Identified vs recovered by supplier.",
             recovery_report,
+            True,
+            ("supplier_id", "period_from", "period_to"),
+        ),
+        ReportDef(
+            "recovery_audit",
+            "Recovery audit",
+            "Look back up to three years: rebates calculated as owed but not received.",
+            recovery_audit,
             True,
             ("supplier_id", "period_from", "period_to"),
         ),

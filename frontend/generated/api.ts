@@ -2421,6 +2421,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/recovery-audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Audit */
+        get: operations["audit_api_v1_recovery_audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recovery-audit/claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Claims
+         * @description One claim per supplier for the selected shortfalls; nothing is created if any fails.
+         */
+        post: operations["create_claims_api_v1_recovery_audit_claims_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recovery-audit/coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Coverage */
+        get: operations["coverage_api_v1_recovery_audit_coverage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reports": {
         parameters: {
             query?: never;
@@ -3261,6 +3315,8 @@ export interface components {
         AgreementDetail: {
             /** Active Version */
             active_version?: number | null;
+            /** Claim Deadline Days */
+            claim_deadline_days?: number | null;
             /**
              * Created At
              * Format: date-time
@@ -3300,6 +3356,8 @@ export interface components {
         AgreementOut: {
             /** Active Version */
             active_version?: number | null;
+            /** Claim Deadline Days */
+            claim_deadline_days?: number | null;
             /**
              * Created At
              * Format: date-time
@@ -3335,6 +3393,8 @@ export interface components {
         };
         /** AgreementPatch */
         AgreementPatch: {
+            /** Claim Deadline Days */
+            claim_deadline_days?: number | null;
             /** External Reference */
             external_reference?: string | null;
             /** Name */
@@ -4311,7 +4371,7 @@ export interface components {
              * Report
              * @enum {string}
              */
-            report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "agreement_register" | "import_history";
+            report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "agreement_register" | "import_history";
         };
         /** ExportOut */
         ExportOut: {
@@ -5710,10 +5770,109 @@ export interface components {
             /** Tier Alert Pct */
             tier_alert_pct?: string | null;
         };
+        /** RecoveryAuditClaimsIn */
+        RecoveryAuditClaimsIn: {
+            /** Result Ids */
+            result_ids: string[];
+        };
+        /** RecoveryAuditClaimsOut */
+        RecoveryAuditClaimsOut: {
+            /** Claim Ids */
+            claim_ids: string[];
+        };
+        /** RecoveryAuditOut */
+        RecoveryAuditOut: {
+            /** Note */
+            note: string;
+            /** Rows */
+            rows: components["schemas"]["RecoveryAuditRowOut"][];
+            /**
+             * Total Shortfall
+             * @example 1234.50
+             */
+            total_shortfall: string;
+        };
+        /** RecoveryAuditRowOut */
+        RecoveryAuditRowOut: {
+            /** Age */
+            age: string;
+            /** Agreement */
+            agreement: string;
+            /** Claim */
+            claim: string;
+            /** Deadline */
+            deadline: string;
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /** Expected */
+            expected: string | null;
+            /** Period */
+            period: string;
+            /**
+             * Period End
+             * Format: date
+             */
+            period_end: string;
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            /**
+             * Received
+             * @example 1234.50
+             */
+            received: string;
+            /**
+             * Result Id
+             * Format: uuid
+             */
+            result_id: string;
+            /** Shortfall */
+            shortfall: string | null;
+            /** Status */
+            status: string;
+            /** Supplier */
+            supplier: string;
+        };
         /** RecoveryCodesOut */
         RecoveryCodesOut: {
             /** Recovery Codes */
             recovery_codes: string[];
+        };
+        /** RecoveryCoverageOut */
+        RecoveryCoverageOut: {
+            /** Agreements */
+            agreements: number;
+            /** Data From */
+            data_from: string | null;
+            /** Gaps */
+            gaps: components["schemas"]["RecoveryGapOut"][];
+            /** History Starts Late */
+            history_starts_late: boolean;
+            /** Name */
+            name: string;
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+        };
+        /** RecoveryGapOut */
+        RecoveryGapOut: {
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
         };
         /** RecoveryIn */
         RecoveryIn: {
@@ -12288,6 +12447,107 @@ export interface operations {
             };
         };
     };
+    audit_api_v1_recovery_audit_get: {
+        parameters: {
+            query: {
+                period_from: string;
+                period_to: string;
+                supplier_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryAuditOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_claims_api_v1_recovery_audit_claims_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoveryAuditClaimsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryAuditClaimsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    coverage_api_v1_recovery_audit_coverage_get: {
+        parameters: {
+            query: {
+                period_from: string;
+                period_to: string;
+                supplier_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryCoverageOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_reports_api_v1_reports_get: {
         parameters: {
             query?: never;
@@ -12311,7 +12571,7 @@ export interface operations {
     preview_report_api_v1_reports_preview_get: {
         parameters: {
             query: {
-                report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "agreement_register" | "import_history";
+                report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "agreement_register" | "import_history";
                 supplier_id?: string | null;
                 period_from?: string | null;
                 period_to?: string | null;

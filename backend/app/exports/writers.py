@@ -49,6 +49,8 @@ class Table:
     subtitle: str = ""
     filters: list[tuple[str, str]] = field(default_factory=list)
     totals: dict[str, Decimal] = field(default_factory=dict)
+    #: Printed at the top of every PDF page (e.g. "identified, not recovered").
+    page_note: str = ""
 
 
 # --------------------------------------------------------------------------- text values

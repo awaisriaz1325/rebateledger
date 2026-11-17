@@ -73,6 +73,7 @@ function Agreement({ a }: { a: AgreementDetail }) {
               </li>
             ))}
           </ul>
+          <ClaimDeadline a={a} editable={editable} onSaved={refresh} />
         </nav>
         {v ? (
           <Tabs
@@ -91,6 +92,28 @@ function Agreement({ a }: { a: AgreementDetail }) {
       <ConfirmDialog open={archiving} onOpenChange={setArchiving} title={a.status === "archived" ? "Unarchive agreement?" : "Archive agreement?"}
         description={a.status === "archived" ? "It will be included in runs again." : "Archived agreements are left out of new runs. Past results stay."} confirmLabel={a.status === "archived" ? "Unarchive" : "Archive"} tone={a.status === "archived" ? "primary" : "danger"} pending={archive.isPending} onConfirm={() => archive.mutate()} />
     </>
+  );
+}
+
+/** Days after a period ends that the supplier accepts claims (v1.2 Phase 20). Informational. */
+function ClaimDeadline({ a, editable, onSaved }: { a: AgreementDetail; editable: boolean; onSaved: () => void }) {
+  const [value, setValue] = useState(a.claim_deadline_days == null ? "" : String(a.claim_deadline_days));
+  const save = useMutation({
+    mutationFn: async () => {
+      const head = await api.GET("/api/v1/agreements/{agreement_id}", { params: { path: { agreement_id: a.id } } });
+      return unwrap(await api.PATCH("/api/v1/agreements/{agreement_id}", { params: { path: { agreement_id: a.id } }, body: { claim_deadline_days: value === "" ? null : Number(value) }, headers: { "If-Match": head.response.headers.get("ETag") ?? "" } }));
+    },
+    onSuccess: () => { toast.success("Claim deadline saved"); onSaved(); },
+    onError: (e) => toast.error(errorMessage(e)),
+  });
+  const valid = value === "" || /^\d+$/.test(value);
+  return (
+    <form className="mt-6 flex flex-col gap-2" onSubmit={(e) => { e.preventDefault(); if (valid) save.mutate(); }}>
+      <Field id="claim-deadline" label="Claim deadline (days)" hint="Days after a period ends that the supplier accepts claims. Empty if none. Audits flag later periods; nothing is dropped.">
+        <Input id="claim-deadline" inputMode="numeric" value={value} disabled={!editable} onChange={(e) => setValue(e.target.value.trim())} aria-invalid={!valid || undefined} />
+      </Field>
+      {editable ? <Button type="submit" variant="secondary" disabled={!valid} loading={save.isPending}>Save deadline</Button> : null}
+    </form>
   );
 }
 

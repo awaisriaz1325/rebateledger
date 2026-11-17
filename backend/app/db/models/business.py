@@ -126,7 +126,13 @@ class VersionStatus(StrEnum):
 
 class Agreement(IdMixin, TenantMixin, TimestampMixin, AuthorMixin, VersionedMixin, Base):
     __tablename__ = "agreements"
-    __table_args__ = (_in("status", ["active", "archived"]),)
+    __table_args__ = (
+        _in("status", ["active", "archived"]),
+        CheckConstraint(
+            "claim_deadline_days IS NULL OR claim_deadline_days BETWEEN 1 AND 3650",
+            name="claim_deadline_days_range",
+        ),
+    )
 
     supplier_id: Mapped[uuid.UUID] = mapped_column(_fk("suppliers", "RESTRICT"), index=True)
     name: Mapped[str] = mapped_column(String(200))
@@ -134,6 +140,9 @@ class Agreement(IdMixin, TenantMixin, TimestampMixin, AuthorMixin, VersionedMixi
     status: Mapped[str] = mapped_column(String(20), default="active")
     owner_user_id: Mapped[uuid.UUID | None]
     notes: Mapped[str] = mapped_column(Text, default="")
+    #: Days after a period ends within which the supplier accepts claims (v1.2 Phase 20).
+    #: Informational: past it a period is flagged "may be time-barred", never dropped.
+    claim_deadline_days: Mapped[int | None] = mapped_column(Integer)
 
 
 class AgreementVersion(IdMixin, TenantMixin, TimestampMixin, AuthorMixin, VersionedMixin, Base):
