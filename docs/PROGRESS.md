@@ -12,6 +12,14 @@ Template:
 - Next step:
 -->
 
+## 2026-11-18 — Follow-up security audit (auth, MFA, public forms)
+- Fixed (each with a failing test first): abandoned MFA re-enrollment no longer switches MFA off
+  (pending secret, migration 0014); wrong MFA/recovery codes count toward the existing lockout and a
+  password sign-in no longer resets the count; pilot confirmation email no longer echoes the name.
+- Report: docs/security/2026-11-18-audit.md findings 8–10.
+- Open questions: email a security notice when an account is locked (not in SPEC §4.1 list)?
+- Next step: Phase 25 (claim-deadline alerts) once approved.
+
 ## 2026-11-18 — v1.3 Phase 24: getting-started checklist
 - Changed: dashboard API returns `getting_started` (7 steps derived from data: suppliers, purchases,
   agreements, activation, first successful run, credits, review = a claim exists or a run found no
