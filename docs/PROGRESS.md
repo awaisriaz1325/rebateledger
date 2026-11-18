@@ -12,6 +12,15 @@ Template:
 - Next step:
 -->
 
+## 2026-11-18 — v1.3 Phase 25: claim-deadline alerts
+- Changed: new alert type `claim_deadline` (daily job `claim_deadlines`, 16:00 UTC): short-paid or
+  missing periods whose agreement claim deadline is 0–30 days away; once per period; owners, admins,
+  analysts; switchable per channel. Weekly digest now includes a deadlines section and is sent when
+  there are deadlines even without tier opportunities.
+- Decisions (ADRs): recipients = digest roles (owner/admin/analyst); time-barred periods are not
+  alerted (the recovery audit flags them).
+- Next step: Phase 26 (supplier scorecard).
+
 ## 2026-11-18 — v1.3 Phase 24: getting-started checklist
 - Changed: dashboard API returns `getting_started` (7 steps derived from data: suppliers, purchases,
   agreements, activation, first successful run, credits, review = a claim exists or a run found no

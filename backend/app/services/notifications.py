@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Iterable
+from dataclasses import dataclass
+from datetime import date, timedelta
+from decimal import Decimal
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -36,6 +39,7 @@ ALERT_TYPES = {
     "export_ready": "Export ready",
     "weekly_digest": "Weekly tier opportunities",
     "spa_deadline": "SPA claim deadlines",
+    "claim_deadline": "Claim deadline approaching",
 }
 UNSUBSCRIBE_TTL = 365 * 24 * 3600
 
@@ -318,6 +322,121 @@ def _tier_alerts(db: Session, job: JobContext) -> dict[str, Any]:
     return {"sent": sent}
 
 
+# --------------------------------------------------------------------------- claim deadlines
+
+DEADLINE_HORIZON_DAYS = 30
+
+
+@dataclass(frozen=True)
+class DeadlineItem:
+    agreement_id: uuid.UUID
+    agreement_name: str
+    supplier_name: str
+    period_label: str
+    period_start: date
+    shortfall: Decimal
+    deadline: date
+    days_left: int
+
+
+def upcoming_deadlines(db: Session, tenant: Tenant, today: date) -> list[DeadlineItem]:
+    """Short-paid or missing periods whose agreement claim deadline (days after the full period
+    ends; Phase 20) is 0–30 days away. Already time-barred periods are left to the recovery audit."""
+    from app.db.models.business import Agreement
+    from app.engine.reconcile import ReconStatus
+    from app.services.reconciliation import live_items
+
+    limits = dict(
+        db.execute(
+            select(Agreement.id, Agreement.claim_deadline_days).where(
+                Agreement.tenant_id == tenant.id, Agreement.claim_deadline_days.is_not(None)
+            )
+        ).all()
+    )
+    if not limits:
+        return []
+    out = []
+    for li in live_items(db, tenant, today=today):
+        r, it = li.result, li.item
+        days = limits.get(r.agreement_id)
+        if days is None or it.status not in (ReconStatus.SHORT_PAID, ReconStatus.MISSING):
+            continue
+        deadline = r.full_period_end + timedelta(days=days)
+        left = (deadline - today).days
+        if 0 <= left <= DEADLINE_HORIZON_DAYS and it.variance is not None:
+            out.append(
+                DeadlineItem(
+                    r.agreement_id,
+                    li.agreement_name,
+                    li.supplier_name,
+                    r.period_label or f"{r.period_start:%b %d, %Y}",
+                    r.period_start,
+                    (-it.variance).quantize(Decimal("0.01")),
+                    deadline,
+                    left,
+                )
+            )
+    out.sort(key=lambda d: (d.days_left, d.supplier_name, d.agreement_name))
+    return out
+
+
+def _digest_recipients(db: Session, tenant_id: uuid.UUID) -> list[uuid.UUID]:
+    return list(
+        db.execute(
+            select(Membership.user_id).where(
+                Membership.tenant_id == tenant_id,
+                Membership.status == MembershipStatus.ACTIVE.value,
+                Membership.role.in_(DIGEST_ROLES),
+            )
+        ).scalars()
+    )
+
+
+@handler("claim_deadlines")
+def _claim_deadlines(db: Session, job: JobContext) -> dict[str, Any]:
+    """Once per period: its claim deadline is within 30 days (v1.3 Phase 25)."""
+    assert job.tenant_id is not None
+    tenant = db.get(Tenant, job.tenant_id)
+    assert tenant is not None
+    today = today_in(tenant.timezone)
+    sent = 0
+    for d in upcoming_deadlines(db, tenant, today):
+        key = f"deadline:{d.agreement_id}:{d.period_start}"
+        already = db.execute(
+            select(Notification.id).where(
+                Notification.tenant_id == tenant.id,
+                Notification.type == "claim_deadline",
+                Notification.link.like(f"%{key}%"),
+            )
+        ).first()
+        if already:
+            continue
+        when = "today" if d.days_left == 0 else f"in {d.days_left} days"
+        notify(
+            db,
+            tenant.id,
+            _digest_recipients(db, tenant.id),
+            "claim_deadline",
+            f"Claim deadline {when}: {d.agreement_name}, {d.period_label}",
+            f"{d.supplier_name} still owes {d.shortfall:,.2f} for {d.agreement_name}, "
+            f"{d.period_label}. The agreement accepts claims until {d.deadline:%b %d, %Y}. "
+            "Create or send the claim before then (identified, not recovered).",
+            f"/app/discrepancies?focus={key}",
+        )
+        sent += 1
+    return {"sent": sent}
+
+
+def deadline_text(items: list[DeadlineItem]) -> str:
+    lines = [f"Claim deadlines in the next {DEADLINE_HORIZON_DAYS} days:", ""]
+    for d in items:
+        lines.append(
+            f"- {d.agreement_name}, {d.period_label}: {d.shortfall:,.2f} by "
+            f"{d.deadline:%b %d, %Y} ({d.days_left} days)"
+        )
+    return "\n".join(lines)
+
+
 # --------------------------------------------------------------------------- weekly digest
 
 DIGEST_ROLES = (Role.OWNER.value, Role.ADMIN.value, Role.ANALYST.value)
@@ -368,7 +487,8 @@ def _weekly_digest(db: Session, job: JobContext) -> dict[str, Any]:
     if today.weekday() != 0:
         return {"sent": 0, "skipped": "not_monday"}
     items = opportunities(db, tenant, today)[:DIGEST_TOP]
-    if not items:
+    deadlines = upcoming_deadlines(db, tenant, today)
+    if not items and not deadlines:
         return {"sent": 0, "skipped": "no_opportunities"}
     iso = today.isocalendar()
     week = f"{iso.year}-W{iso.week:02d}"
@@ -379,8 +499,15 @@ def _weekly_digest(db: Session, job: JobContext) -> dict[str, Any]:
             Membership.role.in_(DIGEST_ROLES),
         )
     ).scalars()
-    body = digest_text(items)
-    title = f"{len(items)} tier {'opportunity' if len(items) == 1 else 'opportunities'} this week"
+    parts = ([digest_text(items)] if items else []) + (
+        [deadline_text(deadlines)] if deadlines else []
+    )
+    body = "\n\n".join(parts)
+    title = (
+        f"{len(items)} tier {'opportunity' if len(items) == 1 else 'opportunities'} this week"
+        if items
+        else f"{len(deadlines)} claim deadline{'' if len(deadlines) == 1 else 's'} in the next {DEADLINE_HORIZON_DAYS} days"
+    )
     sent = 0
     for uid in users:
         done = db.execute(
@@ -394,6 +521,14 @@ def _weekly_digest(db: Session, job: JobContext) -> dict[str, Any]:
             continue
         db.add(DigestSend(tenant_id=tenant.id, user_id=uid, week=week))
         db.flush()
-        notify(db, tenant.id, [uid], "weekly_digest", title, body, "/app/tiers")
+        notify(
+            db,
+            tenant.id,
+            [uid],
+            "weekly_digest",
+            title,
+            body,
+            "/app/tiers" if items else "/app/discrepancies",
+        )
         sent += 1
     return {"sent": sent, "week": week}
