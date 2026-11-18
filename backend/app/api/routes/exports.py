@@ -36,6 +36,7 @@ ReportKey = Literal[
     "claims_register",
     "recovery_report",
     "recovery_audit",
+    "supplier_scorecard",
     "group_payouts",
     "agreement_register",
     "import_history",

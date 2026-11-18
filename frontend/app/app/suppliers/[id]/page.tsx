@@ -57,6 +57,7 @@ export default function SupplierDetailPage() {
               ...(s.kind === "supplier" && s.group_ids.length ? [{ value: "groups", label: "Buying groups", content: <MemberOf groupIds={s.group_ids} /> }] : []),
               { value: "agreements", label: "Agreements", content: <SupplierAgreements supplierId={s.id} /> },
               { value: "results", label: "Latest results", content: <SupplierResults supplierId={s.id} /> },
+              ...(s.kind === "supplier" ? [{ value: "scorecard", label: "Scorecard", content: <SupplierScorecard supplierId={s.id} /> }] : []),
               { value: "claims", label: "Claims", content: <SupplierClaims supplierId={s.id} /> },
               { value: "contacts", label: "Contacts", content: <Contacts supplierId={s.id} editable={editable} /> },
               { value: "notes", label: "Notes", content: <Card><p className="text-sm whitespace-pre-wrap">{s.payment_notes || "No payment notes."}</p><p className="mt-3 text-sm whitespace-pre-wrap text-muted">{s.notes}</p></Card> },
@@ -176,6 +177,43 @@ function SupplierResults({ supplierId }: { supplierId: string }) {
           ))}</tbody>
         </table>
       )}
+    </QueryState>
+  );
+}
+
+/** How this supplier pays (v1.3 Phase 26): the supplier scorecard report for the last 12 months. */
+function SupplierScorecard({ supplierId }: { supplierId: string }) {
+  const query = useQuery({
+    queryKey: ["scorecard", supplierId],
+    queryFn: async () => unwrap(await api.GET("/api/v1/reports/preview", { params: { query: { report: "supplier_scorecard", supplier_id: supplierId } } })),
+  });
+  return (
+    <QueryState query={query} isEmpty={(r) => r.rows.length === 0} empty={<EmptyState title="Nothing owed and due yet">The scorecard fills in once periods ending in the last 12 months are due for payment.</EmptyState>}>
+      {(r) => {
+        const row = r.rows[0];
+        const pct = (v: string | undefined) => (v ? `${v}%` : "—");
+        const tiles: [string, React.ReactNode][] = [
+          ["Received of rebate owed", <>{pct(row.received_pct)} <span className="text-sm font-normal text-muted">(<Money value={row.received} /> of <Money value={row.earned} />)</span></>],
+          ["Paid in full on time", pct(row.on_time_pct)],
+          ["Average days late", row.avg_days_late || "—"],
+          ["Short-paid / missing periods", `${row.short_paid} / ${row.missing}`],
+          ["Open claims", <>{row.open_claims} <span className="text-sm font-normal text-muted">(<Money value={row.open_claim_amount} />)</span></>],
+          ["Recovered of claimed", pct(row.recovery_pct)],
+        ];
+        return (
+          <Card title="Scorecard, last 12 months" actions={<Link href="/app/reports" className="text-sm text-brand hover:underline">All suppliers →</Link>}>
+            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {tiles.map(([label, value]) => (
+                <div key={label}>
+                  <dt className="text-xs text-muted">{label}</dt>
+                  <dd className="mt-1 text-lg font-semibold">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-3 text-xs text-muted">{row.periods} period(s) owed and due. Paid date = the latest credit linked to the period.</p>
+          </Card>
+        );
+      }}
     </QueryState>
   );
 }

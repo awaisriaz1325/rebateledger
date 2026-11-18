@@ -431,6 +431,111 @@ def recovery_audit(db: Session, tenant: Tenant, p: ReportParams) -> Table:
     )
 
 
+# --------------------------------------------------------------------------- supplier scorecard
+
+OWED = (ReconStatus.MATCHED, ReconStatus.OVERPAID, ReconStatus.SHORT_PAID, ReconStatus.MISSING)
+PAID = (ReconStatus.MATCHED, ReconStatus.OVERPAID)
+
+
+def _pct(part: Decimal, whole: Decimal) -> Decimal | None:
+    return (part / whole * 100).quantize(Decimal("0.1")) if whole else None
+
+
+def supplier_scorecard(db: Session, tenant: Tenant, p: ReportParams) -> Table:
+    """How each supplier pays (v1.3 Phase 26). Periods count when a rebate was owed and due:
+    paid in full (on time or late), short-paid or missing. Not-yet-due, not-earned and
+    needs-review periods are left out. Paid date = the latest credit allocated to the period."""
+    from app.db.models.business import CreditLineRow
+    from app.db.models.runs import CreditAllocation
+    from app.services.claims import recovered_total
+
+    today = today_in(tenant.timezone)
+    start = p.period_from or date(today.year - 1, today.month, today.day)
+    end = p.period_to or today
+    paid_on: dict[tuple[uuid.UUID, date], date] = {}
+    for aid, ps, credit_date in db.execute(
+        select(
+            CreditAllocation.agreement_id, CreditAllocation.period_start, CreditLineRow.credit_date
+        )
+        .join(CreditLineRow, CreditLineRow.id == CreditAllocation.credit_id)
+        .where(CreditAllocation.tenant_id == tenant.id, CreditAllocation.reversed_at.is_(None))
+    ).all():
+        key = (aid, ps)
+        paid_on[key] = max(paid_on.get(key, credit_date), credit_date)
+    by: dict[uuid.UUID, dict[str, Any]] = {}
+    for li in recon.live_items(db, tenant, supplier_id=p.supplier_id, today=today):
+        r, it = li.result, li.item
+        if it.status not in OWED or not (start <= r.period_end <= end):
+            continue
+        row = by.setdefault(
+            r.supplier_id,
+            {"supplier": li.supplier_name, "periods": 0, "earned": ZERO, "received": ZERO,
+             "on_time": 0, "late_days": [], "short_paid": 0, "missing": 0},
+        )  # fmt: skip
+        row["periods"] += 1
+        row["earned"] += it.expected or ZERO
+        row["received"] += it.received
+        if it.status in PAID:
+            when = paid_on.get((r.agreement_id, r.period_start))
+            if when is not None and when > it.due_date:
+                row["late_days"].append((when - it.due_date).days)
+            else:
+                row["on_time"] += 1
+        elif it.status is ReconStatus.SHORT_PAID:
+            row["short_paid"] += 1
+        else:
+            row["missing"] += 1
+    claims = db.execute(
+        select(Claim).where(Claim.tenant_id == tenant.id, Claim.supplier_id.in_(list(by)))
+    ).scalars()
+    terminal = {s.value for s in TERMINAL_CLAIM}
+    for row in by.values():
+        row.update(open_claims=0, open_claim_amount=ZERO, claimed=ZERO, recovered=ZERO)
+    for c in claims:
+        row = by[c.supplier_id]
+        row["claimed"] += c.claimed_amount
+        row["recovered"] += recovered_total(db, c.id)
+        if c.status not in terminal:
+            row["open_claims"] += 1
+            row["open_claim_amount"] += c.claimed_amount
+    rows = []
+    for row in sorted(by.values(), key=lambda x: x["supplier"]):
+        late = row.pop("late_days")
+        rows.append(
+            {
+                **row,
+                "earned": row["earned"].quantize(CENT),
+                "received": row["received"].quantize(CENT),
+                "received_pct": _pct(row["received"], row["earned"]),
+                "on_time_pct": _pct(Decimal(row.pop("on_time")), Decimal(row["periods"])),
+                "avg_days_late": round(sum(late) / len(late)) if late else None,
+                "open_claim_amount": row["open_claim_amount"].quantize(CENT),
+                "recovery_pct": _pct(row.pop("recovered"), row.pop("claimed")),
+            }
+        )
+    return Table(
+        title="Supplier scorecard",
+        subtitle=f"How suppliers paid rebates owed for periods ending {start.isoformat()} to {end.isoformat()}",
+        columns=[
+            Column("supplier", "Supplier"),
+            Column("periods", "Periods owed", "int"),
+            Column("earned", "Rebate owed", "money"),
+            Column("received", "Received", "money"),
+            Column("received_pct", "Received %", "number"),
+            Column("on_time_pct", "Paid in full on time %", "number"),
+            Column("avg_days_late", "Average days late", "int"),
+            Column("short_paid", "Short-paid periods", "int"),
+            Column("missing", "Missing periods", "int"),
+            Column("open_claims", "Open claims", "int"),
+            Column("open_claim_amount", "Open claim amount", "money"),
+            Column("recovery_pct", "Recovered % of claimed", "number"),
+        ],
+        rows=rows,
+        filters=_filter_text(db, tenant, p),
+        totals={k: _sum(rows, k) for k in ("earned", "received", "open_claim_amount")},
+    )
+
+
 # --------------------------------------------------------------------------- buying-group payouts
 
 
@@ -655,6 +760,14 @@ REPORTS: dict[str, ReportDef] = {
             "Recovery audit",
             "Look back up to three years: rebates calculated as owed but not received.",
             recovery_audit,
+            True,
+            ("supplier_id", "period_from", "period_to"),
+        ),
+        ReportDef(
+            "supplier_scorecard",
+            "Supplier scorecard",
+            "How each supplier pays: received %, on-time %, days late, short-paid and missing periods, claims.",
+            supplier_scorecard,
             True,
             ("supplier_id", "period_from", "period_to"),
         ),

@@ -12,6 +12,15 @@ Template:
 - Next step:
 -->
 
+## 2026-11-18 — v1.3 Phase 26: supplier scorecard
+- Changed: report `supplier_scorecard` (CSV/XLSX/PDF; default last 12 months): periods owed and
+  due, rebate owed vs received %, paid-in-full-on-time %, average days late (paid date = latest
+  linked credit), short-paid and missing counts, open claims, recovered % of claimed; "Scorecard"
+  tab on supplier pages (reuses the report preview; no new endpoint).
+- Decisions (ADRs): not-yet-due, not-earned and needs-review periods are excluded; a fully paid
+  period with no linked credit date counts as on time.
+- Next step: Phase 27 (dispute tracking).
+
 ## 2026-11-18 — v1.3 Phase 25: claim-deadline alerts
 - Changed: new alert type `claim_deadline` (daily job `claim_deadlines`, 16:00 UTC): short-paid or
   missing periods whose agreement claim deadline is 0–30 days away; once per period; owners, admins,

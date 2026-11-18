@@ -4379,7 +4379,7 @@ export interface components {
              * Report
              * @enum {string}
              */
-            report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "group_payouts" | "agreement_register" | "import_history";
+            report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "supplier_scorecard" | "group_payouts" | "agreement_register" | "import_history";
         };
         /** ExportOut */
         ExportOut: {
@@ -12598,7 +12598,7 @@ export interface operations {
     preview_report_api_v1_reports_preview_get: {
         parameters: {
             query: {
-                report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "group_payouts" | "agreement_register" | "import_history";
+                report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "supplier_scorecard" | "group_payouts" | "agreement_register" | "import_history";
                 supplier_id?: string | null;
                 period_from?: string | null;
                 period_to?: string | null;
