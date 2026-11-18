@@ -12,6 +12,15 @@ Template:
 - Next step:
 -->
 
+## 2026-11-18 — Security audit, penetration tests, v1.3 plan
+- Changed: open redirect after sign-in fixed (safeNext); OpenAPI schema not served in production;
+  production containers hardened (no capabilities, no-new-privileges, read-only root for api/worker/
+  scheduler, XDG cache in /tmp); Redis password; per-user throttle on expensive reads;
+  backend/tests/api/test_pentest.py (cross-tenant ids in bodies/queries, session and CSRF abuse).
+- Report: docs/security/2026-11-18-audit.md. Plan: docs/PHASES-v1.3.md (Phases 24–29, awaiting approval).
+- Open questions: approve v1.3; dev-tool advisories in make audit; dedicated VM; restore drill.
+- Next step: founder approval of v1.3.
+
 ## 2026-11-17 — Fixes after v1.2 review
 - Fixed (each with a failing test first): accrual journal now accrues programs paid through a
   buying group net of the group fee; bulk agreement import reports over-long text per row (was a
