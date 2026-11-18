@@ -287,7 +287,7 @@ def _pilot_emails(db: Session, req: PilotRequest) -> None:
         template="generic",
         context={
             "subject": f"We received your {settings.product_name} pilot request",
-            "text": f"Hi {req.name}, thanks for your interest. We will reply within two business days to arrange a short call. If you did not submit this request, you can ignore this email.",
+            "text": "Thanks for your interest. We will reply within two business days to arrange a short call. If you did not submit this request, you can ignore this email.",
             "url": "",
             "link_label": "",
         },

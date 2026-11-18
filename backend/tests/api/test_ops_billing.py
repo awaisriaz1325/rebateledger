@@ -437,6 +437,8 @@ def test_pilot_request_reaches_inbox_and_sends_both_emails(
     to_ops = [e for e in outbox if e.to == "ops-inbox@rebateledger.invalid"]
     assert len(to_requester) == 1 and "received your" in to_requester[0].subject
     assert body["message"] not in to_requester[0].text  # nothing reflected back
+    # Security audit 2026-11-18 #3: the form must not relay attacker text to any address.
+    assert body["name"] not in to_requester[0].text
     assert (
         len(to_ops) == 1
         and "Riley Wholesale" in to_ops[0].subject
