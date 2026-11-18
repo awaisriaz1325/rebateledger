@@ -97,7 +97,13 @@ class Member:
         totp = pyotp.TOTP(self.totp_secret)
         import time
 
-        current = int(time.time()) // 30
+        now = time.time()
+        current = int(now) // 30
+        if max(self._step + 1, current - 1) == current - 1 and 30 - now % 30 < 2:
+            # current - 1 is the oldest step the server accepts; if the 30 s boundary passes
+            # before the server checks it, it falls out of the window (flaky 401 MFA_INVALID).
+            time.sleep(30 - now % 30 + 0.05)
+            current = int(time.time()) // 30
         self._step = max(self._step + 1, current - 1)
         return totp.generate_otp(self._step)
 

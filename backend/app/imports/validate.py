@@ -59,6 +59,8 @@ class Context:
     today: date
     agreements_by_ref: dict[str, uuid.UUID] = field(default_factory=dict)
     agreements_by_supplier: dict[uuid.UUID, list[uuid.UUID]] = field(default_factory=dict)
+    #: Buying group → member programs paid through it (v1.2 Phase 23); statements only.
+    agreements_by_payer: dict[uuid.UUID, list[uuid.UUID]] = field(default_factory=dict)
     buying_groups: frozenset[uuid.UUID] = frozenset()
 
     def number_format(self) -> NumberFormat:
@@ -452,7 +454,12 @@ class RowValidator:
         ref = self._text(r, cells, "agreement_reference", False)
         agreement: uuid.UUID | None = None
         status = "unmatched"
-        options = self.ctx.agreements_by_supplier.get(supplier, []) if supplier else []
+        options = (
+            self.ctx.agreements_by_supplier.get(supplier, [])
+            + self.ctx.agreements_by_payer.get(supplier, [])
+            if supplier
+            else []
+        )
         if ref:
             found = self.ctx.agreements_by_ref.get(ref.lower())
             if found is not None and found in options:

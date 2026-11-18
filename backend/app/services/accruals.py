@@ -45,6 +45,7 @@ from app.engine.calculate import calculate
 from app.engine.models import CalcOptions, Period
 from app.engine.periods import clip, periods_overlapping
 from app.services import agreements as agreement_svc
+from app.services import group_payouts as groups
 from app.services import runs as run_svc
 from app.services.agreement_terms import snapshot_for
 from app.services.audit import record
@@ -133,6 +134,13 @@ def build(db: Session, tenant: Tenant, closing: date) -> Journal:
         for s in db.execute(select(Supplier).where(Supplier.tenant_id == tenant.id)).scalars()
     }
     received = _received(db, tenant.id, list(agreements), closing)
+    group_fees = groups.fees(db, tenant.id)
+
+    def receivable(a: Agreement, earned: Decimal) -> Decimal:
+        """What will actually arrive: net of the buying group's fee when paid through one."""
+        net = groups.net_expected(earned.quantize(CENT), groups.fee_for(a, group_fees))
+        assert net is not None
+        return net
 
     # Closed periods: latest successful run.
     calculated: set[tuple[uuid.UUID, date, date]] = set()
@@ -159,7 +167,7 @@ def build(db: Session, tenant: Tenant, closing: date) -> Journal:
             r.period_end,
             r.period_label,
             "closed",
-            r.expected.quantize(CENT),
+            receivable(a, r.expected),
             received[(a.id, r.period_start, r.period_end)].quantize(CENT),
         )
         if line.outstanding != 0:
@@ -236,7 +244,7 @@ def build(db: Session, tenant: Tenant, closing: date) -> Journal:
                 full.end,
                 full.label,
                 "open_estimate",
-                res.expected.quantize(CENT),
+                receivable(a, res.expected),
                 got.quantize(CENT),
             )
             if line.outstanding != 0:

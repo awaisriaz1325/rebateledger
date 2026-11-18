@@ -7,6 +7,7 @@ import time
 from typing import Any
 
 import pyotp
+import pytest
 from fastapi.testclient import TestClient
 
 from app.emails.service import RenderedEmail
@@ -372,3 +373,20 @@ def test_new_device_notification(
     notices = [e for e in outbox if "New sign-in" in e.subject]
     assert len(notices) == 1
     assert notices[0].html.count("<p>") >= 1 and notices[0].text
+
+
+def test_totp_helper_never_issues_a_code_about_to_expire(
+    world: World, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression for a flaky test helper: a code for step current−1 issued 0.5 s before a 30 s
+    boundary was rejected when the boundary passed before the server checked it."""
+    clock = {"now": 1_800_000_029.5}  # 0.5 s before a boundary (1_800_000_030 is a multiple of 30)
+    monkeypatch.setattr(time, "time", lambda: clock["now"])
+    monkeypatch.setattr(time, "sleep", lambda s: clock.__setitem__("now", clock["now"] + s))
+    m = world.member(world.tenant(), "owner")
+    assert m.totp_secret is not None
+    code = m.code()
+    clock["now"] += 0.7  # the request reaches the server just after the boundary
+    from app.core.security import verify_totp
+
+    assert verify_totp(m.totp_secret, code, None, now=clock["now"]) is not None

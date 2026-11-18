@@ -286,3 +286,21 @@ def test_file_guards(world_setup: Any) -> None:  # noqa: F811
     assert code("agreement_ref\nCaf\xe9\n".encode("latin-1")) == "FILE_ENCODING"
     many = "agreement_ref\n" + "A\n" * 2001
     assert code(many.encode()) == "TOO_MANY_ROWS"
+
+
+def test_overlong_text_is_a_row_error_not_a_server_error(world_setup: Any) -> None:  # noqa: F811
+    """Bug fix: text cells had no length limit, so a long name reached the database (500)."""
+    c, *_ = world_setup
+    rows = [
+        row(agreement_ref="R" * 101, component_key="b", component_type="flat_percent", rate="1%"),
+        row(agreement_ref="N", agreement_name="x" * 201, component_key="b", component_type="flat_percent", rate="1%"),
+        row(agreement_ref="M", notes="y" * 5001, component_key="b", component_type="flat_percent", rate="1%"),
+    ]  # fmt: skip
+    plan = preview(c, to_csv(rows))
+    assert {(e["row"], e["column"]) for e in plan["errors"]} == {
+        (2, "agreement_ref"),
+        (3, "agreement_name"),
+        (4, "notes"),
+    }
+    r = commit(c, to_csv(rows))
+    assert r.status_code == 422 and r.json()["code"] == "BULK_INVALID"

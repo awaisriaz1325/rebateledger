@@ -238,8 +238,11 @@ def _validation_context(db: Session, ctx: Any, batch: ImportBatch, header: list[
         db.execute(select(Agreement).where(Agreement.tenant_id == batch.tenant_id)).scalars()
     )
     by_supplier: dict[uuid.UUID, list[uuid.UUID]] = {}
+    by_payer: dict[uuid.UUID, list[uuid.UUID]] = {}
     for a in agreements:
         by_supplier.setdefault(a.supplier_id, []).append(a.id)
+        if a.paid_via_group_id:
+            by_payer.setdefault(a.paid_via_group_id, []).append(a.id)
     return Context(
         import_type=ImportType(batch.import_type),
         header=header,
@@ -250,6 +253,7 @@ def _validation_context(db: Session, ctx: Any, batch: ImportBatch, header: list[
             a.external_reference.lower(): a.id for a in agreements if a.external_reference
         },
         agreements_by_supplier=by_supplier,
+        agreements_by_payer=by_payer,
         buying_groups=frozenset(
             db.execute(
                 select(Supplier.id).where(

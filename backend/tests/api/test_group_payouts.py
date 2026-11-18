@@ -209,3 +209,65 @@ def test_guards(world_setup: Any) -> None:  # noqa: F811
     ).json()["id"]
     login(c, w.member(t, "analyst"))
     assert _patch(c, f"/api/v1/agreements/{aid}", {"paid_via_group_id": foreign}).status_code == 404
+
+
+def test_accrual_receivable_is_net_of_the_group_fee(world_setup: Any) -> None:  # noqa: F811
+    """Bug fix: the month-end accrual booked the group's fee as money receivable.
+
+    Closing 2025-05-31, AD keeps 10%:
+    - Q1 closed: 2,000.00 earned → 1,800.00 expected from AD; 1,800.00 received → nothing outstanding
+    - Q2 open (Apr–May): 50,000 × 2% = 1,000.00 to date → 900.00 expected from AD; none received
+    Outstanding 900.00 (before the fix: 200.00 + 1,000.00 = 1,200.00).
+    """
+    c, _w, _t, sid, aid = world_setup
+    _group(c, sid, aid)
+    imp(
+        c,
+        "credits",
+        "Vendor,Memo,Date,Amount,Program,Period\nAD,CM-AD-1,04/20/2025,1800.00,ACME-1,Q1 2025\n",
+        CREDIT_COLS,
+    )
+    run(c)
+    j = c.get("/api/v1/accruals/journal", params={"closing_date": "2025-05-31"}).json()
+    assert [(ln["period_start"], ln["outstanding"]) for ln in j["lines"]] == [
+        ("2025-04-01", "900.00")
+    ]
+
+
+def test_statement_from_the_paying_group_matches_and_compares_net(world_setup: Any) -> None:  # noqa: F811
+    """A buying group's statement about a member's program (paid through it) matches that program
+    and is compared with what the group owes: Q1 2,000.00 × 0.90 = 1,800.00."""
+    c, _w, _t, sid, aid = world_setup
+    _group(c, sid, aid)
+    run(c)
+    imp(
+        c,
+        "statements",
+        "Vendor,Program,From,To,Rebate,Statement\nAD,ACME-1,01/01/2025,03/31/2025,1800.00,AD-ST-1\n"
+        "AD,,04/01/2025,06/30/2025,850.00,AD-ST-2\n",
+        {
+            "supplier_code": "Vendor",
+            "agreement_reference": "Program",
+            "period_start": "From",
+            "period_end": "To",
+            "supplier_rebate": "Rebate",
+            "statement_reference": "Statement",
+        },
+    )
+    rows = {r["statement_reference"]: r for r in c.get("/api/v1/statements").json()}
+    st1 = rows["AD-ST-1"]
+    assert (st1["match_status"], st1["status"], st1["ours"], st1["difference"]) == (
+        "matched",
+        "agrees",
+        "1800.00",
+        "0.00",
+    )
+    # No reference: the group passes through one program, so it is suggested; confirm it.
+    assert rows["AD-ST-2"]["match_status"] == "suggested"
+    r = c.put(f"/api/v1/statements/{rows['AD-ST-2']['id']}/agreement", json={"agreement_id": aid})
+    assert r.status_code == 200, r.text
+    assert (r.json()["ours"], r.json()["difference"], r.json()["status"]) == (
+        "900.00",
+        "50.00",
+        "rate_or_tier_differs",
+    )

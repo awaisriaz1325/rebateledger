@@ -24,6 +24,7 @@ from app.core.errors import AppError, not_found
 from app.db.models.business import Agreement, StatementLineRow, Supplier
 from app.db.models.identity import Tenant
 from app.db.models.runs import PeriodResultRow
+from app.services import group_payouts as groups
 from app.services import runs as run_svc
 from app.services.audit import record
 
@@ -83,8 +84,12 @@ def compare_line(
     line: StatementLineRow,
     results: list[PeriodResultRow],
     tolerance: Any,
+    group_fee: Decimal | None = None,
 ) -> tuple[str, Decimal | None, Decimal | None, Decimal | None]:
-    """Pure decision for one line: (status, ours, our measure, difference)."""
+    """Pure decision for one line: (status, ours, our measure, difference).
+
+    ``group_fee`` is set when the statement comes from the buying group that pays the program:
+    ours is then what the group owes, net of its fee (as in reconciliation)."""
     if line.agreement_id is None or line.match_status == "unmatched":
         return UNMATCHED, None, None, None
     if line.match_status == "suggested":
@@ -93,7 +98,9 @@ def compare_line(
         return NOT_CALCULATED, None, None, None
     if any(r.expected is None or "NEEDS_REVIEW" in r.statuses for r in results):
         return NEEDS_REVIEW, None, None, None
-    ours = sum((r.expected or Decimal(0) for r in results), Decimal(0)).quantize(CENT)
+    gross = sum((r.expected or Decimal(0) for r in results), Decimal(0)).quantize(CENT)
+    ours = groups.net_expected(gross, group_fee)
+    assert ours is not None
     measure = sum((r.measure for r in results), Decimal(0)).quantize(CENT)
     theirs = line.supplier_rebate.quantize(CENT)
     diff = ours - theirs
@@ -128,14 +135,16 @@ def compare(
         return []
     agreement_ids = {ln.agreement_id for ln in lines if ln.agreement_id}
     results = _results_by_period(db, tenant.id, agreement_ids)
-    names = {
-        a.id: a.name
+    agreement_rows = {
+        a.id: a
         for a in db.execute(
             select(Agreement).where(
                 Agreement.tenant_id == tenant.id, Agreement.id.in_(agreement_ids)
             )
         ).scalars()
     }
+    names = {aid: a.name for aid, a in agreement_rows.items()}
+    group_fees = groups.fees(db, tenant.id)
     supplier_names = {
         s.id: s.name
         for s in db.execute(
@@ -153,7 +162,13 @@ def compare(
             if ln.agreement_id
             else []
         )
-        status, ours, measure, diff = compare_line(ln, rs, tolerance)
+        a = agreement_rows.get(ln.agreement_id) if ln.agreement_id else None
+        fee = (
+            groups.fee_for(a, group_fees)
+            if a is not None and a.paid_via_group_id == ln.supplier_id
+            else None
+        )
+        status, ours, measure, diff = compare_line(ln, rs, tolerance, fee)
         out.append(
             Comparison(
                 line=ln,
@@ -192,12 +207,12 @@ def assign(
         ).scalar_one_or_none()
         if a is None:
             raise not_found("Agreement")
-        if a.supplier_id != line.supplier_id:
+        if line.supplier_id not in (a.supplier_id, a.paid_via_group_id):
             raise AppError(
                 422,
                 "AGREEMENT_SUPPLIER_MISMATCH",
                 "Different supplier",
-                "Choose an agreement of the supplier that sent the statement.",
+                "Choose an agreement of the supplier that sent the statement, or one it pays through.",
             )
         line.agreement_id, line.match_status = a.id, "confirmed"
     else:

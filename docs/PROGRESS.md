@@ -12,6 +12,16 @@ Template:
 - Next step:
 -->
 
+## 2026-11-17 — Fixes after v1.2 review
+- Fixed (each with a failing test first): accrual journal now accrues programs paid through a
+  buying group net of the group fee; bulk agreement import reports over-long text per row (was a
+  500) and never echoes a whole cell; supplier statements from the paying buying group match the
+  member's program and compare net of the fee; flaky MFA test helper (code issued for the oldest
+  accepted step just before a 30 s boundary).
+- Security scans: bandit clean, gitleaks clean; pnpm audit fails on two dev-tooling advisories
+  (picomatch ReDoS: no fixed release; minimatch: fix released 2026-11-16, too new to adopt).
+- Open questions: accept the two dev-only advisories in the audit gate, or wait for fixes.
+
 ## 2026-11-17 — v1.2 Phase 23: buying-group payout reconciliation
 - Changed: suppliers.group_fee_pct and agreements.paid_via_group_id (migration 0013); a program
   paid through a group accepts the group's credits (auto-match by reference + period, or manual

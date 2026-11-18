@@ -67,6 +67,8 @@ class Column:
     required: bool
     help: str
     allowed: tuple[str, ...] = ()
+    #: Text columns only: the database column's limit, checked before anything is saved.
+    max_len: int = 100
 
 
 def _enum(e: type[StrEnum]) -> tuple[str, ...]:
@@ -77,9 +79,9 @@ _PERIODS = tuple(p for p in _enum(PeriodType) if p != PeriodType.CUSTOM.value)
 
 COLUMNS: tuple[Column, ...] = (
     Column("agreement_ref", "agreement", TEXT, True, "Your unique reference for the agreement. Rows with the same reference form one agreement; re-importing it adds a new draft version."),
-    Column("agreement_name", "agreement", TEXT, True, "Agreement name."),
-    Column("supplier", "agreement", TEXT, True, "Supplier code or exact supplier name, as set up under Suppliers."),
-    Column("notes", "agreement", TEXT, False, "Free text."),
+    Column("agreement_name", "agreement", TEXT, True, "Agreement name.", max_len=200),
+    Column("supplier", "agreement", TEXT, True, "Supplier code or exact supplier name, as set up under Suppliers.", max_len=200),
+    Column("notes", "agreement", TEXT, False, "Free text.", max_len=5000),
     Column("effective_from", "version", DATE, True, "First day the terms apply (YYYY-MM-DD or MM/DD/YYYY)."),
     Column("effective_to", "version", DATE, False, "Last day the terms apply; empty for open-ended."),
     Column("period_type", "version", TEXT, True, "How often the rebate is calculated. Custom periods are set in the editor.", _PERIODS),
@@ -180,6 +182,8 @@ def _convert(col: Column, raw: str) -> Any:
         if text.lower() not in col.allowed:
             raise CellError(f"must be one of: {', '.join(col.allowed)}")
         return text.lower()
+    if len(text) > col.max_len:
+        raise CellError(f"is too long (at most {col.max_len} characters)")
     return text
 
 
@@ -291,9 +295,9 @@ def parse(db: Session, ctx: Any, data: bytes) -> Plan:
             try:
                 values[col.name] = _convert(col, raw.get(col.name, ""))
             except CellError as exc:
-                errors.append(
-                    RowError(line_no, col.name, f"“{raw.get(col.name, '').strip()}” {exc}")
-                )
+                shown = raw.get(col.name, "").strip()
+                shown = shown if len(shown) <= 40 else shown[:40] + "…"  # never echo a whole cell
+                errors.append(RowError(line_no, col.name, f"“{shown}” {exc}"))
                 values[col.name] = None
                 bad_rows.add(line_no)
                 continue
