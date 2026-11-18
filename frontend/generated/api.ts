@@ -3780,6 +3780,12 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Dispute Amount */
+            dispute_amount?: string | null;
+            /** Dispute Reason */
+            dispute_reason?: string | null;
+            /** Disputed At */
+            disputed_at?: string | null;
             /** Due Date */
             due_date: string | null;
             /** Events */
@@ -3927,6 +3933,12 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Dispute Amount */
+            dispute_amount?: string | null;
+            /** Dispute Reason */
+            dispute_reason?: string | null;
+            /** Disputed At */
+            disputed_at?: string | null;
             /** Due Date */
             due_date: string | null;
             /** Follow Up Date */
@@ -3997,7 +4009,7 @@ export interface components {
          * ClaimStatus
          * @enum {string}
          */
-        ClaimStatus: "draft" | "ready" | "submitted" | "acknowledged" | "resolved_recovered" | "resolved_partial" | "rejected" | "written_off";
+        ClaimStatus: "draft" | "ready" | "submitted" | "acknowledged" | "disputed" | "resolved_recovered" | "resolved_partial" | "rejected" | "written_off";
         /** CommitIn */
         CommitIn: {
             /**
@@ -7287,6 +7299,10 @@ export interface components {
         };
         /** TransitionIn */
         TransitionIn: {
+            /** Dispute Amount */
+            dispute_amount?: string | null;
+            /** Dispute Reason */
+            dispute_reason?: ("data_mismatch" | "eligibility" | "rate_or_tier" | "timing" | "other") | null;
             /**
              * Note
              * @default

@@ -1774,6 +1774,44 @@
             "title": "Created At",
             "type": "string"
           },
+          "dispute_amount": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispute Amount"
+          },
+          "dispute_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispute Reason"
+          },
+          "disputed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disputed At"
+          },
           "due_date": {
             "anyOf": [
               {
@@ -2164,6 +2202,44 @@
             "title": "Created At",
             "type": "string"
           },
+          "dispute_amount": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispute Amount"
+          },
+          "dispute_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispute Reason"
+          },
+          "disputed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disputed At"
+          },
           "due_date": {
             "anyOf": [
               {
@@ -2435,6 +2511,7 @@
           "ready",
           "submitted",
           "acknowledged",
+          "disputed",
           "resolved_recovered",
           "resolved_partial",
           "rejected",
@@ -11612,6 +11689,40 @@
       "TransitionIn": {
         "additionalProperties": false,
         "properties": {
+          "dispute_amount": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "ge": 0,
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispute Amount"
+          },
+          "dispute_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "data_mismatch",
+                  "eligibility",
+                  "rate_or_tier",
+                  "timing",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispute Reason"
+          },
           "note": {
             "default": "",
             "maxLength": 2000,

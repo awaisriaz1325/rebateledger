@@ -16,6 +16,7 @@ from app.core.permissions import Permission
 from app.db.models.business import Approval, SupplierContact
 from app.db.models.identity import Membership, MembershipStatus
 from app.db.models.runs import (
+    DISPUTE_REASONS,
     TERMINAL_CLAIM,
     Claim,
     ClaimEvent,
@@ -34,12 +35,28 @@ TRANSITIONS: dict[ClaimStatus, set[ClaimStatus]] = {
     S.READY: {S.DRAFT, S.SUBMITTED, S.WRITTEN_OFF},
     S.SUBMITTED: {
         S.ACKNOWLEDGED,
+        S.DISPUTED,
         S.RESOLVED_RECOVERED,
         S.RESOLVED_PARTIAL,
         S.REJECTED,
         S.WRITTEN_OFF,
     },
-    S.ACKNOWLEDGED: {S.RESOLVED_RECOVERED, S.RESOLVED_PARTIAL, S.REJECTED, S.WRITTEN_OFF},
+    S.ACKNOWLEDGED: {
+        S.DISPUTED,
+        S.RESOLVED_RECOVERED,
+        S.RESOLVED_PARTIAL,
+        S.REJECTED,
+        S.WRITTEN_OFF,
+    },
+    # Resubmitting goes back to SUBMITTED with corrected evidence.
+    S.DISPUTED: {
+        S.ACKNOWLEDGED,
+        S.SUBMITTED,
+        S.RESOLVED_RECOVERED,
+        S.RESOLVED_PARTIAL,
+        S.REJECTED,
+        S.WRITTEN_OFF,
+    },
     S.REJECTED: {S.SUBMITTED, S.WRITTEN_OFF},
     S.RESOLVED_PARTIAL: {S.SUBMITTED, S.RESOLVED_RECOVERED, S.WRITTEN_OFF},
     S.RESOLVED_RECOVERED: set(),
@@ -318,8 +335,28 @@ def recovered_total(db: Session, claim_id: uuid.UUID) -> Decimal:
     )
 
 
-def transition(db: Session, ctx: Any, claim: Claim, to: ClaimStatus, note: str = "") -> Claim:
+def transition(
+    db: Session,
+    ctx: Any,
+    claim: Claim,
+    to: ClaimStatus,
+    note: str = "",
+    *,
+    dispute_reason: str | None = None,
+    dispute_amount: Decimal | None = None,
+) -> Claim:
     current = S(claim.status)
+    if to is S.DISPUTED and dispute_reason is None:
+        raise AppError(
+            422, "REASON_REQUIRED", "Reason required", "Choose why the supplier disputes the claim."
+        )
+    if to is not S.DISPUTED and (dispute_reason is not None or dispute_amount is not None):
+        raise AppError(
+            422,
+            "DISPUTE_FIELDS_INVALID",
+            "Not a dispute",
+            "A dispute reason or amount can only be given when marking a claim disputed.",
+        )
     if to not in TRANSITIONS[current]:
         raise conflict(
             "TRANSITION_NOT_ALLOWED", f"A {current.value} claim cannot move to {to.value}."
@@ -338,6 +375,12 @@ def transition(db: Session, ctx: Any, claim: Claim, to: ClaimStatus, note: str =
         raise conflict(
             "NO_RECOVERY", "Link at least one recovering credit before resolving as partial."
         )
+    if to is S.DISPUTED:
+        assert dispute_reason is not None
+        claim.dispute_reason, claim.dispute_amount = dispute_reason, dispute_amount
+        claim.disputed_at = utcnow()
+        offered = f" Supplier accepts {dispute_amount:,.2f}." if dispute_amount is not None else ""
+        note = f"Disputed: {DISPUTE_REASONS[dispute_reason]}.{offered} {note}".strip()
     _apply(db, ctx, claim, to, note)
     return claim
 

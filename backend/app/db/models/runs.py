@@ -196,11 +196,22 @@ class CreditAllocation(IdMixin, TenantMixin, Base):
     reversed_by: Mapped[uuid.UUID | None]
 
 
+DISPUTE_REASONS: dict[str, str] = {
+    "data_mismatch": "Data mismatch",
+    "eligibility": "Eligibility",
+    "rate_or_tier": "Rate or tier",
+    "timing": "Timing",
+    "other": "Other",
+}
+"""Why a supplier disputes a claim (v1.3 Phase 27)."""
+
+
 class ClaimStatus(StrEnum):
     DRAFT = "draft"
     READY = "ready"
     SUBMITTED = "submitted"
     ACKNOWLEDGED = "acknowledged"
+    DISPUTED = "disputed"  # v1.3 Phase 27: the supplier contests the claim
     RESOLVED_RECOVERED = "resolved_recovered"
     RESOLVED_PARTIAL = "resolved_partial"
     REJECTED = "rejected"
@@ -221,6 +232,10 @@ class Claim(IdMixin, TenantMixin, TimestampMixin, AuthorMixin, VersionedMixin, B
         UniqueConstraint("tenant_id", "number"),
         _in("status", [s.value for s in ClaimStatus]),
         _in("channel", ["email", "portal", "phone", "other"]),
+        _in("dispute_reason", list(DISPUTE_REASONS)),
+        CheckConstraint(
+            "dispute_amount IS NULL OR dispute_amount >= 0", name="dispute_amount_valid"
+        ),
     )
 
     number: Mapped[int] = mapped_column(Integer)
@@ -243,6 +258,11 @@ class Claim(IdMixin, TenantMixin, TimestampMixin, AuthorMixin, VersionedMixin, B
     write_off_reason: Mapped[str] = mapped_column(String(500), default="")
     pending_write_off: Mapped[bool] = mapped_column(Boolean, default=False)
     last_reminder: Mapped[dict[str, Any]] = mapped_column(default=dict)
+    #: Latest supplier dispute (v1.3 Phase 27); kept after the dispute ends, for history.
+    dispute_reason: Mapped[str | None] = mapped_column(String(20))
+    dispute_amount: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    """The amount the supplier says it owes, if it named one."""
+    disputed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class ClaimItem(IdMixin, TenantMixin, Base):

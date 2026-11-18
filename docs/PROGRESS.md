@@ -12,6 +12,18 @@ Template:
 - Next step:
 -->
 
+## 2026-11-18 — v1.3 Phase 27: dispute tracking on claims
+- Changed: claim status `disputed` (from submitted/acknowledged; to acknowledged, resubmitted,
+  resolved, rejected, written off) with a required reason (data mismatch, eligibility, rate or
+  tier, timing, other), an optional amount the supplier accepts, and the date (migration 0014);
+  the dispute is written into the claim history (and so the evidence pack); claims register gains
+  dispute reason, supplier-accepted amount and days in dispute; claim page dispute dialog + notice.
+- Decisions (ADRs): the latest dispute is kept after it ends (history); days in dispute count only
+  while the claim is still disputed.
+- Note: E2E pilot-form test hit its 5/hour per-IP limit after repeated local runs; local Redis
+  counters cleared, full suite then green. Not a product issue.
+- Next step: Phase 28 (effective rebate rate).
+
 ## 2026-11-18 — v1.3 Phase 26: supplier scorecard
 - Changed: report `supplier_scorecard` (CSV/XLSX/PDF; default last 12 months): periods owed and
   due, rebate owed vs received %, paid-in-full-on-time %, average days late (paid date = latest

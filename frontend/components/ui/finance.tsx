@@ -85,6 +85,7 @@ const STATUS: Record<string, { label: string; tone: Tone }> = {
   ready: { label: "Ready", tone: "info" },
   submitted: { label: "Submitted", tone: "info" },
   acknowledged: { label: "Acknowledged", tone: "info" },
+  disputed: { label: "Disputed", tone: "warning" },
   resolved_recovered: { label: "Recovered", tone: "positive" },
   resolved_partial: { label: "Partly recovered", tone: "warning" },
   rejected: { label: "Rejected", tone: "negative" },

@@ -31,6 +31,7 @@ const ACTION_LABEL: Record<string, string> = {
   ready: "Mark ready",
   submitted: "Mark submitted to supplier",
   acknowledged: "Supplier acknowledged",
+  disputed: "Supplier disputes…",
   resolved_recovered: "Resolve: fully recovered",
   resolved_partial: "Resolve: partly recovered",
   rejected: "Supplier rejected",
@@ -100,16 +101,37 @@ function useRefresh(id: string) {
   return () => Promise.all([qc.invalidateQueries({ queryKey: ["claim", id] }), qc.invalidateQueries({ queryKey: ["claims"] }), qc.invalidateQueries({ queryKey: ["discrepancies"] }), qc.invalidateQueries({ queryKey: ["reconciliation"] })]);
 }
 
+type DisputeReason = NonNullable<components["schemas"]["TransitionIn"]["dispute_reason"]>;
+const DISPUTE_REASONS: Record<DisputeReason, string> = {
+  data_mismatch: "Data mismatch",
+  eligibility: "Eligibility",
+  rate_or_tier: "Rate or tier",
+  timing: "Timing",
+  other: "Other",
+};
+
 function Lifecycle({ claim }: { claim: ClaimDetail }) {
   const session = useSession();
   const refresh = useRefresh(claim.id);
   const [to, setTo] = useState<ClaimStatus | null>(null);
   const [note, setNote] = useState("");
+  const [reason, setReason] = useState<DisputeReason | "">("");
+  const [offered, setOffered] = useState("");
+  const disputing = to === "disputed";
+  const offeredValid = offered === "" || /^\d+(\.\d{1,2})?$/.test(offered);
   const move = useMutation({
-    mutationFn: async (target: ClaimStatus) => unwrap(await api.POST("/api/v1/claims/{claim_id}/transition", { params: { path: { claim_id: claim.id } }, body: { to: target, note } })),
+    mutationFn: async (target: ClaimStatus) =>
+      unwrap(
+        await api.POST("/api/v1/claims/{claim_id}/transition", {
+          params: { path: { claim_id: claim.id } },
+          body: target === "disputed" ? { to: target, note, dispute_reason: reason || null, dispute_amount: offered || null } : { to: target, note },
+        }),
+      ),
     onSuccess: async (c) => {
       setTo(null);
       setNote("");
+      setReason("");
+      setOffered("");
       toast.success(c.pending_write_off ? "Write-off sent for approval" : `Claim is now ${statusLabel(c.status).toLowerCase()}`);
       await refresh();
     },
@@ -117,10 +139,20 @@ function Lifecycle({ claim }: { claim: ClaimDetail }) {
   });
   const allowed = claim.allowed_transitions.filter((t) => t !== "written_off" || can(session, "write_off_claims")) as ClaimStatus[];
   if (claim.pending_write_off) return <Notice tone="warning" title="Write-off awaiting approval">Someone else with approval rights must approve it on the Approvals page.</Notice>;
-  if (!allowed.length) return null;
+  const dispute = claim.dispute_reason ? (
+    <div className="mb-3">
+      <Notice tone={claim.status === "disputed" ? "warning" : "info"} title={claim.status === "disputed" ? "Disputed by the supplier" : "Earlier supplier dispute"}>
+        Reason: {DISPUTE_REASONS[claim.dispute_reason as DisputeReason] ?? claim.dispute_reason}
+        {claim.dispute_amount != null ? <> · supplier accepts <Money value={claim.dispute_amount} /></> : null}
+        {claim.disputed_at ? <> · since <DateText value={claim.disputed_at.slice(0, 10)} /></> : null}
+      </Notice>
+    </div>
+  ) : null;
+  if (!allowed.length) return dispute;
   const writingOff = to === "written_off";
   return (
     <Card title="Next step">
+      {dispute}
       <div className="flex flex-wrap gap-2">
         {allowed.map((t) => <Button key={t} size="sm" variant={t === "written_off" ? "danger" : t === "draft" ? "ghost" : "secondary"} onClick={() => setTo(t)}>{ACTION_LABEL[t] ?? statusLabel(t)}</Button>)}
       </div>
@@ -128,9 +160,22 @@ function Lifecycle({ claim }: { claim: ClaimDetail }) {
         open={to !== null}
         onOpenChange={(o) => !o && setTo(null)}
         title={to ? ACTION_LABEL[to]?.replace("…", "") ?? statusLabel(to) : ""}
-        description={writingOff ? "Writing off closes the claim without recovering the rest. A reason is required and is kept in the audit log." : "Add a note for the claim history (optional)."}
-        footer={<><Button variant="secondary" onClick={() => setTo(null)}>Cancel</Button><Button variant={writingOff ? "danger" : "primary"} disabled={writingOff && note.trim().length < 3} loading={move.isPending} onClick={() => to && move.mutate(to)}>Confirm</Button></>}
+        description={writingOff ? "Writing off closes the claim without recovering the rest. A reason is required and is kept in the audit log." : disputing ? "Record why the supplier contests the claim and, if they named one, the amount they accept. You can resubmit or resolve it later." : "Add a note for the claim history (optional)."}
+        footer={<><Button variant="secondary" onClick={() => setTo(null)}>Cancel</Button><Button variant={writingOff ? "danger" : "primary"} disabled={(writingOff && note.trim().length < 3) || (disputing && (!reason || !offeredValid))} loading={move.isPending} onClick={() => to && move.mutate(to)}>Confirm</Button></>}
       >
+        {disputing ? (
+          <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field id="tr-reason" label="Supplier's reason" required>
+              <Select id="tr-reason" value={reason} onChange={(e) => setReason(e.target.value as DisputeReason | "")}>
+                <option value="">Choose…</option>
+                {(Object.keys(DISPUTE_REASONS) as DisputeReason[]).map((r) => <option key={r} value={r}>{DISPUTE_REASONS[r]}</option>)}
+              </Select>
+            </Field>
+            <Field id="tr-offered" label="Amount the supplier accepts" hint="Optional, e.g. 300.00" error={offeredValid ? undefined : "Enter an amount like 300.00."}>
+              <Input id="tr-offered" inputMode="decimal" value={offered} onChange={(e) => setOffered(e.target.value.trim())} aria-invalid={!offeredValid || undefined} />
+            </Field>
+          </div>
+        ) : null}
         <Field id="tr-note" label={writingOff ? "Reason" : "Note"} required={writingOff}><Textarea id="tr-note" rows={3} maxLength={2000} value={note} onChange={(e) => setNote(e.target.value)} /></Field>
       </Dialog>
     </Card>

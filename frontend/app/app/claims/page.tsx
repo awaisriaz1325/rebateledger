@@ -12,7 +12,7 @@ import { api, unwrap } from "@/lib/api";
 import { useNames } from "@/lib/queries";
 import type { Claim } from "@/lib/types";
 
-const STATUSES = ["draft", "ready", "submitted", "acknowledged", "resolved_partial", "resolved_recovered", "rejected", "written_off"];
+const STATUSES = ["draft", "ready", "submitted", "acknowledged", "disputed", "resolved_partial", "resolved_recovered", "rejected", "written_off"];
 
 export default function ClaimsPage() {
   const router = useRouter();

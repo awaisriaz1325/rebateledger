@@ -18,7 +18,7 @@ from app.core.clock import today_in
 from app.core.errors import AppError, not_found
 from app.db.models.business import Agreement, AgreementVersion, ImportBatch, Supplier
 from app.db.models.identity import Membership, Tenant, User
-from app.db.models.runs import TERMINAL_CLAIM, Claim, ClaimItem
+from app.db.models.runs import DISPUTE_REASONS, TERMINAL_CLAIM, Claim, ClaimItem
 from app.engine.reconcile import ReconStatus
 from app.exports.writers import Column, Table
 from app.services import reconciliation as recon
@@ -228,6 +228,7 @@ def claims_register(db: Session, tenant: Tenant, p: ReportParams) -> Table:
     from app.services.claims import recovered_total
 
     suppliers, people = _names(db, tenant)
+    today = today_in(tenant.timezone)
     rows = [
         {
             "number": c.number,
@@ -242,6 +243,12 @@ def claims_register(db: Session, tenant: Tenant, p: ReportParams) -> Table:
             "submitted": c.submitted_at.date() if c.submitted_at else None,
             "due": c.due_date,
             "closed": c.resolved_at.date() if c.resolved_at else None,
+            # v1.3 Phase 27: the latest dispute; the day count runs only while still disputed.
+            "dispute_reason": DISPUTE_REASONS.get(c.dispute_reason or "", ""),
+            "dispute_amount": c.dispute_amount,
+            "dispute_days": (today - c.disputed_at.date()).days
+            if c.status == "disputed" and c.disputed_at
+            else None,
         }
         for c in _claims(db, tenant, p)
     ]
@@ -261,6 +268,9 @@ def claims_register(db: Session, tenant: Tenant, p: ReportParams) -> Table:
             Column("submitted", "Submitted", "date"),
             Column("due", "Due", "date"),
             Column("closed", "Closed", "date"),
+            Column("dispute_reason", "Dispute reason"),
+            Column("dispute_amount", "Supplier accepts", "money"),
+            Column("dispute_days", "Days in dispute", "int"),
         ],
         rows=rows,
         filters=_filter_text(db, tenant, p),

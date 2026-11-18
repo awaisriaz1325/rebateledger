@@ -66,6 +66,11 @@ class ClaimPatch(In):
 class TransitionIn(In):
     to: ClaimStatus
     note: Annotated[str, Field(max_length=2000)] = ""
+    #: Only with to="disputed" (v1.3 Phase 27).
+    dispute_reason: (
+        Literal["data_mismatch", "eligibility", "rate_or_tier", "timing", "other"] | None
+    ) = None
+    dispute_amount: Annotated[MoneyIn | None, Field(ge=0)] = None
 
 
 class NoteIn(In):
@@ -153,6 +158,9 @@ class ClaimOut(Out):
     resolved_at: datetime | None
     write_off_reason: str
     pending_write_off: bool
+    dispute_reason: str | None = None
+    dispute_amount: DecimalStr | None = None
+    disputed_at: datetime | None = None
     row_version: int
     created_at: datetime
 
@@ -291,7 +299,15 @@ def transition(
     c = svc.get(ctx.db, ctx.tenant_uuid, claim_id, lock=True)
     if body.to is ClaimStatus.WRITTEN_OFF and not ctx.can(Permission.WRITE_OFF_CLAIMS):
         raise forbidden("Your role cannot write off claims.")
-    svc.transition(ctx.db, ctx, c, body.to, body.note)
+    svc.transition(
+        ctx.db,
+        ctx,
+        c,
+        body.to,
+        body.note,
+        dispute_reason=body.dispute_reason,
+        dispute_amount=body.dispute_amount,
+    )
     return _detail(ctx, c, response)
 
 

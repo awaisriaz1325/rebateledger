@@ -158,6 +158,22 @@ test("a claim goes from discrepancy to fully recovered", async ({ page }) => {
   await page.getByRole("dialog").getByRole("button", { name: "Confirm" }).click();
   await toast(page, /now submitted/i);
 
+  // v1.3 Phase 27: the supplier disputes the claim; record it, then resubmit with evidence.
+  await page.getByRole("button", { name: "Supplier disputes…" }).click();
+  const dispute = page.getByRole("dialog", { name: "Supplier disputes" });
+  await expect(dispute.getByRole("button", { name: "Confirm" })).toBeDisabled(); // a reason is required
+  await dispute.getByLabel(/^Supplier's reason/).selectOption("rate_or_tier");
+  await dispute.getByLabel(/^Amount the supplier accepts/).fill("300.00");
+  await expectAccessible(page);
+  await dispute.getByRole("button", { name: "Confirm" }).click();
+  await toast(page, /now disputed/i);
+  await expect(page.getByText("Disputed by the supplier")).toBeVisible();
+  await expect(page.getByText(/Reason: Rate or tier · supplier accepts \$300\.00/)).toBeVisible();
+  await page.getByRole("button", { name: "Mark submitted to supplier" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Confirm" }).click();
+  await toast(page, /now submitted/i);
+  await expect(page.getByText("Earlier supplier dispute")).toBeVisible();
+
   await page.getByRole("button", { name: "Link a credit" }).click();
   const link = page.getByRole("dialog", { name: "Link a recovering credit" });
   await link.getByLabel("Enter a new credit").check();
