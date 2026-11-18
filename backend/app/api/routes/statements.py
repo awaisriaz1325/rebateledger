@@ -11,6 +11,7 @@ from fastapi.responses import Response
 
 from app.api.deps import Ctx, Requires
 from app.api.schemas.common import DecimalStr, In, Out
+from app.core import ratelimit
 from app.core.permissions import Permission
 from app.services import statements as svc
 
@@ -87,6 +88,7 @@ def _out(c: svc.Comparison) -> StatementRowOut:
 
 def _rows(ctx: Ctx, supplier_id: uuid.UUID | None, status: Status | None) -> list[svc.Comparison]:
     assert ctx.tenant is not None
+    ratelimit.heavy(ctx.user.id)
     rows = svc.compare(ctx.db, ctx.tenant, supplier_id=supplier_id)
     return [r for r in rows if status is None or r.status == status]
 

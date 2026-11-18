@@ -12,6 +12,7 @@ from pydantic import Field
 
 from app.api.deps import Ctx, Requires, idempotency_key
 from app.api.schemas.common import DecimalStr, In, Out
+from app.core import ratelimit
 from app.core.permissions import Permission
 from app.exports import reports
 from app.services import idempotency
@@ -72,6 +73,7 @@ def coverage(
     ctx: View, period_from: date, period_to: date, supplier_id: uuid.UUID | None = None
 ) -> list[RecoveryCoverageOut]:
     assert ctx.tenant is not None
+    ratelimit.heavy(ctx.user.id)
     return [
         RecoveryCoverageOut(
             supplier_id=c.supplier_id,
@@ -90,6 +92,7 @@ def audit(
     ctx: View, period_from: date, period_to: date, supplier_id: uuid.UUID | None = None
 ) -> RecoveryAuditOut:
     assert ctx.tenant is not None
+    ratelimit.heavy(ctx.user.id)
     table = reports.recovery_audit(
         ctx.db,
         ctx.tenant,

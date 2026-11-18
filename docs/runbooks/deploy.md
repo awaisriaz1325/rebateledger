@@ -8,7 +8,8 @@ Every command runs on the VM, from the repo root, as a person. Nothing deploys a
 1. Run the prepared cloud commands in `infra/prod/gcloud-prepared.md` (bucket, IAM, DNS).
 2. `sudo install -d -m 700 /etc/rebateledger` and create `/etc/rebateledger/prod.env` from
    `infra/prod/prod.env.example` with real values (`chmod 600`). Pin `CLOUD_CLI_IMAGE` to an
-   exact tag checked on the official registry.
+   exact tag checked on the official registry. Generate `REDIS_PASSWORD` (e.g.
+   `openssl rand -hex 32`) and put the same value in `RL_REDIS_URL`.
 3. Add `infra/prod/Caddyfile.snippet` to the host Caddy and reload it.
 4. `infra/prod/deploy.sh v1.1.0`
 5. Create the operator account:

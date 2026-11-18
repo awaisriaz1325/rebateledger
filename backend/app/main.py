@@ -55,7 +55,9 @@ def create_app() -> FastAPI:
         version="1.0.0",
         docs_url=None if settings.is_production_like else "/api/docs",
         redoc_url=None,
-        openapi_url="/api/openapi.json",
+        # The schema maps every endpoint; publish it only outside production (audit 2026-11-18).
+        # `python -m app.openapi` builds it in-process for the frontend client either way.
+        openapi_url=None if settings.is_production_like else "/api/openapi.json",
     )
     application.add_exception_handler(AppError, app_error_handler)
     application.add_exception_handler(RequestValidationError, validation_handler)

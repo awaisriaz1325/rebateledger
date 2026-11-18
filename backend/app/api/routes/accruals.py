@@ -12,6 +12,7 @@ from sqlalchemy import select
 
 from app.api.deps import Ctx, Requires
 from app.api.schemas.common import DecimalStr, In, Out
+from app.core import ratelimit
 from app.core.permissions import Permission
 from app.db.models.business import AccrualExport
 from app.services import accruals as svc
@@ -85,6 +86,7 @@ class AccrualExportIn(In):
 def preview(ctx: View, closing_date: Annotated[date, Query()]) -> AccrualJournalOut:
     """What the journal for this month end would contain. Estimates are labelled."""
     assert ctx.tenant is not None
+    ratelimit.heavy(ctx.user.id)
     journal = svc.build(ctx.db, ctx.tenant, closing_date)
     prev = svc.previous(ctx.db, ctx.tenant_uuid, closing_date)
     return AccrualJournalOut(

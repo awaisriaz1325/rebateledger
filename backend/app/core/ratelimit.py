@@ -40,5 +40,13 @@ def hit(scope: str, ident: str, limit: int, window_seconds: int) -> None:
         )
 
 
+HEAVY_PER_MINUTE = 60
+"""Per-user cap on expensive reads (report previews, comparisons, audits; audit 2026-11-18)."""
+
+
+def heavy(user_id: object) -> None:
+    hit("heavy", str(user_id), HEAVY_PER_MINUTE, 60)
+
+
 def reset(scope: str, ident: str) -> None:
     client().delete(_key(scope, ident))

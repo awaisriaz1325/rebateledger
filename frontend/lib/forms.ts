@@ -42,6 +42,14 @@ export function useLinkToken(): string | null {
 
 /** Only allow same-site relative redirects after sign-in (no open redirects). */
 export function safeNext(next: string | null): string {
-  if (next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\")) return next;
+  // Browsers strip tabs/newlines and treat a backslash as "/" when parsing, so "/\t/evil" means "//evil".
+  if (!next || !next.startsWith("/") || /[\s\u0000-\u001f\\]/.test(next)) return "/app";
+  const base = "https://same-origin.invalid";
+  try {
+    const url = new URL(next, base);
+    if (url.origin === base) return url.pathname + url.search + url.hash;
+  } catch {
+    // unparsable: fall through
+  }
   return "/app";
 }

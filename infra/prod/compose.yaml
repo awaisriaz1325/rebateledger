@@ -7,13 +7,23 @@ x-logs: &logs
   driver: json-file
   options: {max-size: "20m", max-file: "5"}
 
+# Container hardening (audit 2026-11-18): no Linux capabilities, no privilege gain via setuid,
+# read-only root filesystem (only /tmp and the storage volume are writable).
+x-hardened: &hardened
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+
 x-app: &app
+  <<: *hardened
   image: rebateledger-api:${RELEASE:?set RELEASE (git tag)}
   restart: unless-stopped
+  read_only: true
+  tmpfs: ["/tmp:size=256m"]
   env_file: /etc/rebateledger/prod.env
   environment:
     RL_ENV: production
     RL_STORAGE_DIR: /data/storage
+    XDG_CACHE_HOME: /tmp/.cache  # fontconfig cache for PDFs (root filesystem is read-only)
   volumes: [storage:/data/storage]
   depends_on:
     postgres: {condition: service_healthy}
@@ -51,7 +61,9 @@ services:
   redis:
     image: redis:8.10.3-alpine
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    # Password required even inside the private network (shared VM, audit 2026-11-18).
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?}"]
+    environment: {REDISCLI_AUTH: "${REDIS_PASSWORD:?}"}
     volumes: [redisdata:/data]
     healthcheck: {test: ["CMD", "redis-cli", "ping"], interval: 10s, timeout: 3s, retries: 30}
     networks: [prod]
@@ -62,6 +74,7 @@ services:
     environment:
       RL_ENV: production
       RL_STORAGE_DIR: /data/storage
+      XDG_CACHE_HOME: /tmp/.cache
       FORWARDED_ALLOW_IPS: 172.31.250.0/24  # only the stack network (web) may set X-Forwarded-For
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
@@ -78,6 +91,7 @@ services:
     command: ["python", "-m", "app.workers.scheduler"]
 
   web:
+    <<: *hardened
     image: rebateledger-web:${RELEASE:?}
     restart: unless-stopped
     ports: ["127.0.0.1:3200:3000"]  # host Caddy (imageme-caddy, host network) proxies here

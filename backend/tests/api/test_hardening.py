@@ -133,3 +133,24 @@ def test_unmatched_credits_query_count_does_not_grow_with_credits(
     assert len(rows) == 40
     assert len(statements) < 25, f"{len(statements)} statements for 40 credits"
     assert len(app_client.get("/api/v1/credits/unmatched", params={"limit": 10}).json()) == 10
+
+
+def test_api_schema_and_docs_are_not_published_in_production(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Audit 2026-11-18: /api/openapi.json (the full API map) was served in every environment."""
+    from fastapi.testclient import TestClient
+
+    from app.core.config import get_settings
+    from app.main import create_app
+
+    monkeypatch.setenv("RL_ENV", "production")
+    get_settings.cache_clear()
+    try:
+        app = create_app()
+        client = TestClient(app, base_url="https://testserver")
+        assert client.get("/api/openapi.json").status_code == 404
+        assert client.get("/api/docs").status_code == 404
+        assert app.openapi()["paths"]  # the client generator (python -m app.openapi) still works
+    finally:
+        get_settings.cache_clear()

@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse, Response
 
 from app.api.deps import Ctx, Requires, idempotency_key
 from app.api.schemas.common import Out
+from app.core import ratelimit
 from app.core.permissions import Permission
 from app.services import agreement_bulk as svc
 from app.services import idempotency
@@ -99,6 +100,7 @@ def template(ctx: View) -> Response:
 @router.post("/preview", response_model=BulkPlanOut)
 def preview(ctx: Edit, file: Annotated[UploadFile, File()]) -> BulkPlanOut:
     """Validate the file and show what would be created. Nothing is saved."""
+    ratelimit.heavy(ctx.user.id)
     return _out(svc.parse(ctx.db, ctx, _read(file)))
 
 

@@ -16,6 +16,7 @@ from pydantic import Field
 
 from app.api.deps import Ctx, Requires, idempotency_key
 from app.api.schemas.common import In, Out
+from app.core import ratelimit
 from app.core.permissions import Permission
 from app.exports import reports
 from app.exports import service as svc
@@ -128,6 +129,7 @@ def preview_report(
     status: Annotated[str | None, Query(max_length=200)] = None,
 ) -> ReportPreviewOut:
     assert ctx.tenant is not None
+    ratelimit.heavy(ctx.user.id)
     filters = ReportFilters(
         supplier_id=supplier_id, period_from=period_from, period_to=period_to, status=status
     )
