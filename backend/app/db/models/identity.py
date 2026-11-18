@@ -213,6 +213,8 @@ class MfaFactor(IdMixin, Base):
         ForeignKey(f"{SCHEMA}.users.id", ondelete="CASCADE"), unique=True
     )
     secret_encrypted: Mapped[bytes] = mapped_column(LargeBinary)
+    pending_secret_encrypted: Mapped[bytes | None] = mapped_column(LargeBinary)
+    """Re-enrollment in progress; replaces ``secret_encrypted`` only once confirmed."""
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_used_timestep: Mapped[int | None] = mapped_column(BigInteger)

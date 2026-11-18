@@ -251,7 +251,6 @@ def login(db: Session, email: str, password: str, *, user_agent: str, ip: str) -
         raise _invalid_credentials()
 
     _clear_failures(email)
-    user.failed_login_count = 0
     user.locked_until = None
     if user.password_hash and needs_rehash(user.password_hash):
         user.password_hash = hash_password(password)
@@ -274,6 +273,9 @@ def login(db: Session, email: str, password: str, *, user_agent: str, ip: str) -
         state = SessionState.PENDING_ENROLLMENT
     else:
         state = SessionState.ACTIVE
+    if state is not SessionState.PENDING_MFA:
+        # With MFA, the count is cleared only by a correct code (audit 2026-11-18 #2).
+        user.failed_login_count = 0
     issued = _create_session(
         db,
         user,
@@ -323,6 +325,15 @@ def _after_full_login(db: Session, user: User, s: UserSession) -> None:
         )
 
 
+def _mfa_invalid() -> AppError:
+    return AppError(
+        401,
+        "MFA_INVALID",
+        "Code not accepted",
+        "The code is wrong or already used. Use the newest code from your app.",
+    )
+
+
 def complete_mfa(
     db: Session, s: UserSession, user: User, *, code: str | None, recovery_code: str | None
 ) -> str:
@@ -331,18 +342,16 @@ def complete_mfa(
             409, "MFA_NOT_PENDING", "MFA not pending", "This session is not waiting for a code."
         )
     ratelimit.hit("mfa", str(user.id), 10, 300)
+    if user.locked_until is not None and user.locked_until > utcnow():
+        raise _mfa_invalid()
     factor = mfa_factor(db, user.id)
     assert factor is not None and factor.confirmed_at is not None
     used_recovery = False
     if code:
         step = verify_totp(decrypt_secret(factor.secret_encrypted), code, factor.last_used_timestep)
         if step is None:
-            raise AppError(
-                401,
-                "MFA_INVALID",
-                "Code not accepted",
-                "The code is wrong or already used. Use the newest code from your app.",
-            )
+            _record_failure(user.id)
+            raise _mfa_invalid()
         factor.last_used_timestep = step
     elif recovery_code:
         wanted = hash_token(normalise_recovery_code(recovery_code))
@@ -359,6 +368,7 @@ def complete_mfa(
             None,
         )
         if rc is None:
+            _record_failure(user.id)
             raise AppError(
                 401,
                 "MFA_INVALID",
@@ -372,6 +382,7 @@ def complete_mfa(
         raise invalid(
             "MFA_CODE_REQUIRED", "Enter a code from your authenticator app or a recovery code."
         )
+    user.failed_login_count = 0
     s.state = SessionState.ACTIVE.value
     s.mfa_verified_at = utcnow()
     token = rotate(db, s)
@@ -402,9 +413,12 @@ def start_enrollment(db: Session, user: User) -> tuple[str, str]:
     if factor is None:
         factor = MfaFactor(user_id=user.id, secret_encrypted=encrypt_secret(secret))
         db.add(factor)
+    elif factor.confirmed_at is not None:
+        # Re-enrollment: the confirmed authenticator stays in force until the new one is
+        # confirmed, so an abandoned setup never leaves the account without MFA.
+        factor.pending_secret_encrypted = encrypt_secret(secret)
     else:
         factor.secret_encrypted = encrypt_secret(secret)
-        factor.confirmed_at = None
         factor.last_used_timestep = None
     db.flush()
     return secret, totp_uri(secret, user.email)
@@ -413,11 +427,16 @@ def start_enrollment(db: Session, user: User) -> tuple[str, str]:
 def confirm_enrollment(db: Session, user: User, s: UserSession, code: str) -> tuple[list[str], str]:
     ratelimit.hit("mfa", str(user.id), 10, 300)
     factor = mfa_factor(db, user.id)
-    if factor is None or (factor.confirmed_at is not None and not user.must_reenroll_mfa):
+    # A confirmed factor can only be replaced through a pending re-enrollment secret.
+    if factor is None or (
+        factor.confirmed_at is not None
+        and (not user.must_reenroll_mfa or factor.pending_secret_encrypted is None)
+    ):
         raise AppError(
             409, "MFA_NOT_STARTED", "No enrollment in progress", "Start MFA setup first."
         )
-    step = verify_totp(decrypt_secret(factor.secret_encrypted), code, None)
+    candidate = factor.pending_secret_encrypted or factor.secret_encrypted
+    step = verify_totp(decrypt_secret(candidate), code, None)
     if step is None:
         raise AppError(
             401,
@@ -425,6 +444,7 @@ def confirm_enrollment(db: Session, user: User, s: UserSession, code: str) -> tu
             "Code not accepted",
             "The code is wrong. Check your device clock and try the newest code.",
         )
+    factor.secret_encrypted, factor.pending_secret_encrypted = candidate, None
     factor.confirmed_at = utcnow()
     factor.last_used_timestep = step
     user.must_reenroll_mfa = False

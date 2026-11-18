@@ -28,6 +28,7 @@ SKIP_COLUMNS = {
     "storage_key",
     "dedupe_key",
     "secret_encrypted",
+    "pending_secret_encrypted",
     "password_hash",
     "code_hash",
 }

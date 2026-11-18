@@ -390,3 +390,68 @@ def test_totp_helper_never_issues_a_code_about_to_expire(
     from app.core.security import verify_totp
 
     assert verify_totp(m.totp_secret, code, None, now=clock["now"]) is not None
+
+
+def test_abandoned_mfa_reenrollment_keeps_the_old_factor(
+    app_client: TestClient, world: World
+) -> None:
+    """Security audit 2026-11-18 #1: opening MFA setup must not switch MFA off."""
+    admin = world.member(world.tenant(), "admin")
+    world.sql("UPDATE rl.users SET must_reenroll_mfa = true WHERE id = :u", u=admin.user_id)
+    login(app_client, admin)
+    new_secret = app_client.post("/api/v1/auth/mfa/setup").json()["secret"]  # then abandoned
+
+    # Password alone must still not be enough; the old authenticator still works.
+    app_client.cookies.clear()
+    body = app_client.post(
+        "/api/v1/auth/login", json={"email": admin.email, "password": PASSWORD}
+    ).json()
+    assert body["state"] == "pending_mfa"
+    login(app_client, admin)
+
+    # Finishing re-enrollment swaps in the new authenticator.
+    new_secret = app_client.post("/api/v1/auth/mfa/setup").json()["secret"]
+    r = app_client.post("/api/v1/auth/mfa/confirm", json={"code": pyotp.TOTP(new_secret).now()})
+    assert r.status_code == 200, r.text
+    app_client.cookies.clear()
+    body = app_client.post(
+        "/api/v1/auth/login", json={"email": admin.email, "password": PASSWORD}
+    ).json()
+    r = app_client.post(
+        "/api/v1/auth/mfa/verify",
+        json={"code": admin.code()},
+        headers={"X-CSRF-Token": body["csrf_token"]},
+    )
+    assert r.status_code == 401  # old authenticator no longer accepted
+
+
+def test_wrong_mfa_codes_lock_the_account(app_client: TestClient, world: World) -> None:
+    """Security audit 2026-11-18 #2: MFA guesses count toward the lockout, and signing in
+    again with the password does not reset the count."""
+    owner = world.member(world.tenant(), "owner")
+    for attempt in range(10):
+        app_client.cookies.clear()
+        body = app_client.post(
+            "/api/v1/auth/login", json={"email": owner.email, "password": PASSWORD}
+        ).json()
+        assert body["state"] == "pending_mfa", (attempt, body)
+        r = app_client.post(
+            "/api/v1/auth/mfa/verify",
+            json={"code": "000000"},
+            headers={"X-CSRF-Token": body["csrf_token"]},
+        )
+        assert r.status_code == 401
+        if attempt == 4:
+            from app.core import ratelimit
+
+            ratelimit.reset("mfa", str(owner.user_id))  # isolate lockout from the rate limit
+    # The correct code is now refused on the still-open pending session, and login fails.
+    r = app_client.post(
+        "/api/v1/auth/mfa/verify",
+        json={"code": owner.code()},
+        headers={"X-CSRF-Token": body["csrf_token"]},
+    )
+    assert r.status_code == 401
+    app_client.cookies.clear()
+    r = app_client.post("/api/v1/auth/login", json={"email": owner.email, "password": PASSWORD})
+    assert r.status_code == 401
