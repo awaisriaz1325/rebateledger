@@ -20,8 +20,7 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader title="Dashboard" description={`${session.organization?.name ?? ""} · identified amounts are what the system found; recovered amounts are credits you confirmed.`} />
-      <Onboarding />
-      <QueryState query={query}>{(d) => <Kpis d={d} />}</QueryState>
+      <QueryState query={query}>{(d) => <><Onboarding steps={d.getting_started} /><Kpis d={d} /></>}</QueryState>
     </>
   );
 }
@@ -129,57 +128,32 @@ function TopOpportunities({ items }: { items: Opportunity[] }) {
   );
 }
 
-const STEPS = [
-  { key: "supplier", label: "Add a supplier", href: "/app/suppliers/new" },
-  { key: "agreement", label: "Add an agreement", href: "/app/agreements/new" },
-  { key: "purchases", label: "Import purchases", href: "/app/imports/new?type=purchases" },
-  { key: "credits", label: "Import credits", href: "/app/imports/new?type=credits" },
-  { key: "run", label: "Run a reconciliation", href: "/app/runs" },
-  { key: "review", label: "Review results", href: "/app/results" },
-] as const;
+type Step = Dashboard["getting_started"][number];
 
-/** Onboarding checklist (SPEC §4.2): progress derived from real data; dismissal saved. */
-function Onboarding() {
+/** Getting-started checklist (v1.3 Phase 24): steps come from the API, derived from real data;
+ *  the card hides itself once every step is done, or when the organization dismisses it. */
+function Onboarding({ steps }: { steps: Step[] }) {
   const qc = useQueryClient();
   const org = useQuery({ queryKey: ["org"], queryFn: async () => unwrap(await api.GET("/api/v1/org")) });
-  const progress = useQuery({
-    queryKey: ["onboarding-progress"],
-    enabled: !!org.data && !org.data.onboarding?.dismissed,
-    queryFn: async () => {
-      const [s, a, p, c, r] = await Promise.all([
-        api.GET("/api/v1/suppliers", { params: { query: { limit: 1 } } }),
-        api.GET("/api/v1/agreements", { params: { query: { limit: 1 } } }),
-        api.GET("/api/v1/imports", { params: { query: { import_type: "purchases", limit: 1 } } }),
-        api.GET("/api/v1/imports", { params: { query: { import_type: "credits", limit: 1 } } }),
-        api.GET("/api/v1/runs", { params: { query: { limit: 1 } } }),
-      ]);
-      const has = (x: { data?: { items: unknown[] } }) => (x.data?.items.length ?? 0) > 0;
-      const ran = has(r);
-      return { supplier: has(s), agreement: has(a), purchases: has(p), credits: has(c), run: ran, review: ran };
-    },
-  });
   const dismiss = useMutation({
     mutationFn: async () => unwrap(await api.POST("/api/v1/org/onboarding", { body: { dismissed: true } })),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["org"] }),
   });
-  if (!org.data || org.data.onboarding?.dismissed || !progress.data) return null;
-  const done = STEPS.filter((s) => progress.data[s.key]).length;
-  if (done === STEPS.length) return null;
+  const done = steps.filter((s) => s.done).length;
+  if (!org.data || org.data.onboarding?.dismissed || done === steps.length) return null;
   return (
-    <Card className="mb-6" title={`Get started — ${done} of ${STEPS.length} done`} actions={<Button variant="ghost" size="sm" onClick={() => dismiss.mutate()}>Dismiss</Button>}>
-      <ol className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        {STEPS.map((s) => {
-          const ok = progress.data[s.key];
-          return (
-            <li key={s.key}>
-              <Link href={s.href} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-surface-2">
-                {ok ? <CheckCircle2 size={16} className="text-positive" aria-hidden="true" /> : <Circle size={16} className="text-muted" aria-hidden="true" />}
-                <span className={ok ? "text-muted line-through" : ""}>{s.label}</span>
-                <span className="sr-only">{ok ? "(done)" : "(to do)"}</span>
-              </Link>
-            </li>
-          );
-        })}
+    <Card className="mb-6" title={`Get started — ${done} of ${steps.length} done`} actions={<Button variant="ghost" size="sm" onClick={() => dismiss.mutate()}>Dismiss</Button>}>
+      <ol className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        {steps.map((s, i) => (
+          <li key={s.key}>
+            <Link href={s.link} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-surface-2">
+              {s.done ? <CheckCircle2 size={16} className="text-positive" aria-hidden="true" /> : <Circle size={16} className="text-muted" aria-hidden="true" />}
+              <span className={s.done ? "text-muted line-through" : ""}>{i + 1}. {s.label}</span>
+              {s.count != null && s.count > 0 ? <span className="text-xs text-muted">({s.count})</span> : null}
+              <span className="sr-only">{s.done ? "(done)" : "(to do)"}</span>
+            </Link>
+          </li>
+        ))}
       </ol>
     </Card>
   );

@@ -4249,6 +4249,8 @@ export interface components {
             /** As Of */
             as_of: string;
             data_freshness: components["schemas"]["Freshness"];
+            /** Getting Started */
+            getting_started: components["schemas"]["SetupStepOut"][];
             /** Has Results */
             has_results: boolean;
             identified_open_variance: components["schemas"]["LinkedAmount"];
@@ -6372,6 +6374,19 @@ export interface components {
             last_seen_at: string;
             /** User Agent */
             user_agent: string;
+        };
+        /** SetupStepOut */
+        SetupStepOut: {
+            /** Count */
+            count: number | null;
+            /** Done */
+            done: boolean;
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Link */
+            link: string;
         };
         /** SpaClaimIn */
         SpaClaimIn: {

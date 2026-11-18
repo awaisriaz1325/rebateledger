@@ -3304,6 +3304,13 @@
           "data_freshness": {
             "$ref": "#/components/schemas/Freshness"
           },
+          "getting_started": {
+            "items": {
+              "$ref": "#/components/schemas/SetupStepOut"
+            },
+            "title": "Getting Started",
+            "type": "array"
+          },
           "has_results": {
             "title": "Has Results",
             "type": "boolean"
@@ -3340,6 +3347,7 @@
         },
         "required": [
           "as_of",
+          "getting_started",
           "identified_open_variance",
           "recovered_this_year",
           "open_claims",
@@ -8993,6 +9001,46 @@
           "current"
         ],
         "title": "SessionOut",
+        "type": "object"
+      },
+      "SetupStepOut": {
+        "properties": {
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "done": {
+            "title": "Done",
+            "type": "boolean"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "link": {
+            "title": "Link",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "done",
+          "count",
+          "link"
+        ],
+        "title": "SetupStepOut",
         "type": "object"
       },
       "SpaClaimIn": {

@@ -66,8 +66,17 @@ class OpportunityOut(Out):
     data_as_of: date | None
 
 
+class SetupStepOut(Out):
+    key: str
+    label: str
+    done: bool
+    count: int | None
+    link: str
+
+
 class DashboardOut(Out):
     as_of: str
+    getting_started: list[SetupStepOut]
     identified_open_variance: LinkedAmount
     recovered_this_year: LinkedAmount
     open_claims: OpenClaims

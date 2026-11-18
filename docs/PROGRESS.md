@@ -12,6 +12,14 @@ Template:
 - Next step:
 -->
 
+## 2026-11-18 — v1.3 Phase 24: getting-started checklist
+- Changed: dashboard API returns `getting_started` (7 steps derived from data: suppliers, purchases,
+  agreements, activation, first successful run, credits, review = a claim exists or a run found no
+  shortfall); the existing dashboard card now uses it (one request instead of five; voided imports
+  and failed runs no longer count; counts shown; dismissal kept).
+- Decisions (ADRs): none (plan docs/PHASES-v1.3.md approved by founder 2026-11-18).
+- Next step: Phase 25 (claim-deadline alerts).
+
 ## 2026-11-18 — Security audit, penetration tests, v1.3 plan
 - Changed: open redirect after sign-in fixed (safeNext); OpenAPI schema not served in production;
   production containers hardened (no capabilities, no-new-privileges, read-only root for api/worker/
