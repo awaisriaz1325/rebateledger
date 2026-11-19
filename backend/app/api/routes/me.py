@@ -10,8 +10,10 @@ from fastapi import APIRouter, Depends, Response
 
 from app.api.deps import Authenticated, Ctx
 from app.api.routes.auth import set_session_cookie
-from app.api.schemas.common import Email, In, Name, Ok, Out, Password
+from app.api.schemas.common import DecimalStr, Email, In, Name, Ok, Out, Password
+from app.core import ratelimit
 from app.services import auth as auth_service
+from app.services import portfolio as portfolio_svc
 
 router = APIRouter(prefix="/api/v1/me", tags=["me"])
 Me = Annotated[Ctx, Depends(Authenticated())]
@@ -113,3 +115,24 @@ def list_sessions(ctx: Me) -> list[SessionOut]:
 def revoke_session(session_id: uuid.UUID, ctx: Me) -> Ok:
     auth_service.revoke_session(ctx.db, ctx.user.id, session_id)
     return Ok()
+
+
+class PortfolioOrgOut(Out):
+    tenant_id: uuid.UUID
+    name: str
+    role: str
+    current: bool
+    locked: bool
+    """Two-factor sign-in is required there and not set up: switch to it to enrol."""
+    identified_open_variance: DecimalStr | None
+    missing: int | None
+    short_paid: int | None
+    open_claims: int | None
+    last_run_at: datetime | None
+
+
+@router.get("/portfolio", response_model=list[PortfolioOrgOut])
+def get_portfolio(ctx: Me) -> list[PortfolioOrgOut]:
+    """Every organization you belong to, each read with its own access rules (v1.3 Phase 29)."""
+    ratelimit.heavy(ctx.user.id)
+    return [PortfolioOrgOut(**row) for row in portfolio_svc.portfolio(ctx.user.id, ctx.tenant_id)]

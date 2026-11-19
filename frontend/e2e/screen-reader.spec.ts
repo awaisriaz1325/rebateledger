@@ -31,6 +31,7 @@ const APP_PAGES = [
   "/app/spa",
   "/app/statements",
   "/app/recovery-audit",
+  "/app/portfolio",
   "/app/approvals",
   "/app/reports",
   "/app/accruals",

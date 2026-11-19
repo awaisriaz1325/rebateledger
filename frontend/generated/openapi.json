@@ -6631,6 +6631,105 @@
         "title": "PlanUsageOut",
         "type": "object"
       },
+      "PortfolioOrgOut": {
+        "properties": {
+          "current": {
+            "title": "Current",
+            "type": "boolean"
+          },
+          "identified_open_variance": {
+            "anyOf": [
+              {
+                "examples": [
+                  "1234.50"
+                ],
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identified Open Variance"
+          },
+          "last_run_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run At"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "boolean"
+          },
+          "missing": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missing"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "open_claims": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open Claims"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "short_paid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Paid"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "name",
+          "role",
+          "current",
+          "locked",
+          "identified_open_variance",
+          "missing",
+          "short_paid",
+          "open_claims",
+          "last_run_at"
+        ],
+        "title": "PortfolioOrgOut",
+        "type": "object"
+      },
       "PreferenceIn": {
         "additionalProperties": false,
         "properties": {
@@ -17157,6 +17256,32 @@
           }
         },
         "summary": "Change Password",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/portfolio": {
+      "get": {
+        "description": "Every organization you belong to, each read with its own access rules (v1.3 Phase 29).",
+        "operationId": "get_portfolio_api_v1_me_portfolio_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PortfolioOrgOut"
+                  },
+                  "title": "Response Get Portfolio Api V1 Me Portfolio Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Portfolio",
         "tags": [
           "me"
         ]

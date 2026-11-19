@@ -287,6 +287,7 @@ function OrgSwitcher({ session }: { session: SessionInfo }) {
           <option key={o.id} value={o.id}>{o.name}</option>
         ))}
       </select>
+      <Link href="/app/portfolio" className="ml-2 hidden text-xs text-brand hover:underline sm:inline">All organizations</Link>
     </>
   );
 }
@@ -365,7 +366,7 @@ function SupportGrantBanner({ session }: { session: SessionInfo }) {
 const LABELS: Record<string, string> = {
   app: "Dashboard", suppliers: "Suppliers", agreements: "Agreements", imports: "Imports", runs: "Runs", results: "Results",
   discrepancies: "Discrepancies", credits: "Credits", claims: "Claims", tiers: "Tier tracker", settings: "Settings", reports: "Reports",
-  approvals: "Approvals", new: "New", model: "Deal modelling", import: "Import", accruals: "Month-end accruals", spa: "SPA claims", statements: "Supplier statements", "recovery-audit": "Recovery audit", accounting: "Accounting", profile: "Profile", security: "Security", organization: "Organization", members: "Members",
+  approvals: "Approvals", new: "New", model: "Deal modelling", import: "Import", accruals: "Month-end accruals", spa: "SPA claims", statements: "Supplier statements", portfolio: "All organizations", "recovery-audit": "Recovery audit", accounting: "Accounting", profile: "Profile", security: "Security", organization: "Organization", members: "Members",
   reconciliation: "Reconciliation", notifications: "Notifications", templates: "Import templates", plan: "Plan & usage", audit: "Audit log", data: "Data",
 };
 

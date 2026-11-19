@@ -12,6 +12,16 @@ Template:
 - Next step:
 -->
 
+## 2026-11-19 — v1.3 Phase 29: advisor portfolio view
+- Changed: GET /api/v1/me/portfolio and /app/portfolio ("All organizations", linked next to the
+  organization switcher when a user has two or more): per active membership, the role, identified
+  open variance, short-paid and missing counts, open claims and the last successful run; "Open"
+  switches organization. Each organization is read in its own tenant session (RLS); none spans
+  tenants. An organization that requires two-factor sign-in is locked (no figures) for a user
+  without it, matching switch_tenant. Throttled with ratelimit.heavy.
+- Decisions (ADRs): none beyond the plan.
+- Next step: v1.3 plan complete; founder review, push, and go-live items.
+
 ## 2026-11-19 — v1.3 Phase 28: effective rebate rate
 - Changed: report `rebate_rate` (CSV/XLSX/PDF; default last 12 months): per supplier purchases,
   rebate earned and received, earned % and received % of purchases, earned % for the same dates a

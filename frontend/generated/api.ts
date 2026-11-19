@@ -1482,6 +1482,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/portfolio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Portfolio
+         * @description Every organization you belong to, each read with its own access rules (v1.3 Phase 29).
+         */
+        get: operations["get_portfolio_api_v1_me_portfolio_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/sessions": {
         parameters: {
             query?: never;
@@ -5498,6 +5518,32 @@ export interface components {
             usage: {
                 [key: string]: number;
             };
+        };
+        /** PortfolioOrgOut */
+        PortfolioOrgOut: {
+            /** Current */
+            current: boolean;
+            /** Identified Open Variance */
+            identified_open_variance: string | null;
+            /** Last Run At */
+            last_run_at: string | null;
+            /** Locked */
+            locked: boolean;
+            /** Missing */
+            missing: number | null;
+            /** Name */
+            name: string;
+            /** Open Claims */
+            open_claims: number | null;
+            /** Role */
+            role: string;
+            /** Short Paid */
+            short_paid: number | null;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
         };
         /** PreferenceIn */
         PreferenceIn: {
@@ -10629,6 +10675,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_portfolio_api_v1_me_portfolio_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortfolioOrgOut"][];
                 };
             };
         };
