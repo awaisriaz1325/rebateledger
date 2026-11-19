@@ -3401,6 +3401,9 @@
           "open_claims": {
             "$ref": "#/components/schemas/OpenClaims"
           },
+          "rebate_rate": {
+            "$ref": "#/components/schemas/RateTileOut"
+          },
           "recovered_this_year": {
             "$ref": "#/components/schemas/LinkedAmount"
           },
@@ -3424,6 +3427,7 @@
         },
         "required": [
           "as_of",
+          "rebate_rate",
           "getting_started",
           "identified_open_variance",
           "recovered_this_year",
@@ -3689,6 +3693,7 @@
               "recovery_report",
               "recovery_audit",
               "supplier_scorecard",
+              "rebate_rate",
               "group_payouts",
               "agreement_register",
               "import_history"
@@ -7179,6 +7184,43 @@
           "max_import_rows_per_month"
         ],
         "title": "PublicPlan",
+        "type": "object"
+      },
+      "RateTileOut": {
+        "properties": {
+          "earned_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Earned Pct"
+          },
+          "link": {
+            "title": "Link",
+            "type": "string"
+          },
+          "received_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received Pct"
+          }
+        },
+        "required": [
+          "earned_pct",
+          "received_pct",
+          "link"
+        ],
+        "title": "RateTileOut",
         "type": "object"
       },
       "ReasonOut": {
@@ -20172,6 +20214,7 @@
                 "recovery_report",
                 "recovery_audit",
                 "supplier_scorecard",
+                "rebate_rate",
                 "group_payouts",
                 "agreement_register",
                 "import_history"

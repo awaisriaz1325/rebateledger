@@ -190,8 +190,20 @@ def kpis(db: Session, tenant: Tenant) -> dict[str, Any]:
             }
         )
     top = sorted(by_supplier.items(), key=lambda kv: kv[1], reverse=True)[:5]
+    from datetime import timedelta
+
+    from app.exports.reports import rate_totals
+
+    rates = rate_totals(db, tenant, today - timedelta(days=364), today, items)
     return {
         "as_of": today.isoformat(),
+        "rebate_rate": {
+            "earned_pct": None if rates["earned_pct"] is None else format(rates["earned_pct"], "f"),
+            "received_pct": None
+            if rates["received_pct"] is None
+            else format(rates["received_pct"], "f"),
+            "link": "/app/reports?report=rebate_rate",
+        },
         "getting_started": getting_started(db, tenant, discrepancies),
         "identified_open_variance": {
             "amount": format(open_variance, "f"),

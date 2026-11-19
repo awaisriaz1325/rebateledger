@@ -42,11 +42,12 @@ function Kpis({ d }: { d: Dashboard }) {
   return (
     <div className="flex flex-col gap-6">
       {!d.has_results ? <Notice tone="info" title="No reconciliation yet">Import purchases and credits, then start a run to see your numbers here.</Notice> : null}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <Tile label="Identified open variance" value={<Money value={d.identified_open_variance.amount} />} sub="Short-paid and missing, not yet recovered" href="/app/discrepancies?status=SHORT_PAID,MISSING" />
         <Tile label="Recovered this year" value={<Money value={d.recovered_this_year.amount} />} sub="Credits linked to claims" href="/app/claims?open=false" />
         <Tile label="Open claims" value={<span className="num">{d.open_claims.count}</span>} sub={<>Claimed <Money value={d.open_claims.amount} /></>} href="/app/claims?open=true" />
         <Tile label="Needs review" value={<span className="num">{d.needs_review.count}</span>} sub="Decisions the engine will not guess" href="/app/results?status=NEEDS_REVIEW" />
+        <Tile label="Rebate earned, % of purchases" value={<span className="num">{d.rebate_rate.earned_pct ? `${d.rebate_rate.earned_pct}%` : "—"}</span>} sub={d.rebate_rate.received_pct ? `Received ${d.rebate_rate.received_pct}% · last 12 months` : "Last 12 months"} href={d.rebate_rate.link} />
       </div>
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Card title="Open claims by age (days)">

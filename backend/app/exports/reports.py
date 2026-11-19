@@ -7,7 +7,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -546,6 +546,136 @@ def supplier_scorecard(db: Session, tenant: Tenant, p: ReportParams) -> Table:
     )
 
 
+# --------------------------------------------------------------------------- effective rebate rate
+
+
+def _year_earlier(d: date) -> date:
+    return (
+        d.replace(year=d.year - 1, day=28)
+        if (d.month, d.day) == (2, 29)
+        else d.replace(year=d.year - 1)
+    )
+
+
+def _spend(
+    db: Session, tenant_id: uuid.UUID, start: date, end: date, supplier_id: uuid.UUID | None
+) -> dict[uuid.UUID, Decimal]:
+    from sqlalchemy import func
+
+    from app.db.models.business import PurchaseLineRow as P
+
+    when = func.coalesce(P.invoice_date, P.ship_date, P.receipt_date)
+    q = (
+        select(P.supplier_id, func.sum(P.amount))
+        .where(P.tenant_id == tenant_id, P.voided.is_(False), when >= start, when <= end)
+        .group_by(P.supplier_id)
+    )
+    if supplier_id:
+        q = q.where(P.supplier_id == supplier_id)
+    return {sid: Decimal(total) for sid, total in db.execute(q).all()}
+
+
+def _earned(items: list[Any], start: date, end: date) -> dict[uuid.UUID, dict[str, Any]]:
+    """Per supplier, periods ending in the range: earned (engine result), received, review count."""
+    out: dict[uuid.UUID, dict[str, Any]] = {}
+    for li in items:
+        r, it = li.result, li.item
+        if not start <= r.period_end <= end:
+            continue
+        row = out.setdefault(
+            r.supplier_id,
+            {"name": li.supplier_name, "earned": ZERO, "received": ZERO, "review": 0},
+        )
+        if it.status is ReconStatus.NEEDS_REVIEW or r.expected is None:
+            row["review"] += 1  # not added to earned: its amount is not known
+            continue
+        row["earned"] += r.expected
+        row["received"] += it.received
+    return out
+
+
+def _rate(part: Decimal, spend: Decimal) -> Decimal | None:
+    return (part / spend * 100).quantize(CENT) if spend else None
+
+
+def rate_totals(
+    db: Session, tenant: Tenant, start: date, end: date, items: list[Any]
+) -> dict[str, Decimal | None]:
+    """All suppliers together, for the dashboard tile."""
+    spend = sum(_spend(db, tenant.id, start, end, None).values(), ZERO)
+    earned = _earned(items, start, end).values()
+    return {
+        "earned_pct": _rate(sum((e["earned"] for e in earned), ZERO), spend),
+        "received_pct": _rate(sum((e["received"] for e in earned), ZERO), spend),
+    }
+
+
+def rebate_rate(db: Session, tenant: Tenant, p: ReportParams) -> Table:
+    """Rebate as a share of spend, per supplier, with the same range a year earlier (Phase 28).
+
+    By supplier only: rebates are calculated per agreement and period, so splitting them across
+    product categories would need an allocation rule nobody agreed (never guess with money).
+    """
+    today = today_in(tenant.timezone)
+    end = p.period_to or today
+    start = p.period_from or end - timedelta(days=364)
+    prior_start, prior_end = _year_earlier(start), _year_earlier(end)
+    items = recon.live_items(db, tenant, supplier_id=p.supplier_id, today=today)
+    spend, earned = _spend(db, tenant.id, start, end, p.supplier_id), _earned(items, start, end)
+    prior_spend = _spend(db, tenant.id, prior_start, prior_end, p.supplier_id)
+    prior_earned = _earned(items, prior_start, prior_end)
+    names = {sid: e["name"] for sid, e in earned.items()}
+    missing = [sid for sid in spend if sid not in names]
+    if missing:
+        names.update(
+            dict(
+                db.execute(select(Supplier.id, Supplier.name).where(Supplier.id.in_(missing))).all()
+            )
+        )
+    rows = []
+    for sid in sorted(set(spend) | set(earned), key=lambda s: names.get(s, "")):
+        e = earned.get(sid, {"earned": ZERO, "received": ZERO, "review": 0})
+        s, ps = spend.get(sid, ZERO), prior_spend.get(sid, ZERO)
+        now_pct = _rate(e["earned"], s)
+        prior_pct = _rate(prior_earned.get(sid, {"earned": ZERO})["earned"], ps)
+        rows.append(
+            {
+                "supplier": names.get(sid, ""),
+                "spend": s.quantize(CENT),
+                "earned": e["earned"].quantize(CENT),
+                "received": e["received"].quantize(CENT),
+                "earned_pct": now_pct,
+                "received_pct": _rate(e["received"], s),
+                "prior_earned_pct": prior_pct,
+                "change_pts": now_pct - prior_pct
+                if now_pct is not None and prior_pct is not None
+                else None,
+                "needs_review": e["review"],
+            }
+        )
+    return Table(
+        title="Effective rebate rate",
+        subtitle=(
+            f"Rebate as a share of purchases, {start.isoformat()} to {end.isoformat()}, against the "
+            "same dates a year earlier. Periods needing review are counted, not included."
+        ),
+        columns=[
+            Column("supplier", "Supplier"),
+            Column("spend", "Purchases", "money"),
+            Column("earned", "Rebate earned", "money"),
+            Column("received", "Rebate received", "money"),
+            Column("earned_pct", "Earned % of purchases", "number"),
+            Column("received_pct", "Received % of purchases", "number"),
+            Column("prior_earned_pct", "Earned % a year earlier", "number"),
+            Column("change_pts", "Change (points)", "number"),
+            Column("needs_review", "Periods needing review", "int"),
+        ],
+        rows=rows,
+        filters=_filter_text(db, tenant, p),
+        totals={k: _sum(rows, k) for k in ("spend", "earned", "received")},
+    )
+
+
 # --------------------------------------------------------------------------- buying-group payouts
 
 
@@ -778,6 +908,14 @@ REPORTS: dict[str, ReportDef] = {
             "Supplier scorecard",
             "How each supplier pays: received %, on-time %, days late, short-paid and missing periods, claims.",
             supplier_scorecard,
+            True,
+            ("supplier_id", "period_from", "period_to"),
+        ),
+        ReportDef(
+            "rebate_rate",
+            "Effective rebate rate",
+            "Rebate earned and received as a % of purchases per supplier, against a year earlier.",
+            rebate_rate,
             True,
             ("supplier_id", "period_from", "period_to"),
         ),

@@ -12,6 +12,16 @@ Template:
 - Next step:
 -->
 
+## 2026-11-19 — v1.3 Phase 28: effective rebate rate
+- Changed: report `rebate_rate` (CSV/XLSX/PDF; default last 12 months): per supplier purchases,
+  rebate earned and received, earned % and received % of purchases, earned % for the same dates a
+  year earlier and the change in points, periods needing review; dashboard tile "Rebate earned, %
+  of purchases" (last 12 months) linking to it; Reports page accepts `?report=<key>`.
+- Decisions (ADRs): by supplier only, not by category (the plan said "and category where products
+  exist"): rebates are calculated per agreement-period, so a category split would need an invented
+  allocation rule. Periods needing review are counted, never included in the rate.
+- Next step: Phase 29 (advisor portfolio view).
+
 ## 2026-11-18 — v1.3 Phase 27: dispute tracking on claims
 - Changed: claim status `disputed` (from submitted/acknowledged; to acknowledged, resubmitted,
   resolved, rejected, written off) with a required reason (data mismatch, eligibility, rate or

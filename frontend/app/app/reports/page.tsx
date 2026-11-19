@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { DataTable, type Column } from "@/components/data-table";
 import { Button, Card, Field, Input, Notice, PageHeader, Select } from "@/components/ui/core";
 import { DateText, Money, StatusBadge, statusLabel } from "@/components/ui/finance";
@@ -22,8 +23,17 @@ type Row = Record<string, string>;
 const RECON_STATUSES = ["MATCHED", "NOT_EARNED", "PENDING", "SHORT_PAID", "MISSING", "OVERPAID", "NEEDS_REVIEW"];
 
 export default function ReportsPage() {
+  return (
+    <Suspense>
+      <Reports />
+    </Suspense>
+  );
+}
+
+function Reports() {
   const catalogue = useQuery({ queryKey: ["reports"], queryFn: async () => unwrap(await api.GET("/api/v1/reports")) });
-  const [key, setKey] = useState<ReportKey>("reconciliation_summary");
+  // ?report=<key> preselects a report (e.g. from a dashboard tile); unknown keys fall back below.
+  const [key, setKey] = useState<ReportKey>((useSearchParams().get("report") as ReportKey | null) ?? "reconciliation_summary");
   return (
     <>
       <PageHeader title="Reports" description="Preview any report on screen, then export it as CSV, Excel or PDF. Exports are prepared in the background and downloaded through a link that expires in 15 minutes." />

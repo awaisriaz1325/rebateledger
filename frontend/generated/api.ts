@@ -4268,6 +4268,7 @@ export interface components {
             identified_open_variance: components["schemas"]["LinkedAmount"];
             needs_review: components["schemas"]["LinkedCount"];
             open_claims: components["schemas"]["OpenClaims"];
+            rebate_rate: components["schemas"]["RateTileOut"];
             recovered_this_year: components["schemas"]["LinkedAmount"];
             tier_opportunities: components["schemas"]["LinkedCount"];
             /** Top Opportunities */
@@ -4391,7 +4392,7 @@ export interface components {
              * Report
              * @enum {string}
              */
-            report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "supplier_scorecard" | "group_payouts" | "agreement_register" | "import_history";
+            report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "supplier_scorecard" | "rebate_rate" | "group_payouts" | "agreement_register" | "import_history";
         };
         /** ExportOut */
         ExportOut: {
@@ -5695,6 +5696,15 @@ export interface components {
             monthly_price: string;
             /** Name */
             name: string;
+        };
+        /** RateTileOut */
+        RateTileOut: {
+            /** Earned Pct */
+            earned_pct: string | null;
+            /** Link */
+            link: string;
+            /** Received Pct */
+            received_pct: string | null;
         };
         /** ReasonOut */
         ReasonOut: {
@@ -12614,7 +12624,7 @@ export interface operations {
     preview_report_api_v1_reports_preview_get: {
         parameters: {
             query: {
-                report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "supplier_scorecard" | "group_payouts" | "agreement_register" | "import_history";
+                report: "reconciliation_summary" | "supplier_statement" | "claims_register" | "recovery_report" | "recovery_audit" | "supplier_scorecard" | "rebate_rate" | "group_payouts" | "agreement_register" | "import_history";
                 supplier_id?: string | null;
                 period_from?: string | null;
                 period_to?: string | null;

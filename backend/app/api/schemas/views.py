@@ -74,8 +74,15 @@ class SetupStepOut(Out):
     link: str
 
 
+class RateTileOut(Out):
+    earned_pct: str | None
+    received_pct: str | None
+    link: str
+
+
 class DashboardOut(Out):
     as_of: str
+    rebate_rate: RateTileOut
     getting_started: list[SetupStepOut]
     identified_open_variance: LinkedAmount
     recovered_this_year: LinkedAmount
