@@ -57,14 +57,17 @@ gcloud storage buckets add-iam-policy-binding gs://$BUCKET \
   --member="serviceAccount:SA_EMAIL" --role="roles/storage.objectAdmin"
 ```
 
-## 4. Uptime check and alert (SPEC §12)
+## 4. Uptime check — CREATED 2026-11-20; alert NOT YET (SPEC §12)
+Created `rebateledger-login`: https, port 443, `/login`, every 5 min, timeout 10 s, SSL validated,
+page must contain "RebateLedger" (flags checked against gcloud 593 `--help`). Still to do: an
+email notification channel and an alerting policy on this check (needs the ops address).
+
 ```sh
 gcloud monitoring uptime create rebateledger-login --project $P --resource-type=uptime-url \
   --resource-labels=host=rebateledger.imageme.tech,project_id=$P \
   --path=/login --protocol=https --period=5
 ```
-UNVERIFIED: flag names of `gcloud monitoring uptime create` — check `--help` on the installed
-gcloud before running. Attach an email notification channel in the console.
+Attach an email notification channel in the console.
 
 ## 5. DNS (wherever `imageme.tech` is hosted)
 - `rebateledger.imageme.tech`: A record → the VM's static IP from step 1
