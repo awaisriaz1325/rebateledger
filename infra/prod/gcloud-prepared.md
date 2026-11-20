@@ -1,69 +1,67 @@
 # Cloud commands — PREPARED, NOT RUN (CLAUDE.md §2: a person runs these after approval)
 
-Replace `PROJECT_ID`, `ZONE`, `VM_NAME` and the bucket name. Read-only checks first.
-
-## 1. Check the VM's service account and scopes (read-only)
+Production VM: `opspilot-production` (ADR 0020). Values from OpsPilot's own docs, check them:
 ```sh
-gcloud compute instances describe VM_NAME --zone ZONE --project PROJECT_ID \
-  --format="value(serviceAccounts[].email, serviceAccounts[].scopes)"
+P=project-8540c9da-5229-461c-bba
+Z=us-central1-a
+R=us-central1
+BUCKET=project-8540c9da-5229-461c-bba-rebateledger-backups   # must be globally unique
 ```
-The `offsite` container authenticates as this service account. Its scopes must include
-`devstorage.read_write` or `cloud-platform`; changing scopes needs the VM stopped (downtime
-for every app on the VM) — decide before running.
 
-## 2. Private backup bucket (cost: storage of ~a few GB, typically a few dollars a month)
+## 1. Read-only checks first
 ```sh
-gcloud storage buckets create gs://example-rebateledger-backups \
-  --project PROJECT_ID --location REGION --uniform-bucket-level-access \
-  --public-access-prevention --soft-delete-duration=7d
+gcloud compute instances describe opspilot-production --zone $Z --project $P \
+  --format="value(machineType.basename(), serviceAccounts[].email, serviceAccounts[].scopes)"
+gcloud compute addresses list --project $P --filter="name=opspilot-production-ip"
+```
+The `offsite` container uploads backups as the VM's service account (metadata server). Its
+scopes must include `devstorage.read_write` or `cloud-platform`. If they do not, add one in
+step 2 while the VM is stopped anyway, keeping every scope it already has (OpsPilot needs them).
+
+## 2. Resize to e2-standard-2 — DONE 2026-11-20 15:34–15:36 UTC (founder's go-ahead)
+Result: 2 vCPU, 7.9 GB, 5.1 GB available; all 28 containers back, OpsPilot healthy at 15:40.
+The service account already has the `cloud-platform` scope: no scope change needed.
+
+The VM had 772 MB available of 4 GB with OpsPilot and imageme; RebateLedger idles at ~590 MB
+(measured locally, all 8 containers) and is capped at ~3.7 GB. Cost: about $49/month instead of
+about $24 (UNVERIFIED estimate for us-central1, on-demand; check the pricing calculator).
+Downtime: a few minutes for OpsPilot and imageme. The static IP is kept.
+```sh
+gcloud compute instances stop opspilot-production --zone $Z --project $P
+gcloud compute instances set-machine-type opspilot-production --zone $Z --project $P --machine-type e2-standard-2
+# Only if step 1 showed no storage scope (list ALL current scopes plus the new one):
+# gcloud compute instances set-service-account opspilot-production --zone $Z --project $P \
+#   --service-account SA_EMAIL --scopes CURRENT_SCOPES,https://www.googleapis.com/auth/devstorage.read_write
+gcloud compute instances start opspilot-production --zone $Z --project $P
+```
+Then follow OpsPilot's `docs/ops-cost-mode.md` start-up checks, and run `free -m` on the VM.
+
+## 3. Private backup bucket (a few GB: typically a few dollars a month)
+```sh
+gcloud storage buckets create gs://$BUCKET --project $P --location $R \
+  --uniform-bucket-level-access --public-access-prevention --soft-delete-duration=7d
 
 # Expire backups after 30 days — ONLY under archive/ (storage/ mirrors live uploads).
 cat > lifecycle.json <<'JSON'
 {"rule": [{"action": {"type": "Delete"}, "condition": {"age": 30, "matchesPrefix": ["archive/"]}}]}
 JSON
-gcloud storage buckets update gs://example-rebateledger-backups --lifecycle-file=lifecycle.json
+gcloud storage buckets update gs://$BUCKET --lifecycle-file=lifecycle.json
 
-# Least privilege: the VM service account may write objects to this bucket only.
-gcloud storage buckets add-iam-policy-binding gs://example-rebateledger-backups \
+# The VM's service account may manage objects in this bucket only.
+gcloud storage buckets add-iam-policy-binding gs://$BUCKET \
   --member="serviceAccount:SA_EMAIL" --role="roles/storage.objectAdmin"
 ```
 
-## 3. Uptime check and alert (SPEC §12)
+## 4. Uptime check and alert (SPEC §12)
 ```sh
-gcloud monitoring uptime create rebateledger-login \
-  --project PROJECT_ID --resource-type=uptime-url \
-  --resource-labels=host=rebateledger.imagenet.tech,project_id=PROJECT_ID \
+gcloud monitoring uptime create rebateledger-login --project $P --resource-type=uptime-url \
+  --resource-labels=host=rebateledger.imagenet.tech,project_id=$P \
   --path=/login --protocol=https --period=5
 ```
-UNVERIFIED: flag names of `gcloud monitoring uptime create` — check `--help` on the
-installed gcloud before running. Attach an email notification channel in the console.
+UNVERIFIED: flag names of `gcloud monitoring uptime create` — check `--help` on the installed
+gcloud before running. Attach an email notification channel in the console.
 
-## 4. DNS (at your registrar or Cloud DNS)
-- `rebateledger.imagenet.tech`: A record → the production VM's external IP (at the DNS host of `imagenet.tech`).
+## 5. DNS (wherever `imagenet.tech` is hosted)
+- `rebateledger.imagenet.tech`: A record → the VM's static IP from step 1
+  (`34.135.27.193`, `opspilot-production-ip`, checked 2026-11-20; OpsPilot's docs say 35.222.55.6, outdated).
 - Email: SPF, DKIM and DMARC records from the chosen email provider (ADR 0006, still OPEN).
-
-## 5. Optional: dedicated production VM (ADR 0018 "safer alternative") — PREPARED, NOT RUN
-Moves production off the shared VM (High risk). Cost estimate, UNVERIFIED — check the GCP pricing
-calculator for your region: e2-standard-2 (2 vCPU, 8 GB) about $49/month on-demand plus a 50 GB
-balanced disk about $5/month, plus egress. Pick a zone near your customers (US).
-```sh
-# Read-only first: confirm the image family and that the default HTTP/HTTPS firewall rules exist.
-gcloud compute images describe-from-family ubuntu-2404-lts-amd64 --project ubuntu-os-cloud
-gcloud compute firewall-rules list --project PROJECT_ID --filter="name~'default-allow-http'"
-
-# The VM: its own service account scope covers the backup bucket (section 2 IAM binding).
-gcloud compute instances create rebateledger-prod \
-  --project PROJECT_ID --zone ZONE --machine-type e2-standard-2 \
-  --image-family ubuntu-2404-lts-amd64 --image-project ubuntu-os-cloud \
-  --boot-disk-size 50GB --boot-disk-type pd-balanced \
-  --scopes https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write \
-  --tags http-server,https-server --shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring
-
-# Only if the list above was empty:
-gcloud compute firewall-rules create default-allow-http-https --project PROJECT_ID \
-  --allow tcp:80,tcp:443 --target-tags http-server,https-server
-```
-Then on the new VM: install Docker Engine from Docker's official apt repository, clone the repo,
-and follow docs/runbooks/deploy.md "First install". Difference from the shared VM: there is no
-host Caddy there, so a Caddy service must be added to `infra/prod/compose.yaml` (I will prepare it
-once you choose this option). DNS then points at the new VM's external IP.

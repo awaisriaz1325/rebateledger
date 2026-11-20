@@ -1,6 +1,6 @@
 # ADR 0018 — Production on the shared GCP VM (deviation from SPEC §13)
 
-Status: accepted (founder, 2026-11-17)
+Status: accepted (founder, 2026-11-17); hosting, TLS and deploy revised by ADR 0020 (2026-11-20)
 
 ## Context
 SPEC §13 planned Cloud Run + Cloud SQL. The founder chose to run production on the existing
