@@ -57,10 +57,10 @@ gcloud storage buckets add-iam-policy-binding gs://$BUCKET \
   --member="serviceAccount:SA_EMAIL" --role="roles/storage.objectAdmin"
 ```
 
-## 4. Uptime check — CREATED 2026-11-20; alert NOT YET (SPEC §12)
+## 4. Uptime check and alert — CREATED 2026-11-20 (SPEC §12)
 Created `rebateledger-login`: https, port 443, `/login`, every 5 min, timeout 10 s, SSL validated,
-page must contain "RebateLedger" (flags checked against gcloud 593 `--help`). Still to do: an
-email notification channel and an alerting policy on this check (needs the ops address).
+page must contain "RebateLedger" (flags checked against gcloud 593 `--help`). Alert policy "RebateLedger down (uptime /login)": fails from more than one region over 20 min →
+email channel "RebateLedger ops (email)" (the founder's address). Not yet tested by an outage.
 
 ```sh
 gcloud monitoring uptime create rebateledger-login --project $P --resource-type=uptime-url \
