@@ -55,13 +55,13 @@ gcloud storage buckets add-iam-policy-binding gs://$BUCKET \
 ## 4. Uptime check and alert (SPEC §12)
 ```sh
 gcloud monitoring uptime create rebateledger-login --project $P --resource-type=uptime-url \
-  --resource-labels=host=rebateledger.imagenet.tech,project_id=$P \
+  --resource-labels=host=rebateledger.imageme.tech,project_id=$P \
   --path=/login --protocol=https --period=5
 ```
 UNVERIFIED: flag names of `gcloud monitoring uptime create` — check `--help` on the installed
 gcloud before running. Attach an email notification channel in the console.
 
-## 5. DNS (wherever `imagenet.tech` is hosted)
-- `rebateledger.imagenet.tech`: A record → the VM's static IP from step 1
+## 5. DNS (wherever `imageme.tech` is hosted)
+- `rebateledger.imageme.tech`: A record → the VM's static IP from step 1
   (`34.135.27.193`, `opspilot-production-ip`, checked 2026-11-20; OpsPilot's docs say 35.222.55.6, outdated).
 - Email: SPF, DKIM and DMARC records from the chosen email provider (ADR 0006, still OPEN).

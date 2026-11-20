@@ -2,7 +2,7 @@
 
 | # | Item | Owner | Done |
 |---|---|---|---|
-| 1 | Real domains chosen; DNS A records point at the VM — domain `rebateledger.imagenet.tech` (one host for app and public pages), DNS not yet set | Founder | ☐ |
+| 1 | Real domains chosen; DNS A records point at the VM — domain `rebateledger.imageme.tech` (one host for app and public pages), DNS not yet set | Founder | ☐ |
 | 2 | Email provider chosen (ADR 0006); SPF, DKIM, DMARC published; test email delivered | Founder | ☐ |
 | 3 | `/var/lib/rebateledger/prod.env` filled with generated secrets (never in git) | Operator | ☐ |
 | 4 | Backup bucket, lifecycle (archive/ only) and IAM created (`infra/prod/gcloud-prepared.md`) | Operator | ☐ |

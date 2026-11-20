@@ -22,7 +22,7 @@ compose() {
 ## First install (once)
 1. **Resize the VM** and check its service account (`infra/prod/gcloud-prepared.md` §1–2).
 2. **Bucket and IAM** (`gcloud-prepared.md` §3). **DNS**: A record
-   `rebateledger.imagenet.tech` → the VM's static IP (`gcloud-prepared.md` §5).
+   `rebateledger.imageme.tech` → the VM's static IP (`gcloud-prepared.md` §5).
 3. **Secrets** on the VM:
    `sudo install -d -m 700 /var/lib/rebateledger`, then create `/var/lib/rebateledger/prod.env`
    from `infra/prod/prod.env.example` with real values (`sudo chmod 600`). Generate every
@@ -35,9 +35,9 @@ compose() {
    (defined in its `docs/ops-cost-mode.md` §5.3): `$DC $CF exec nginx nginx -t` and
    `$DC $CF exec nginx nginx -s reload`.
 5. **Certificate** (once DNS resolves to the VM), with OpsPilot's certbot:
-   `$DC $CF run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot -d rebateledger.imagenet.tech --agree-tos -m <ops email> -n`
+   `$DC $CF run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot -d rebateledger.imageme.tech --agree-tos -m <ops email> -n`
    It is renewed by OpsPilot's certbot container from then on.
-6. **TLS, stage 2**: only after `~/opspilot-clinic-frontdesk/letsencrypt/live/rebateledger.imagenet.tech/`
+6. **TLS, stage 2**: only after `~/opspilot-clinic-frontdesk/letsencrypt/live/rebateledger.imageme.tech/`
    exists, copy `infra/prod/nginx/rebateledger-https.conf` to `~/nginx-extra/`, run `nginx -t`,
    then reload (as in step 4). A wrong file here stops nginx for OpsPilot and imageme too:
    never reload without a passing `nginx -t`.
@@ -53,7 +53,7 @@ compose() {
 2. On the devbox: `infra/prod/deploy.sh v1.3.1` (builds, uploads ~400 MB over IAP, then on the
    VM: pre-deploy base backup, migrate, start, smoke check). It stops on any error and prints
    `release … is up` after the smoke check.
-3. Manual smoke: `https://rebateledger.imagenet.tech` — sign in, open the dashboard, download
+3. Manual smoke: `https://rebateledger.imageme.tech` — sign in, open the dashboard, download
    one report.
 4. Real client IPs: `compose logs api | tail` shows visitors' IPs or nginx's network address,
    never `172.31.250.x`.

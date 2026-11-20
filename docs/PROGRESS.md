@@ -13,7 +13,7 @@ Template:
 -->
 
 ## 2026-11-20 — Go-live inputs: domain, production VM, deploy rework
-- Changed: production domain `rebateledger.imagenet.tech` (one host for the app and the public
+- Changed: production domain `rebateledger.imageme.tech` (one host for the app and the public
   pages). Fixed a defect: the web image never received `NEXT_PUBLIC_SITE_URL`, so sitemap,
   robots and canonical links would have pointed at localhost (now a required build argument).
 - Decision (founder, ADR 0020): production on `opspilot-production`, resized to e2-standard-2.

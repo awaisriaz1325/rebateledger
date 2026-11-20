@@ -12,7 +12,7 @@ cd "$(dirname "$0")/../.."
 REF="${1:?usage: infra/prod/deploy.sh <git tag>}"
 VM=opspilot-production
 ZONE=us-central1-a
-SITE_URL=https://rebateledger.imagenet.tech
+SITE_URL=https://rebateledger.imageme.tech
 # Docker CLI image with the compose plugin, run on the VM (Container-Optimized OS has no
 # runnable compose). Verified 2026-11-20: docker:29.1.3-cli ships Docker Compose v5.0.0.
 COMPOSE_IMAGE=docker:29.1.3-cli

@@ -7,7 +7,7 @@ ADR 0018 put production on the devbox VM with its host Caddy. The founder chose 
 existing production VM `opspilot-production` (us-central1-a), which runs OpsPilot (nginx +
 certbot on ports 80/443, Container-Optimized OS) and, since 2026-11-20, imageme. It had 772 MB
 of 4 GB available; an on-VM image build took OpsPilot down for ~50 minutes on 2026-11-20.
-Domain: `rebateledger.imagenet.tech`, one host for the app and the public pages.
+Domain: `rebateledger.imageme.tech`, one host for the app and the public pages.
 
 ## Decision
 - **Resize** the VM to e2-standard-2 (8 GB) (founder approved; ~$25/month more, UNVERIFIED).
