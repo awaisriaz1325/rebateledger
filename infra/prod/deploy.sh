@@ -14,7 +14,9 @@ git checkout --quiet "$RELEASE"
 
 docker build -t "rebateledger-api:$RELEASE" backend
 # The web container reaches the API by service name on the stack network.
-docker build -t "rebateledger-web:$RELEASE" --build-arg RL_API_ORIGIN=http://api:8000 frontend
+# The public site URL is baked into the build (canonical links, sitemap).
+docker build -t "rebateledger-web:$RELEASE" --build-arg RL_API_ORIGIN=http://api:8000 \
+  --build-arg NEXT_PUBLIC_SITE_URL="$APP_URL" frontend
 
 compose up -d postgres redis
 if compose ps --services --status running | grep -qx backup; then

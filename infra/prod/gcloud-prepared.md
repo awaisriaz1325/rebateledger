@@ -32,14 +32,14 @@ gcloud storage buckets add-iam-policy-binding gs://example-rebateledger-backups 
 ```sh
 gcloud monitoring uptime create rebateledger-login \
   --project PROJECT_ID --resource-type=uptime-url \
-  --resource-labels=host=app.example.invalid,project_id=PROJECT_ID \
+  --resource-labels=host=rebateledger.imagenet.tech,project_id=PROJECT_ID \
   --path=/login --protocol=https --period=5
 ```
 UNVERIFIED: flag names of `gcloud monitoring uptime create` — check `--help` on the
 installed gcloud before running. Attach an email notification channel in the console.
 
 ## 4. DNS (at your registrar or Cloud DNS)
-- `app.example.invalid` and `www.example.invalid`: A record → the VM's external IP.
+- `rebateledger.imagenet.tech`: A record → the production VM's external IP (at the DNS host of `imagenet.tech`).
 - Email: SPF, DKIM and DMARC records from the chosen email provider (ADR 0006, still OPEN).
 
 ## 5. Optional: dedicated production VM (ADR 0018 "safer alternative") — PREPARED, NOT RUN

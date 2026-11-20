@@ -12,6 +12,19 @@ Template:
 - Next step:
 -->
 
+## 2026-11-20 — Go-live inputs: domain and production VM
+- Changed: production domain `rebateledger.imagenet.tech` (one host for the app and the public
+  pages) in `prod.env.example`, `Caddyfile.snippet`, `gcloud-prepared.md`. Fixed a defect: the web
+  image never received `NEXT_PUBLIC_SITE_URL`, so sitemap, robots and canonical links would have
+  pointed at localhost; it is now a required build argument passed by `deploy.sh` (verified by a
+  real image build).
+- Decision (founder): production goes on the existing VM `opspilot-production`, not this devbox.
+  Facts from the OpsPilot repo: e2-medium (4 GB), Container-Optimized OS, us-central1-a, nginx +
+  certbot already on 80/443, an on-VM build took OpsPilot down on 2026-11-20, and the VM is stopped
+  in "cost mode". ADR 0018 and the deploy files assume this devbox (host Caddy, compose plugin,
+  builds on the VM) and must be reworked; questions put to the founder before doing so.
+- Open: email provider (ADR 0006); VM size, image transfer and nginx approach (see report).
+
 ## 2026-11-20 — Launch readiness: restore drill, backup fixes, web hardening
 - Restore drill (local, `infra/scripts/restore_drill_local.sh`, prod image and backup command):
   passed, point-in-time restore in 3 s. It found two High production defects, both fixed and then

@@ -10,8 +10,12 @@ COPY patches ./patches
 RUN pnpm install --frozen-lockfile
 COPY . .
 ARG RL_API_ORIGIN
+ARG NEXT_PUBLIC_SITE_URL
+# NEXT_PUBLIC_SITE_URL is inlined at build time (canonical links, sitemap, robots); without it
+# the public pages would point at http://localhost:3000.
 RUN test -n "$RL_API_ORIGIN" || (echo "RL_API_ORIGIN build arg is required" && exit 1)
-ENV RL_API_ORIGIN=$RL_API_ORIGIN NEXT_TELEMETRY_DISABLED=1
+RUN test -n "$NEXT_PUBLIC_SITE_URL" || (echo "NEXT_PUBLIC_SITE_URL build arg is required" && exit 1)
+ENV RL_API_ORIGIN=$RL_API_ORIGIN NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL NEXT_TELEMETRY_DISABLED=1
 # shortcut: dev dependencies stay (next.config.ts may need typescript at start); prune once a build proves it safe.
 RUN pnpm build
 
