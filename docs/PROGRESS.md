@@ -25,7 +25,9 @@ Template:
   `X-Forwarded-For` discarded; rollback mode; idle memory ~590 MB.
 - Resized `opspilot-production` to e2-standard-2 (founder's go-ahead): ~2 min down, all 28
   containers back, 5.1 GB available. Static IP is 34.135.27.193 (OpsPilot's docs are outdated).
-- Open: email provider (ADR 0006); bucket, uptime check, DNS (`infra/prod/gcloud-prepared.md`).
+- Backup bucket created and verified from the VM (`gcloud-prepared.md` §3).
+- Open: email provider (ADR 0006; `imageme.tech` is already authenticated in Brevo); uptime
+  check; DNS record for `rebateledger.imageme.tech`.
 
 ## 2026-11-20 — Launch readiness: restore drill, backup fixes, web hardening
 - Restore drill (local, `infra/scripts/restore_drill_local.sh`, prod image and backup command):

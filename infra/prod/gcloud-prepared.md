@@ -36,7 +36,12 @@ gcloud compute instances start opspilot-production --zone $Z --project $P
 ```
 Then follow OpsPilot's `docs/ops-cost-mode.md` start-up checks, and run `free -m` on the VM.
 
-## 3. Private backup bucket (a few GB: typically a few dollars a month)
+## 3. DONE 2026-11-20 — Private backup bucket (a few GB: typically a few dollars a month)
+Created `gs://project-8540c9da-5229-461c-bba-rebateledger-backups` (us-central1): public access
+prevention enforced, uniform access, soft delete 7 days, 30-day expiry on `archive/` only,
+`objectAdmin` for `opspilot-production-vm@…`. Verified from the VM with its own token:
+write 200, read ok, delete 204.
+
 ```sh
 gcloud storage buckets create gs://$BUCKET --project $P --location $R \
   --uniform-bucket-level-access --public-access-prevention --soft-delete-duration=7d
