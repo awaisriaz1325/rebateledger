@@ -28,7 +28,13 @@ Template:
 - Backup bucket created and verified from the VM (`gcloud-prepared.md` §3).
 - Email: Brevo (ADR 0006), SMTP login verified. DNS `rebateledger.imageme.tech` → VM resolves.
   `/var/lib/rebateledger/prod.env` created on the VM (generated secrets, never on the devbox disk).
-- Open: nginx blocks + certificate, first deploy, operator account, uptime check, ops email.
+- **v1.3.0 live** at https://rebateledger.imageme.tech (founder's go-ahead): nginx HTTP block,
+  Let's Encrypt certificate via OpsPilot's certbot, HTTPS block (each behind `nginx -t`), then
+  `deploy.sh v1.3.0`. Verified: pages 200, API 401 unauthenticated, app security headers, real
+  client IP in API logs, migrations at 0014, base backup + WAL in GCS (archived 4, failed 0),
+  ~630 MB used, 4.3 GB available; OpsPilot, imageme, Nexus, collabspace unaffected (200).
+- Open: operator account; uptime check; ops alert email; rotate the Brevo SMTP key (it was
+  pasted in chat); a real test email; restore drill from GCS on the VM.
 
 ## 2026-11-20 — Launch readiness: restore drill, backup fixes, web hardening
 - Restore drill (local, `infra/scripts/restore_drill_local.sh`, prod image and backup command):
