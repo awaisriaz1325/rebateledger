@@ -12,6 +12,17 @@ Template:
 - Next step:
 -->
 
+## 2026-11-20 — Launch readiness: restore drill, backup fixes, web hardening
+- Restore drill (local, `infra/scripts/restore_drill_local.sh`, prod image and backup command):
+  passed, point-in-time restore in 3 s. It found two High production defects, both fixed and then
+  verified by running the real prod `postgres` + `backup` services: WAL archiving always failed
+  (root-owned archive volume) and base backups always failed (no replication access).
+- Web container: verified running read-only, as uid 1000, with no capabilities; compose updated.
+- `make audit` passes again (picomatch advisory no longer applies; minimatch moderate remains in
+  lint tooling).
+- Dedicated VM: commands prepared in infra/prod/gcloud-prepared.md §5, not run.
+- Open: domains, email provider, running the prepared cloud commands, the production restore drill.
+
 ## 2026-11-19 — v1.3 Phase 29: advisor portfolio view
 - Changed: GET /api/v1/me/portfolio and /app/portfolio ("All organizations", linked next to the
   organization switcher when a user has two or more): per active membership, the role, identified

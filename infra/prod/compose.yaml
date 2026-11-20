@@ -43,13 +43,22 @@ services:
       RL_APP_PASSWORD: ${RL_APP_PASSWORD:?}
     # WAL archiving for point-in-time recovery (RPO <= 5 min, ADR 0016): every finished WAL
     # segment (at least every 60 s) is copied to /archive, which `offsite` syncs to GCS.
+    # The archive volume starts root-owned; without this chown every archive attempt fails
+    # (found by the 2026-11-20 restore drill). Then the image's normal entrypoint runs.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - mkdir -p /archive/wal && chown postgres:postgres /archive/wal && exec docker-entrypoint.sh "$$@"
+      - --
     command: >
       postgres -c wal_level=replica -c archive_mode=on -c archive_timeout=60
       -c "archive_command=test ! -f /archive/wal/%f && cp %p /archive/wal/%f"
     volumes:
       - pgdata:/var/lib/postgresql
       - archive:/archive
-      - ../postgres/init:/docker-entrypoint-initdb.d:ro
+      # Mounted file by file: a file mount inside a read-only directory mount cannot be created.
+      - ../postgres/init/01-roles.sh:/docker-entrypoint-initdb.d/01-roles.sh:ro
+      - ./postgres-init/02-replication.sh:/docker-entrypoint-initdb.d/02-replication.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d rebateledger"]
       interval: 10s
@@ -94,6 +103,9 @@ services:
     <<: *hardened
     image: rebateledger-web:${RELEASE:?}
     restart: unless-stopped
+    # Verified 2026-11-20: the image serves pages read-only, as uid 1000, with no capabilities.
+    read_only: true
+    tmpfs: ["/tmp:size=64m", "/app/.next/cache:size=128m,uid=1000,gid=1000"]
     ports: ["127.0.0.1:3200:3000"]  # host Caddy (imageme-caddy, host network) proxies here
     depends_on: [api]
     networks: [prod]

@@ -41,3 +41,29 @@ installed gcloud before running. Attach an email notification channel in the con
 ## 4. DNS (at your registrar or Cloud DNS)
 - `app.example.invalid` and `www.example.invalid`: A record → the VM's external IP.
 - Email: SPF, DKIM and DMARC records from the chosen email provider (ADR 0006, still OPEN).
+
+## 5. Optional: dedicated production VM (ADR 0018 "safer alternative") — PREPARED, NOT RUN
+Moves production off the shared VM (High risk). Cost estimate, UNVERIFIED — check the GCP pricing
+calculator for your region: e2-standard-2 (2 vCPU, 8 GB) about $49/month on-demand plus a 50 GB
+balanced disk about $5/month, plus egress. Pick a zone near your customers (US).
+```sh
+# Read-only first: confirm the image family and that the default HTTP/HTTPS firewall rules exist.
+gcloud compute images describe-from-family ubuntu-2404-lts-amd64 --project ubuntu-os-cloud
+gcloud compute firewall-rules list --project PROJECT_ID --filter="name~'default-allow-http'"
+
+# The VM: its own service account scope covers the backup bucket (section 2 IAM binding).
+gcloud compute instances create rebateledger-prod \
+  --project PROJECT_ID --zone ZONE --machine-type e2-standard-2 \
+  --image-family ubuntu-2404-lts-amd64 --image-project ubuntu-os-cloud \
+  --boot-disk-size 50GB --boot-disk-type pd-balanced \
+  --scopes https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write \
+  --tags http-server,https-server --shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring
+
+# Only if the list above was empty:
+gcloud compute firewall-rules create default-allow-http-https --project PROJECT_ID \
+  --allow tcp:80,tcp:443 --target-tags http-server,https-server
+```
+Then on the new VM: install Docker Engine from Docker's official apt repository, clone the repo,
+and follow docs/runbooks/deploy.md "First install". Difference from the shared VM: there is no
+host Caddy there, so a Caddy service must be added to `infra/prod/compose.yaml` (I will prepare it
+once you choose this option). DNS then points at the new VM's external IP.

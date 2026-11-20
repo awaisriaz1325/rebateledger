@@ -38,3 +38,8 @@ The restore also re-creates RLS policies, invoice-immutability triggers and the
 
 SPEC §11 does not set RPO or RTO. The founder approved the values above on 2026-11-13
 (ADR 0016).
+
+## Drill log
+| Date | Where | Result |
+|---|---|---|
+| 2026-11-20 | Local, `infra/scripts/restore_drill_local.sh` (prod image, archive settings, `pg_basebackup -Ft -z -X none`) | Passed: point-in-time restore in 3 s; 1,500/1,500 rows, incident absent. Found and fixed: archive folder ownership (every WAL archive attempt failed) and replication access for base backups. Real prod `postgres` + `backup` services then verified: base backup ok, WAL archived 4 / failed 0. |

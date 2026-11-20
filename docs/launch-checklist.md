@@ -10,7 +10,7 @@
 | 6 | `deploy.sh` smoke check passed; manual smoke (sign in, dashboard, report) passed | Operator | ☐ |
 | 7 | Real client IPs visible in API logs (not 172.31.250.x) | Operator | ☐ |
 | 8 | WAL files arriving in GCS within 5 minutes; first base backup present | Operator | ☐ |
-| 9 | Restore drill done once (docs/runbooks/restore.md) and timed under 4 h | Operator | ☐ |
+| 9 | Restore drill done once (docs/runbooks/restore.md) and timed under 4 h — local rehearsal passed 2026-11-20; repeat on the production VM from GCS | Operator | ☐ |
 | 10 | Uptime check and alert email tested (stop web briefly, alert arrives) | Operator | ☐ |
 | 11 | Legal pages reviewed by a lawyer; `[LEGAL REVIEW REQUIRED]` removed (ADR 0015) | Founder | ☐ |
 | 12 | Marketing `[PLACEHOLDER]` blocks and prices confirmed or removed | Founder | ☐ |
